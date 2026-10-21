@@ -36,7 +36,7 @@ pub trait CommandReader<T> {
     ) -> impl Future<Output = Result<T, FdReaderError>> + Send;
 }
 
-/// Extends request decoders with explicit protocol-message validation.
+/// Extends message decoders with explicit protocol-message validation.
 ///
 /// Nested value decoders also implement CommandReader, so these helpers must
 /// only be called when decoding a message with an actual receiving object.
@@ -47,6 +47,24 @@ trait CommandReaderExt: CommandReader<Self> + Sized {
         state: &Arc<Mutex<ClientState>>,
     ) -> Result<MutexGuard<'_, ClientState>, FdReaderError> {
         state.lock().map_err(|_| FdReaderError::InvalidProtocol)
+    }
+
+    /// Checks an event receiver, opcode, interface, and negotiated version.
+    fn event_interface(
+        state: &Arc<Mutex<ClientState>>,
+        id: u32,
+        opcode: u16,
+        expected_opcode: u16,
+        name: &str,
+        since: u32,
+    ) -> Result<ObjectInteface, FdReaderError> {
+        let interface = Self::read_state(state)?
+            .object_interface(id)
+            .ok_or(FdReaderError::InvalidProtocol)?;
+        if opcode != expected_opcode || interface.name() != name || interface.version() < since {
+            return Err(FdReaderError::InvalidProtocol);
+        }
+        Ok(interface)
     }
 
     /// Checks the request receiver, opcode, interface, and minimum version.

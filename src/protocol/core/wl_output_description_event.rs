@@ -1,12 +1,15 @@
 use crate::protocol::ClientState;
+use crate::protocol::{CommandReader, CommandReaderExt};
 use crate::protocol::{CommandWriter, CommandWriterExt};
+use crate::utils::reader::{FdPayloadReader, FdReaderError};
 use crate::utils::writer::{FdPayloadWriter, FdWriter, FdWriterError};
 use std::sync::{Arc, Mutex};
 
 /// Server event `wl_output.description`.
 ///
 /// Opcode 5; available since version 4. The structure contains the receiver and arguments in XML order.
-/// Encoding checks wire values and receiver metadata; compositor semantics are not validated.
+/// Encoding and decoding check wire values and receiver metadata; compositor semantics are not validated.
+/// Decoding consumes the complete payload and updates wire object metadata when needed.
 /// The caller handles compositor policy and message contents.
 /// ```xml
 /// <event name="description" since="4">
@@ -66,5 +69,31 @@ impl CommandWriter for WlOutputDescriptionEvent {
         }
         writer.next_string(&self.description).await?;
         Ok(())
+    }
+}
+
+impl CommandReader<Self> for WlOutputDescriptionEvent {
+    async fn read(
+        object_id: u32,
+        opcode: u16,
+        reader: &mut FdPayloadReader<'_>,
+        state: &Arc<Mutex<ClientState>>,
+    ) -> Result<Self, FdReaderError> {
+        Self::event_interface(
+            state,
+            object_id,
+            opcode,
+            Self::OPCODE,
+            "wl_output",
+            Self::SINCE,
+        )?;
+        let description = reader.next_string().await?;
+        if reader.remaining_quota() != 0 {
+            return Err(FdReaderError::InvalidProtocol);
+        }
+        Ok(Self {
+            object_id,
+            description,
+        })
     }
 }

@@ -1,12 +1,15 @@
 use crate::protocol::ClientState;
+use crate::protocol::{CommandReader, CommandReaderExt};
 use crate::protocol::{CommandWriter, CommandWriterExt, ObjectInteface};
+use crate::utils::reader::{FdPayloadReader, FdReaderError};
 use crate::utils::writer::{FdPayloadWriter, FdWriterError};
 use std::sync::{Arc, Mutex};
 
 /// Server event `wl_data_device.data_offer`.
 ///
 /// Opcode 0; available since version 1. The structure contains the receiver and arguments in XML order.
-/// Encoding checks wire values and receiver metadata; compositor semantics are not validated.
+/// Encoding and decoding check wire values and receiver metadata; compositor semantics are not validated.
+/// Decoding consumes the complete payload and updates wire object metadata when needed.
 /// The caller handles compositor policy and message contents.
 /// ```xml
 /// <event name="data_offer">
@@ -65,5 +68,35 @@ impl CommandWriter for WlDataDeviceDataOfferEvent {
                 .map_err(|_| FdWriterError::InvalidProtocol)?;
         }
         Ok(())
+    }
+}
+
+impl CommandReader<Self> for WlDataDeviceDataOfferEvent {
+    async fn read(
+        object_id: u32,
+        opcode: u16,
+        reader: &mut FdPayloadReader<'_>,
+        state: &Arc<Mutex<ClientState>>,
+    ) -> Result<Self, FdReaderError> {
+        let parent = Self::event_interface(
+            state,
+            object_id,
+            opcode,
+            Self::OPCODE,
+            "wl_data_device",
+            Self::SINCE,
+        )?;
+        let id = reader.next_u32().await?;
+        if reader.remaining_quota() != 0 {
+            return Err(FdReaderError::InvalidProtocol);
+        }
+        {
+            let interface = ObjectInteface::from_name("wl_data_offer", parent.version().min(4))
+                .ok_or(FdReaderError::InvalidProtocol)?;
+            Self::read_state(state)?
+                .register_object(id, interface, true)
+                .map_err(|_| FdReaderError::InvalidProtocol)?;
+        }
+        Ok(Self { object_id, id })
     }
 }

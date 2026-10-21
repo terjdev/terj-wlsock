@@ -3,7 +3,11 @@ use std::{os::unix::net::UnixStream, sync::Arc, sync::Mutex};
 use tokio::{io::unix::AsyncFd, net::UnixStream as TokioUnixStream, runtime::Handle, sync::mpsc};
 use tokio_util::sync::CancellationToken;
 
-use crate::{client::{CommandRecv, CommandSend, CreationError, Options}, protocol::{ClientState, DisconnectReason}};
+use crate::{
+    client::{CommandRecv, CommandSend, CreationError, Options},
+    protocol::{ClientError, ClientState, CommandEvent, DisconnectReason},
+    utils::reader::{FdPayloadReader, FdReader, FdReaderError},
+};
 
 pub struct Socket {
     worker: Option<tokio::task::JoinHandle<()>>,
@@ -36,7 +40,15 @@ impl Socket {
         let cancelation_handle = cancelation_token.clone();
 
         let worker = runtime.spawn(async move {
-            handle_client(fd_read, fd_write, send_rx, recv_tx, options, cancelation_handle).await;
+            handle_client(
+                fd_read,
+                fd_write,
+                send_rx,
+                recv_tx,
+                options,
+                cancelation_handle,
+            )
+            .await;
         });
 
         Ok((
@@ -69,12 +81,63 @@ async fn handle_client(
             reason = read_events(fd_read, state.clone(), recv_tx.clone()) => {
                 reason
             },
-            reason = write_requests(fd_write, state, send_rx) => {
+            /*reason = write_requests(fd_write, state, send_rx) => {
                 reason
-            },
+            }, TODO: implement */
         }
     };
 
     // TODO: review
     let _ = recv_tx.send(CommandRecv::Disconnect { reason }).await;
+}
+
+async fn read_events(
+    fd: AsyncFd<UnixStream>,
+    state: Arc<Mutex<ClientState>>,
+    recv_tx: mpsc::Sender<CommandRecv>,
+) -> DisconnectReason {
+    let mut reader = FdReader::new(fd);
+
+    loop {
+        let object_id = match reader.next_u32().await {
+            Ok(id) => {
+                id // TODO: fix issue when partially received object ID also returns EOF instead of protocol error.
+            }
+            Err(FdReaderError::EndOfStream) => {
+                return DisconnectReason::Server;
+            }
+            Err(error) => {
+                return DisconnectReason::Error(ClientError::Read(error));
+            }
+        };
+
+        let command = match read_event(object_id, &mut reader, &state).await {
+            Ok(command) => command,
+            Err(error) => {
+                return DisconnectReason::Error(ClientError::Read(error));
+            }
+        };
+
+        if recv_tx.send(CommandRecv::Event { command }).await.is_err() {
+            return DisconnectReason::Client;
+        }
+    }
+}
+
+async fn read_event(
+    object_id: u32,
+    reader: &mut FdReader,
+    state: &Arc<Mutex<ClientState>>,
+) -> Result<CommandEvent, FdReaderError> {
+    use crate::protocol::CommandReader as _;
+    let word = reader.next_u32().await?;
+    let size = (word >> 16) as usize;
+    let opcode = (word & 0xffff) as u16;
+
+    if size < 8 || size % 4 != 0 {
+        return Err(FdReaderError::InvalidProtocol);
+    }
+
+    let mut payload = FdPayloadReader::new(reader, size - 8)?;
+    CommandEvent::read(object_id, opcode, &mut payload, state).await
 }

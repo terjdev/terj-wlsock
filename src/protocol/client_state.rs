@@ -1,4 +1,4 @@
-//! Stores the interface metadata needed to decode one connection's messages.
+//! Stores the interface metadata needed to encode and decode one connection's messages.
 
 use crate::protocol::ObjectInteface;
 use std::collections::{HashMap, hash_map::Entry};
@@ -26,8 +26,8 @@ pub enum RegisterObjectError {
 /// The compositor must reject operations on resources it has already destroyed.
 ///
 /// ID 1 always denotes wl_display at version 1. Client-created IDs remain in
-/// the table until delete_id is encoded; server IDs can be removed immediately
-/// upon a destructor because they do not receive delete_id acknowledgements.
+/// the table until delete_id is encoded or decoded. Server IDs can be removed
+/// immediately upon a destructor because they do not receive delete_id acknowledgements.
 /// These removals maintain the wire namespace rather than resource lifetimes.
 ///
 /// ```xml
@@ -94,9 +94,9 @@ impl ClientState {
         }
     }
 
-    /// Removes a client ID after its delete_id acknowledgement is encoded.
+    /// Removes a client ID after its delete_id acknowledgement is encoded or decoded.
     ///
-    /// The caller checks the range and existence before encoding the event.
+    /// The caller validates the range and existence before applying the acknowledgement.
     /// Repeated removal is harmless; no compositor lifetime state is inspected.
     pub(crate) fn delete_id(&mut self, id: u32) {
         if (2..SERVER_ID_START).contains(&id) {

@@ -3,12 +3,8 @@ use crate::protocol;
 /// Reports connection lifecycle changes, incoming requests, and transport errors.
 #[derive(Debug)]
 pub enum CommandRecv {
-    Event {
-        command: protocol::CommandEvent,
-    },
-    Disconnect {
-        reason: protocol::DisconnectReason,
-    },
+    Event { command: protocol::CommandEvent },
+    Disconnect { reason: protocol::DisconnectReason },
 }
 
 #[cfg(test)]

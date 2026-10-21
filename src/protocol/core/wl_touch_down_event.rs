@@ -1,12 +1,15 @@
 use crate::protocol::ClientState;
+use crate::protocol::{CommandReader, CommandReaderExt};
 use crate::protocol::{CommandWriter, CommandWriterExt};
+use crate::utils::reader::{FdPayloadReader, FdReaderError};
 use crate::utils::writer::{FdPayloadWriter, FdWriter, FdWriterError};
 use std::sync::{Arc, Mutex};
 
 /// Server event `wl_touch.down`.
 ///
 /// Opcode 0; available since version 1. The structure contains the receiver and arguments in XML order.
-/// Encoding checks wire values and receiver metadata; compositor semantics are not validated.
+/// Encoding and decoding check wire values and receiver metadata; compositor semantics are not validated.
+/// Decoding consumes the complete payload and updates wire object metadata when needed.
 /// The caller handles compositor policy and message contents.
 /// ```xml
 /// <event name="down">
@@ -80,5 +83,41 @@ impl CommandWriter for WlTouchDownEvent {
         writer.next_fixed(self.x).await?;
         writer.next_fixed(self.y).await?;
         Ok(())
+    }
+}
+
+impl CommandReader<Self> for WlTouchDownEvent {
+    async fn read(
+        object_id: u32,
+        opcode: u16,
+        reader: &mut FdPayloadReader<'_>,
+        state: &Arc<Mutex<ClientState>>,
+    ) -> Result<Self, FdReaderError> {
+        Self::event_interface(
+            state,
+            object_id,
+            opcode,
+            Self::OPCODE,
+            "wl_touch",
+            Self::SINCE,
+        )?;
+        let serial = reader.next_u32().await?;
+        let time = reader.next_u32().await?;
+        let surface = reader.next_u32().await?;
+        let id = reader.next_i32().await?;
+        let x = reader.next_fixed().await?;
+        let y = reader.next_fixed().await?;
+        if reader.remaining_quota() != 0 {
+            return Err(FdReaderError::InvalidProtocol);
+        }
+        Ok(Self {
+            object_id,
+            serial,
+            time,
+            surface,
+            id,
+            x,
+            y,
+        })
     }
 }

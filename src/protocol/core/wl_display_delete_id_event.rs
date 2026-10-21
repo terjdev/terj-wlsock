@@ -1,12 +1,15 @@
 use crate::protocol::ClientState;
+use crate::protocol::{CommandReader, CommandReaderExt};
 use crate::protocol::{CommandWriter, CommandWriterExt};
+use crate::utils::reader::{FdPayloadReader, FdReaderError};
 use crate::utils::writer::{FdPayloadWriter, FdWriterError};
 use std::sync::{Arc, Mutex};
 
 /// Server event `wl_display.delete_id`.
 ///
 /// Opcode 1; available since version 1. The structure contains the receiver and arguments in XML order.
-/// Encoding checks wire values and receiver metadata; compositor semantics are not validated.
+/// Encoding and decoding check wire values and receiver metadata; compositor semantics are not validated.
+/// Decoding consumes the complete payload and updates wire object metadata when needed.
 /// The caller handles compositor policy and message contents.
 /// ```xml
 /// <event name="delete_id">
@@ -65,5 +68,35 @@ impl CommandWriter for WlDisplayDeleteIdEvent {
             state.delete_id(self.id);
         }
         Ok(())
+    }
+}
+
+impl CommandReader<Self> for WlDisplayDeleteIdEvent {
+    async fn read(
+        object_id: u32,
+        opcode: u16,
+        reader: &mut FdPayloadReader<'_>,
+        state: &Arc<Mutex<ClientState>>,
+    ) -> Result<Self, FdReaderError> {
+        Self::event_interface(
+            state,
+            object_id,
+            opcode,
+            Self::OPCODE,
+            "wl_display",
+            Self::SINCE,
+        )?;
+        let id = reader.next_u32().await?;
+        if reader.remaining_quota() != 0 {
+            return Err(FdReaderError::InvalidProtocol);
+        }
+        {
+            let mut state = Self::read_state(state)?;
+            if !state.can_delete_id(id) {
+                return Err(FdReaderError::InvalidProtocol);
+            }
+            state.delete_id(id);
+        }
+        Ok(Self { object_id, id })
     }
 }

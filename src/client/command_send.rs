@@ -6,9 +6,7 @@ use crate::protocol;
 /// it does not acknowledge delivery to the client.
 #[derive(Debug)]
 pub enum CommandSend {
-    Request {
-        command: protocol::CommandRequest,
-    },
+    Request { command: protocol::CommandRequest },
 }
 
 #[cfg(test)]
