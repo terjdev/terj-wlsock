@@ -48,13 +48,13 @@ impl CommandWriter for WlCallbackDoneEvent {
         writer: &mut FdPayloadWriter<'_>,
         state: &Arc<Mutex<ClientState>>,
     ) -> Result<(), FdWriterError> {
-        Self::event_interface(state, self.object_id, "wl_callback", Self::SINCE)?;
+        Self::writer_event_interface(state, self.object_id, "wl_callback", Self::SINCE)?;
         if self.payload_size() != writer.remaining_quota() {
             return Err(FdWriterError::InvalidProtocol);
         }
         writer.next_u32(self.callback_data).await?;
         {
-            let mut state = Self::write_state(state)?;
+            let mut state = Self::writer_state(state)?;
             state.release_server_id(self.object_id);
         }
         Ok(())
@@ -68,7 +68,7 @@ impl CommandReader<Self> for WlCallbackDoneEvent {
         reader: &mut FdPayloadReader<'_>,
         state: &Arc<Mutex<ClientState>>,
     ) -> Result<Self, FdReaderError> {
-        Self::event_interface(
+        Self::reader_event_interface(
             state,
             object_id,
             opcode,
@@ -80,7 +80,7 @@ impl CommandReader<Self> for WlCallbackDoneEvent {
         if reader.remaining_quota() != 0 {
             return Err(FdReaderError::InvalidProtocol);
         }
-        Self::read_state(state)?.release_server_id(object_id);
+        Self::reader_state(state)?.release_server_id(object_id);
         Ok(Self {
             object_id,
             callback_data,

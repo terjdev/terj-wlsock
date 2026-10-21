@@ -43,14 +43,14 @@ pub trait CommandReader<T> {
 /// A returned state guard must be released before awaiting socket I/O.
 trait CommandReaderExt: CommandReader<Self> + Sized {
     /// Locks connection state, converting lock poisoning into a protocol error.
-    fn read_state(
+    fn reader_state(
         state: &Arc<Mutex<ClientState>>,
     ) -> Result<MutexGuard<'_, ClientState>, FdReaderError> {
         state.lock().map_err(|_| FdReaderError::InvalidProtocol)
     }
 
     /// Checks an event receiver, opcode, interface, and negotiated version.
-    fn event_interface(
+    fn reader_event_interface(
         state: &Arc<Mutex<ClientState>>,
         id: u32,
         opcode: u16,
@@ -58,7 +58,7 @@ trait CommandReaderExt: CommandReader<Self> + Sized {
         name: &str,
         since: u32,
     ) -> Result<ObjectInteface, FdReaderError> {
-        let interface = Self::read_state(state)?
+        let interface = Self::reader_state(state)?
             .object_interface(id)
             .ok_or(FdReaderError::InvalidProtocol)?;
         if opcode != expected_opcode || interface.name() != name || interface.version() < since {
@@ -69,7 +69,7 @@ trait CommandReaderExt: CommandReader<Self> + Sized {
 
     /// Checks the request receiver, opcode, interface, and minimum version.
     /// Returns a copy of the interface without retaining a lock across I/O.
-    fn request_interface(
+    fn reader_request_interface(
         state: &Arc<Mutex<ClientState>>,
         id: u32,
         opcode: u16,
@@ -77,7 +77,7 @@ trait CommandReaderExt: CommandReader<Self> + Sized {
         name: &str,
         since: u32,
     ) -> Result<ObjectInteface, FdReaderError> {
-        let ifc = Self::read_state(state)?
+        let ifc = Self::reader_state(state)?
             .object_interface(id)
             .ok_or(FdReaderError::InvalidProtocol)?;
         if opcode != expected_opcode || ifc.name() != name || ifc.version() < since {
@@ -113,28 +113,45 @@ pub trait CommandWriter {
     ) -> impl Future<Output = Result<(), FdWriterError>> + Send;
 }
 
-/// Extends event encoders with explicit protocol-message validation.
+/// Extends message encoders with explicit protocol-message validation.
 ///
 /// Nested value encoders also implement CommandWriter, so receiver checks must
 /// only be called when encoding a message with an actual receiving object.
 /// A returned state guard must be released before awaiting socket I/O.
 trait CommandWriterExt: CommandWriter + Sized {
     /// Locks connection state, converting lock poisoning into a protocol error.
-    fn write_state(
+    fn writer_state(
         state: &Arc<Mutex<ClientState>>,
     ) -> Result<MutexGuard<'_, ClientState>, FdWriterError> {
         state.lock().map_err(|_| FdWriterError::InvalidProtocol)
     }
 
-    /// Checks the event receiver's interface and minimum negotiated version.
-    /// Returns a copy of the interface without retaining a lock across I/O.
-    fn event_interface(
+    /// Checks a request receiver's interface and minimum negotiated version.
+    /// Returns metadata without retaining a lock across socket I/O.
+    fn writer_request_interface(
         state: &Arc<Mutex<ClientState>>,
         id: u32,
         name: &str,
         since: u32,
     ) -> Result<ObjectInteface, FdWriterError> {
-        let ifc = Self::write_state(state)?
+        let interface = Self::writer_state(state)?
+            .object_interface(id)
+            .ok_or(FdWriterError::InvalidProtocol)?;
+        if interface.name() != name || interface.version() < since {
+            return Err(FdWriterError::InvalidProtocol);
+        }
+        Ok(interface)
+    }
+
+    /// Checks the event receiver's interface and minimum negotiated version.
+    /// Returns a copy of the interface without retaining a lock across I/O.
+    fn writer_event_interface(
+        state: &Arc<Mutex<ClientState>>,
+        id: u32,
+        name: &str,
+        since: u32,
+    ) -> Result<ObjectInteface, FdWriterError> {
+        let ifc = Self::writer_state(state)?
             .object_interface(id)
             .ok_or(FdWriterError::InvalidProtocol)?;
         if ifc.name() != name || ifc.version() < since {

@@ -1,3 +1,4 @@
+use crate::utils::writer::FdPayloadWriter;
 use std::{os::unix::net::UnixStream, sync::Arc, sync::Mutex};
 
 use tokio::{io::unix::AsyncFd, net::UnixStream as TokioUnixStream, runtime::Handle, sync::mpsc};
@@ -5,8 +6,11 @@ use tokio_util::sync::CancellationToken;
 
 use crate::{
     client::{CommandRecv, CommandSend, CreationError, Options},
-    protocol::{ClientError, ClientState, CommandEvent, DisconnectReason},
-    utils::reader::{FdPayloadReader, FdReader, FdReaderError},
+    protocol::{ClientError, ClientState, CommandEvent, CommandRequest, DisconnectReason},
+    utils::{
+        reader::{FdPayloadReader, FdReader, FdReaderError},
+        writer::{FdWriter, FdWriterError},
+    },
 };
 
 pub struct Socket {
@@ -40,15 +44,7 @@ impl Socket {
         let cancelation_handle = cancelation_token.clone();
 
         let worker = runtime.spawn(async move {
-            handle_client(
-                fd_read,
-                fd_write,
-                send_rx,
-                recv_tx,
-                options,
-                cancelation_handle,
-            )
-            .await;
+            handle_client(fd_read, fd_write, send_rx, recv_tx, cancelation_handle).await;
         });
 
         Ok((
@@ -67,7 +63,6 @@ async fn handle_client(
     fd_write: AsyncFd<UnixStream>,
     send_rx: mpsc::Receiver<CommandSend>,
     recv_tx: mpsc::Sender<CommandRecv>,
-    options: Options,
     cancelation_token: CancellationToken,
 ) {
     let state = Arc::new(Mutex::new(ClientState::default()));
@@ -81,9 +76,9 @@ async fn handle_client(
             reason = read_events(fd_read, state.clone(), recv_tx.clone()) => {
                 reason
             },
-            /*reason = write_requests(fd_write, state, send_rx) => {
+            reason = write_requests(fd_write, state, send_rx) => {
                 reason
-            }, TODO: implement */
+            },
         }
     };
 
@@ -140,4 +135,50 @@ async fn read_event(
 
     let mut payload = FdPayloadReader::new(reader, size - 8)?;
     CommandEvent::read(object_id, opcode, &mut payload, state).await
+}
+
+async fn write_requests(
+    fd: AsyncFd<UnixStream>,
+    state: Arc<Mutex<ClientState>>,
+    mut send_rx: mpsc::Receiver<CommandSend>,
+) -> DisconnectReason {
+    let mut writer = FdWriter::new(fd);
+
+    while let Some(command) = send_rx.recv().await {
+        let CommandSend::Request { command } = command;
+
+        if let Err(error) = write_request(command, &mut writer, &state).await {
+            return DisconnectReason::Error(ClientError::Write(error));
+        }
+    }
+
+    DisconnectReason::Client
+}
+
+async fn write_request(
+    command: CommandRequest,
+    writer: &mut FdWriter,
+    state: &Arc<Mutex<ClientState>>,
+) -> Result<(), FdWriterError> {
+    use crate::protocol::CommandWriter as _;
+    let payload_size = command.payload_size();
+    let size = payload_size
+        .checked_add(8)
+        .filter(|size| *size <= usize::from(u16::MAX) && *size % 4 == 0)
+        .ok_or(FdWriterError::InvalidProtocol)?;
+
+    let object_id = command.object_id();
+    let opcode = command.opcode();
+    let header_word = ((size as u32) << 16) | u32::from(opcode);
+
+    writer.next_u32(object_id).await?;
+    writer.next_u32(header_word).await?;
+
+    {
+        let mut payload = FdPayloadWriter::new(writer, payload_size)?;
+        command.write(&mut payload, state).await?;
+    }
+
+    writer.flush().await?;
+    Ok(())
 }

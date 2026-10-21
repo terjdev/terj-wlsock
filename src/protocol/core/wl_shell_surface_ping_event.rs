@@ -48,7 +48,7 @@ impl CommandWriter for WlShellSurfacePingEvent {
         writer: &mut FdPayloadWriter<'_>,
         state: &Arc<Mutex<ClientState>>,
     ) -> Result<(), FdWriterError> {
-        Self::event_interface(state, self.object_id, "wl_shell_surface", Self::SINCE)?;
+        Self::writer_event_interface(state, self.object_id, "wl_shell_surface", Self::SINCE)?;
         if self.payload_size() != writer.remaining_quota() {
             return Err(FdWriterError::InvalidProtocol);
         }
@@ -64,7 +64,7 @@ impl CommandReader<Self> for WlShellSurfacePingEvent {
         reader: &mut FdPayloadReader<'_>,
         state: &Arc<Mutex<ClientState>>,
     ) -> Result<Self, FdReaderError> {
-        Self::event_interface(
+        Self::reader_event_interface(
             state,
             object_id,
             opcode,

@@ -55,16 +55,16 @@ impl CommandWriter for WlDisplayDeleteIdEvent {
         writer: &mut FdPayloadWriter<'_>,
         state: &Arc<Mutex<ClientState>>,
     ) -> Result<(), FdWriterError> {
-        Self::event_interface(state, self.object_id, "wl_display", Self::SINCE)?;
+        Self::writer_event_interface(state, self.object_id, "wl_display", Self::SINCE)?;
         if self.payload_size() != writer.remaining_quota() {
             return Err(FdWriterError::InvalidProtocol);
         }
-        if !Self::write_state(state)?.can_delete_id(self.id) {
+        if !Self::writer_state(state)?.can_delete_id(self.id) {
             return Err(FdWriterError::InvalidProtocol);
         }
         writer.next_u32(self.id).await?;
         {
-            let mut state = Self::write_state(state)?;
+            let mut state = Self::writer_state(state)?;
             state.delete_id(self.id);
         }
         Ok(())
@@ -78,7 +78,7 @@ impl CommandReader<Self> for WlDisplayDeleteIdEvent {
         reader: &mut FdPayloadReader<'_>,
         state: &Arc<Mutex<ClientState>>,
     ) -> Result<Self, FdReaderError> {
-        Self::event_interface(
+        Self::reader_event_interface(
             state,
             object_id,
             opcode,
@@ -91,7 +91,7 @@ impl CommandReader<Self> for WlDisplayDeleteIdEvent {
             return Err(FdReaderError::InvalidProtocol);
         }
         {
-            let mut state = Self::read_state(state)?;
+            let mut state = Self::reader_state(state)?;
             if !state.can_delete_id(id) {
                 return Err(FdReaderError::InvalidProtocol);
             }

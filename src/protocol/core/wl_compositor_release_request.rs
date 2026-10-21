@@ -1,14 +1,19 @@
 use crate::protocol::ClientState;
 use crate::protocol::{CommandReader, CommandReaderExt};
+use crate::protocol::{CommandWriter, CommandWriterExt};
 use crate::utils::reader::{FdPayloadReader, FdReaderError};
+use crate::utils::writer::{FdPayloadWriter, FdWriterError};
 use std::sync::{Arc, Mutex};
 
 /// Client request `wl_compositor.release`.
 ///
 /// Opcode 2; available since version 7. The message ends the receiver's lifetime.
 /// The structure contains the receiver and arguments in XML order.
-/// Decoding checks wire framing and receiver metadata; object arguments belong to the compositor.
+/// Encoding and decoding check wire framing and receiver metadata; object semantics belong to the compositor.
 /// The caller handles compositor policy and message contents.
+/// Client encoding checks the complete payload quota before writing arguments.
+/// New object IDs are registered before payload I/O; client IDs remain reserved
+/// after destruction until the server acknowledges them with delete_id.
 /// ```xml
 /// <request name="release" type="destructor" since="7">
 ///       <description summary="destroy wl_compositor">
@@ -34,7 +39,7 @@ impl CommandReader<Self> for WlCompositorReleaseRequest {
         reader: &mut FdPayloadReader<'_>,
         state: &Arc<Mutex<ClientState>>,
     ) -> Result<Self, FdReaderError> {
-        Self::request_interface(
+        Self::reader_request_interface(
             state,
             object_id,
             opcode,
@@ -46,9 +51,33 @@ impl CommandReader<Self> for WlCompositorReleaseRequest {
             return Err(FdReaderError::InvalidProtocol);
         }
         {
-            let mut state = Self::read_state(state)?;
+            let mut state = Self::reader_state(state)?;
             state.release_server_id(object_id);
         }
         Ok(Self { object_id })
+    }
+}
+
+impl CommandWriter for WlCompositorReleaseRequest {
+    fn object_id(&self) -> u32 {
+        self.object_id
+    }
+    fn opcode(&self) -> u16 {
+        Self::OPCODE
+    }
+    fn payload_size(&self) -> usize {
+        Self::total_payload_size(&[])
+    }
+    async fn write(
+        self,
+        writer: &mut FdPayloadWriter<'_>,
+        state: &Arc<Mutex<ClientState>>,
+    ) -> Result<(), FdWriterError> {
+        Self::writer_request_interface(state, self.object_id, "wl_compositor", Self::SINCE)?;
+        if self.payload_size() != writer.remaining_quota() {
+            return Err(FdWriterError::InvalidProtocol);
+        }
+        Self::writer_state(state)?.release_server_id(self.object_id);
+        Ok(())
     }
 }

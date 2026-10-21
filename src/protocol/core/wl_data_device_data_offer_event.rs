@@ -54,13 +54,14 @@ impl CommandWriter for WlDataDeviceDataOfferEvent {
         writer: &mut FdPayloadWriter<'_>,
         state: &Arc<Mutex<ClientState>>,
     ) -> Result<(), FdWriterError> {
-        let parent = Self::event_interface(state, self.object_id, "wl_data_device", Self::SINCE)?;
+        let parent =
+            Self::writer_event_interface(state, self.object_id, "wl_data_device", Self::SINCE)?;
         if self.payload_size() != writer.remaining_quota() {
             return Err(FdWriterError::InvalidProtocol);
         }
         writer.next_u32(self.id).await?;
         {
-            let mut state = Self::write_state(state)?;
+            let mut state = Self::writer_state(state)?;
             let new_interface = ObjectInteface::from_name("wl_data_offer", parent.version().min(4))
                 .ok_or(FdWriterError::InvalidProtocol)?;
             state
@@ -78,7 +79,7 @@ impl CommandReader<Self> for WlDataDeviceDataOfferEvent {
         reader: &mut FdPayloadReader<'_>,
         state: &Arc<Mutex<ClientState>>,
     ) -> Result<Self, FdReaderError> {
-        let parent = Self::event_interface(
+        let parent = Self::reader_event_interface(
             state,
             object_id,
             opcode,
@@ -93,7 +94,7 @@ impl CommandReader<Self> for WlDataDeviceDataOfferEvent {
         {
             let interface = ObjectInteface::from_name("wl_data_offer", parent.version().min(4))
                 .ok_or(FdReaderError::InvalidProtocol)?;
-            Self::read_state(state)?
+            Self::reader_state(state)?
                 .register_object(id, interface, true)
                 .map_err(|_| FdReaderError::InvalidProtocol)?;
         }

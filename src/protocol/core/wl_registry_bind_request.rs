@@ -1,14 +1,19 @@
 use super::WlRegistryBindId;
 use crate::protocol::ClientState;
 use crate::protocol::{CommandReader, CommandReaderExt, ObjectInteface};
+use crate::protocol::{CommandWriter, CommandWriterExt};
 use crate::utils::reader::{FdPayloadReader, FdReaderError};
+use crate::utils::writer::{FdPayloadWriter, FdWriter, FdWriterError};
 use std::sync::{Arc, Mutex};
 
 /// Client request `wl_registry.bind`.
 ///
 /// Opcode 0; available since version 1. The structure contains the receiver and arguments in XML order.
-/// Decoding checks wire framing and receiver metadata; object arguments belong to the compositor.
+/// Encoding and decoding check wire framing and receiver metadata; object semantics belong to the compositor.
 /// The caller handles compositor policy and message contents.
+/// Client encoding checks the complete payload quota before writing arguments.
+/// New object IDs are registered before payload I/O; client IDs remain reserved
+/// after destruction until the server acknowledges them with delete_id.
 /// ```xml
 /// <request name="bind">
 ///       <description summary="bind an object to the display">
@@ -41,7 +46,7 @@ impl CommandReader<Self> for WlRegistryBindRequest {
         reader: &mut FdPayloadReader<'_>,
         state: &Arc<Mutex<ClientState>>,
     ) -> Result<Self, FdReaderError> {
-        Self::request_interface(
+        Self::reader_request_interface(
             state,
             object_id,
             opcode,
@@ -59,7 +64,7 @@ impl CommandReader<Self> for WlRegistryBindRequest {
             return Err(FdReaderError::InvalidProtocol);
         }
         {
-            let mut state = Self::read_state(state)?;
+            let mut state = Self::reader_state(state)?;
             let new_interface = ObjectInteface::from_name(&id.interface, id.version)
                 .ok_or(FdReaderError::InvalidProtocol)?;
             state
@@ -71,5 +76,41 @@ impl CommandReader<Self> for WlRegistryBindRequest {
             name,
             id,
         })
+    }
+}
+
+impl CommandWriter for WlRegistryBindRequest {
+    fn object_id(&self) -> u32 {
+        self.object_id
+    }
+    fn opcode(&self) -> u16 {
+        Self::OPCODE
+    }
+    fn payload_size(&self) -> usize {
+        Self::total_payload_size(&[Some(4), Some(self.id.payload_size())])
+    }
+    async fn write(
+        self,
+        writer: &mut FdPayloadWriter<'_>,
+        state: &Arc<Mutex<ClientState>>,
+    ) -> Result<(), FdWriterError> {
+        Self::writer_request_interface(state, self.object_id, "wl_registry", Self::SINCE)?;
+        if self.payload_size() != writer.remaining_quota() {
+            return Err(FdWriterError::InvalidProtocol);
+        }
+        if !FdWriter::is_valid_string(&self.id.interface) {
+            return Err(FdWriterError::InvalidProtocol);
+        }
+        {
+            let mut state = Self::writer_state(state)?;
+            let new_interface = ObjectInteface::from_name(&self.id.interface, self.id.version)
+                .ok_or(FdWriterError::InvalidProtocol)?;
+            state
+                .register_object(self.id.id, new_interface, false)
+                .map_err(|_| FdWriterError::InvalidProtocol)?;
+        }
+        writer.next_u32(self.name).await?;
+        self.id.write(writer, state).await?;
+        Ok(())
     }
 }

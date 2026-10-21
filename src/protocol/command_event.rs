@@ -424,7 +424,7 @@ impl CommandReader<Self> for CommandEvent {
         reader: &mut FdPayloadReader<'_>,
         state: &Arc<Mutex<ClientState>>,
     ) -> Result<Self, FdReaderError> {
-        let interface = Self::read_state(state)?
+        let interface = Self::reader_state(state)?
             .object_interface(object_id)
             .ok_or(FdReaderError::InvalidProtocol)?;
         match interface.name() {

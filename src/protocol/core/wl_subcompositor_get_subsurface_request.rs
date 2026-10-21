@@ -1,13 +1,18 @@
 use crate::protocol::ClientState;
 use crate::protocol::{CommandReader, CommandReaderExt, ObjectInteface};
+use crate::protocol::{CommandWriter, CommandWriterExt};
 use crate::utils::reader::{FdPayloadReader, FdReaderError};
+use crate::utils::writer::{FdPayloadWriter, FdWriterError};
 use std::sync::{Arc, Mutex};
 
 /// Client request `wl_subcompositor.get_subsurface`.
 ///
 /// Opcode 1; available since version 1. The structure contains the receiver and arguments in XML order.
-/// Decoding checks wire framing and receiver metadata; object arguments belong to the compositor.
+/// Encoding and decoding check wire framing and receiver metadata; object semantics belong to the compositor.
 /// The caller handles compositor policy and message contents.
+/// Client encoding checks the complete payload quota before writing arguments.
+/// New object IDs are registered before payload I/O; client IDs remain reserved
+/// after destruction until the server acknowledges them with delete_id.
 /// ```xml
 /// <request name="get_subsurface">
 ///       <description summary="give a surface the role sub-surface">
@@ -63,7 +68,7 @@ impl CommandReader<Self> for WlSubcompositorGetSubsurfaceRequest {
         reader: &mut FdPayloadReader<'_>,
         state: &Arc<Mutex<ClientState>>,
     ) -> Result<Self, FdReaderError> {
-        let receiver_interface = Self::request_interface(
+        let receiver_interface = Self::reader_request_interface(
             state,
             object_id,
             opcode,
@@ -78,7 +83,7 @@ impl CommandReader<Self> for WlSubcompositorGetSubsurfaceRequest {
             return Err(FdReaderError::InvalidProtocol);
         }
         {
-            let mut state = Self::read_state(state)?;
+            let mut state = Self::reader_state(state)?;
             let new_interface =
                 ObjectInteface::from_name("wl_subsurface", receiver_interface.version().min(1))
                     .ok_or(FdReaderError::InvalidProtocol)?;
@@ -92,5 +97,41 @@ impl CommandReader<Self> for WlSubcompositorGetSubsurfaceRequest {
             surface,
             parent,
         })
+    }
+}
+
+impl CommandWriter for WlSubcompositorGetSubsurfaceRequest {
+    fn object_id(&self) -> u32 {
+        self.object_id
+    }
+    fn opcode(&self) -> u16 {
+        Self::OPCODE
+    }
+    fn payload_size(&self) -> usize {
+        Self::total_payload_size(&[Some(4), Some(4), Some(4)])
+    }
+    async fn write(
+        self,
+        writer: &mut FdPayloadWriter<'_>,
+        state: &Arc<Mutex<ClientState>>,
+    ) -> Result<(), FdWriterError> {
+        let receiver_interface =
+            Self::writer_request_interface(state, self.object_id, "wl_subcompositor", Self::SINCE)?;
+        if self.payload_size() != writer.remaining_quota() {
+            return Err(FdWriterError::InvalidProtocol);
+        }
+        {
+            let mut state = Self::writer_state(state)?;
+            let new_interface =
+                ObjectInteface::from_name("wl_subsurface", receiver_interface.version().min(1))
+                    .ok_or(FdWriterError::InvalidProtocol)?;
+            state
+                .register_object(self.id, new_interface, false)
+                .map_err(|_| FdWriterError::InvalidProtocol)?;
+        }
+        writer.next_u32(self.id).await?;
+        writer.next_u32(self.surface).await?;
+        writer.next_u32(self.parent).await?;
+        Ok(())
     }
 }

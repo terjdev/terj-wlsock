@@ -30,6 +30,11 @@ pub enum RegisterObjectError {
 /// immediately upon a destructor because they do not receive delete_id acknowledgements.
 /// These removals maintain the wire namespace rather than resource lifetimes.
 ///
+/// Client request encoders register new IDs before writing payload bytes so an
+/// immediate server response can be decoded concurrently. Encoding failure or
+/// cancellation after registration requires closing the connection; registrations
+/// are not rolled back.
+///
 /// ```xml
 /// <event name="delete_id">
 ///       <description summary="acknowledge object ID deletion">
