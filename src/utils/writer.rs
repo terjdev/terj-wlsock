@@ -1,0 +1,683 @@
+//! Writes native-endian Wayland values and file descriptors to Unix sockets.
+
+use std::{
+    io::{self, IoSlice},
+    mem::MaybeUninit,
+    os::{fd::AsFd, fd::OwnedFd, unix::net::UnixStream},
+};
+
+use rustix::net::{SendAncillaryBuffer, SendAncillaryMessage, SendFlags, sendmsg};
+use thiserror::Error;
+use tokio::io::unix::AsyncFd;
+
+// Fixed storage batches small messages without allocating during writes.
+const BYTES_CAPACITY: usize = 8192;
+// Linux SCM_RIGHTS permits at most 253 descriptors in one ancillary message.
+const FDS_CAPACITY: usize = 253;
+const ANCILLARY_CAPACITY: usize = rustix::cmsg_space!(ScmRights(FDS_CAPACITY));
+
+#[derive(Error, Debug)]
+pub enum FdWriterError {
+    #[error("Failed to write to the Unix socket: {0}")]
+    Io(#[source] io::Error),
+
+    #[error("The Unix socket connection is closed.")]
+    ConnectionClosed,
+
+    #[error("The Unix socket accepted zero bytes from a nonempty write.")]
+    WriteZero,
+
+    #[error("The fixed-point value must be finite and within the signed 24.8 range.")]
+    InvalidFixed,
+
+    #[error("Payload quota exceeded: requested {requested} bytes, but only {remaining} remain.")]
+    QuotaExceeded { requested: usize, remaining: usize },
+
+    #[error("Cannot queue more than {capacity} file descriptors before sending them.")]
+    TooManyFileDescriptors { capacity: usize },
+
+    #[error("The ancillary buffer is too small for the queued file descriptors.")]
+    AncillaryBufferTooSmall,
+
+    #[error("Cannot send file descriptors without at least one ordinary byte.")]
+    FdsWithoutBytes,
+
+    #[error("The writer cannot continue after an error, cancelled write, or incomplete payload.")]
+    WriterFailed,
+
+    #[error("Invalid protocol.")]
+    InvalidProtocol,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum FdWriterState {
+    Open,
+    Writing,
+    Closed,
+    Failed,
+}
+
+/// Buffered native-endian writes to a nonblocking Unix stream.
+///
+/// The socket must already be nonblocking and its Tokio runtime must remain
+/// running. All buffers are fixed arrays; construction and buffering allocate
+/// no heap memory. Headers, message sizes, strings, and padding are the caller's
+/// responsibility. Descriptors are owned until sent or until this writer drops.
+///
+/// A full buffer is sent only when more space is needed, retaining its last
+/// byte so descriptors appended after the bytes can still accompany data.
+/// Call [`Self::flush`] explicitly to send that final byte and any other
+/// buffered data. Dropping the writer performs no I/O and discards its buffers.
+///
+/// Cancelling an asynchronous operation leaves the state as `Writing`:
+/// buffered or sent prefixes cannot safely be repeated. The next operation
+/// rejects continuation and marks the writer as failed.
+pub struct FdWriter {
+    fd: AsyncFd<UnixStream>,
+    bytes_raw: [u8; BYTES_CAPACITY],
+    bytes_len: usize,
+    bytes_sent: usize,
+    fds_raw: [MaybeUninit<u8>; ANCILLARY_CAPACITY],
+    fds_buf: [Option<OwnedFd>; FDS_CAPACITY],
+    fds_len: usize,
+    state: FdWriterState,
+}
+
+impl FdWriter {
+    /// Appends a complete frame without I/O when it fits in the remaining space.
+    /// The caller checked the Open state, wire length, padding and any byte quota.
+    /// `total` is four prefix bytes plus the body and initialized suffix bytes.
+    /// Publishing the frame is synchronous, so cancellation cannot split it.
+    fn try_buffer_frame(&mut self, value: &[u8], wire_len: u32, total: usize) -> bool {
+        if total > BYTES_CAPACITY - self.bytes_len {
+            return false;
+        }
+        let start = self.bytes_len;
+        self.bytes_raw[start..start + 4].copy_from_slice(&wire_len.to_ne_bytes());
+        self.bytes_raw[start + 4..start + 4 + value.len()].copy_from_slice(value);
+        self.bytes_raw[start + 4 + value.len()..start + total].fill(0);
+        self.bytes_len = start + total;
+        true
+    }
+
+    /// Returns the encoded array size, including its length prefix and alignment.
+    /// Returns None if the length cannot fit in u32 or size arithmetic overflows.
+    /// This calculation does not require a socket or perform I/O.
+    pub(crate) fn encoded_array_size(len: usize) -> Option<usize> {
+        u32::try_from(len).ok()?;
+        len.checked_add(3)
+            .map(|n| n & !3)
+            .and_then(|n| n.checked_add(4))
+    }
+
+    /// Returns the encoded nullable-string size, including the terminating NUL.
+    /// NULL occupies only the four-byte length prefix. Returns None on overflow.
+    pub(crate) fn encoded_string_size(value: Option<&str>) -> Option<usize> {
+        match value {
+            None => Some(4),
+            Some(value) => Self::encoded_array_size(value.len().checked_add(1)?),
+        }
+    }
+
+    /// Checks a non-null string before any part of an event is written.
+    /// Message size and payload quota are checked separately by the transport.
+    pub(crate) fn is_valid_string(value: &str) -> bool {
+        !value.as_bytes().contains(&0) && Self::encoded_string_size(Some(value)).is_some()
+    }
+
+    /// Checks signed 24.8 representability without writing or changing stream state.
+    pub(crate) fn is_valid_fixed(value: f64) -> bool {
+        Self::encode_fixed(value).is_some()
+    }
+
+    /// Converts a finite signed 24.8 value, rounding halfway values away from zero.
+    fn encode_fixed(value: f64) -> Option<i32> {
+        let scaled = value * 256.0;
+        if !scaled.is_finite() || scaled < f64::from(i32::MIN) || scaled > f64::from(i32::MAX) {
+            return None;
+        }
+        Some(scaled.round() as i32)
+    }
+
+    /// Writes a UTF-8 string with its length, terminating NUL, and zero padding.
+    /// A complete frame that fits is buffered synchronously without socket I/O.
+    /// Rejects embedded NUL characters and validates the length before writing.
+    ///
+    /// # Errors
+    /// Returns an error for embedded NUL, length overflow, an oversized value,
+    /// insufficient payload quota, or a failed or closed stream.
+    pub async fn next_string(&mut self, value: &str) -> Result<(), FdWriterError> {
+        self.next_nullable_string(Some(value)).await
+    }
+
+    /// Writes a nullable string: None has length zero, and Some("") has length one.
+    ///
+    /// # Errors
+    /// Returns an error for embedded NUL, length overflow, an oversized value,
+    /// insufficient payload quota, or a failed or closed stream.
+    pub async fn next_nullable_string(&mut self, value: Option<&str>) -> Result<(), FdWriterError> {
+        self.check_state()?;
+        let result = async {
+            let Some(value) = value else {
+                return self.next_u32(0).await;
+            };
+            if !FdWriter::is_valid_string(value) {
+                return Err(FdWriterError::InvalidProtocol);
+            }
+            let len = value
+                .len()
+                .checked_add(1)
+                .ok_or(FdWriterError::InvalidProtocol)?;
+            let wire_len = u32::try_from(len).map_err(|_| FdWriterError::InvalidProtocol)?;
+            let padding = (4 - len % 4) % 4;
+            let total =
+                FdWriter::encoded_string_size(Some(value)).ok_or(FdWriterError::InvalidProtocol)?;
+
+            // A single primitive must fit within the maximum Wayland payload size.
+            if total > (usize::from(u16::MAX) & !3) - 8 {
+                return Err(FdWriterError::InvalidProtocol);
+            }
+            if self.try_buffer_frame(value.as_bytes(), wire_len, total) {
+                return Ok(());
+            }
+            self.next_u32(wire_len).await?;
+            self.next_bytes(value.as_bytes()).await?;
+            self.next_bytes(&[0; 4][..1 + padding]).await
+        }
+        .await;
+        if result.is_err() && self.state != FdWriterState::Closed {
+            self.state = FdWriterState::Failed;
+        }
+        result
+    }
+
+    /// Writes an array with its byte length and zero padding to four-byte alignment.
+    /// A complete frame that fits is buffered synchronously without socket I/O.
+    /// The encoded array length excludes padding.
+    ///
+    /// # Errors
+    /// Returns an error for length overflow, an oversized value, insufficient
+    /// payload quota, or a failed or closed stream.
+    pub async fn next_array(&mut self, value: &[u8]) -> Result<(), FdWriterError> {
+        self.check_state()?;
+        let result = async {
+            let len = u32::try_from(value.len()).map_err(|_| FdWriterError::InvalidProtocol)?;
+            let padding = (4 - value.len() % 4) % 4;
+            let total =
+                FdWriter::encoded_array_size(value.len()).ok_or(FdWriterError::InvalidProtocol)?;
+
+            // A single primitive must fit within the maximum Wayland payload size.
+            if total > (usize::from(u16::MAX) & !3) - 8 {
+                return Err(FdWriterError::InvalidProtocol);
+            }
+            if self.try_buffer_frame(value, len, total) {
+                return Ok(());
+            }
+            self.next_u32(len).await?;
+            self.next_bytes(value).await?;
+            self.next_bytes(&[0; 3][..padding]).await
+        }
+        .await;
+        if result.is_err() && self.state != FdWriterState::Closed {
+            self.state = FdWriterState::Failed;
+        }
+        result
+    }
+
+    /// Creates a writer that owns the supplied nonblocking socket.
+    pub fn new(fd: AsyncFd<UnixStream>) -> Self {
+        Self {
+            fd,
+            bytes_raw: [0; BYTES_CAPACITY],
+            bytes_len: 0,
+            bytes_sent: 0,
+            fds_raw: [MaybeUninit::uninit(); ANCILLARY_CAPACITY],
+            fds_buf: [const { None }; FDS_CAPACITY],
+            fds_len: 0,
+            state: FdWriterState::Open,
+        }
+    }
+
+    /// Appends a four-byte signed integer in native byte order.
+    ///
+    /// Four free bytes are filled synchronously; otherwise the buffered byte
+    /// writer drains as needed and retains its cancellation behavior.
+    ///
+    /// # Errors
+    /// Returns an error for socket failures, a failed or closed stream, or
+    /// insufficient payload quota.
+    pub async fn next_i32(&mut self, value: i32) -> Result<(), FdWriterError> {
+        self.check_state()?;
+        if BYTES_CAPACITY - self.bytes_len >= 4 {
+            self.bytes_raw[self.bytes_len..self.bytes_len + 4]
+                .copy_from_slice(&value.to_ne_bytes());
+            self.bytes_len += 4;
+            return Ok(());
+        }
+        self.next_bytes(&value.to_ne_bytes()).await
+    }
+
+    /// Appends a four-byte unsigned integer or object ID in native byte order.
+    ///
+    /// Four free bytes are filled synchronously; otherwise the buffered byte
+    /// writer drains as needed and retains its cancellation behavior.
+    ///
+    /// # Errors
+    /// Returns an error for socket failures, a failed or closed stream, or
+    /// insufficient payload quota.
+    pub async fn next_u32(&mut self, value: u32) -> Result<(), FdWriterError> {
+        self.check_state()?;
+        if BYTES_CAPACITY - self.bytes_len >= 4 {
+            self.bytes_raw[self.bytes_len..self.bytes_len + 4]
+                .copy_from_slice(&value.to_ne_bytes());
+            self.bytes_len += 4;
+            return Ok(());
+        }
+        self.next_bytes(&value.to_ne_bytes()).await
+    }
+
+    /// Encodes signed 24.8 as four bytes, rounding halfway values away from zero.
+    /// Rejects values outside the representable range before rounding.
+    ///
+    /// # Errors
+    /// Returns an error for non-finite values or values outside signed 24.8
+    /// range, socket failures, a failed or closed stream, or insufficient payload quota.
+    pub async fn next_fixed(&mut self, value: f64) -> Result<(), FdWriterError> {
+        self.check_state()?;
+        let Some(encoded) = Self::encode_fixed(value) else {
+            self.state = FdWriterState::Failed;
+            return Err(FdWriterError::InvalidFixed);
+        };
+        self.next_i32(encoded).await
+    }
+
+    /// Buffers bytes, sending prefixes asynchronously when space is needed.
+    /// A failed or cancelled call may already have buffered or sent a prefix.
+    ///
+    /// # Errors
+    /// Returns an error for socket failures, a failed or closed stream, or
+    /// insufficient payload quota.
+    pub async fn next_bytes(&mut self, bytes: &[u8]) -> Result<(), FdWriterError> {
+        self.check_state()?;
+        self.state = FdWriterState::Writing;
+
+        let mut consumed = 0;
+        while consumed < bytes.len() {
+            if self.bytes_len == BYTES_CAPACITY {
+                self.send_buffered(1).await?;
+            }
+            let count = (bytes.len() - consumed).min(BYTES_CAPACITY - self.bytes_len);
+            self.bytes_raw[self.bytes_len..self.bytes_len + count]
+                .copy_from_slice(&bytes[consumed..consumed + count]);
+            self.bytes_len += count;
+            consumed += count;
+        }
+
+        self.state = FdWriterState::Open;
+        Ok(())
+    }
+
+    /// Takes ownership of a descriptor to accompany the next successful send.
+    /// Does not perform I/O. Rejected descriptors are closed automatically.
+    ///
+    /// # Errors
+    /// Returns an error for a failed or closed stream or a full descriptor queue.
+    /// The rejected descriptor is closed.
+    pub fn next_fd(&mut self, fd: OwnedFd) -> Result<(), FdWriterError> {
+        self.check_state()?;
+        if self.fds_len == FDS_CAPACITY {
+            self.state = FdWriterState::Failed;
+            return Err(FdWriterError::TooManyFileDescriptors {
+                capacity: FDS_CAPACITY,
+            });
+        }
+        self.fds_buf[self.fds_len] = Some(fd);
+        self.fds_len += 1;
+        Ok(())
+    }
+
+    /// Sends all buffered bytes and descriptors to the kernel.
+    /// Success does not imply that the peer has processed the message.
+    /// An empty buffer is allowed only when no descriptors are queued.
+    ///
+    /// # Errors
+    /// Returns an error for socket failures, a failed or closed stream,
+    /// descriptors without ordinary bytes, or insufficient ancillary storage.
+    pub async fn flush(&mut self) -> Result<(), FdWriterError> {
+        self.check_state()?;
+        self.state = FdWriterState::Writing;
+        self.send_buffered(0).await?;
+        self.state = FdWriterState::Open;
+        Ok(())
+    }
+
+    /// Returns the current stream state.
+    pub fn state(&self) -> &FdWriterState {
+        &self.state
+    }
+
+    fn check_state(&mut self) -> Result<(), FdWriterError> {
+        match self.state {
+            FdWriterState::Open => Ok(()),
+            FdWriterState::Closed => Err(FdWriterError::ConnectionClosed),
+            FdWriterState::Writing | FdWriterState::Failed => {
+                self.state = FdWriterState::Failed;
+                Err(FdWriterError::WriterFailed)
+            }
+        }
+    }
+
+    /// Drains a prefix, optionally retaining one byte without shifting the buffer.
+    /// Called only while the public operation owns the `Writing` state.
+    async fn send_buffered(&mut self, retain: usize) -> Result<(), FdWriterError> {
+        debug_assert!(
+            retain <= 1 && retain <= self.bytes_len,
+            "send_buffered may retain at most one buffered byte: retain {retain}, buffered {}",
+            self.bytes_len
+        );
+        let end = self.bytes_len - retain;
+        if end == 0 && self.fds_len != 0 {
+            self.state = FdWriterState::Failed;
+            return Err(FdWriterError::FdsWithoutBytes);
+        }
+
+        while self.bytes_sent < end {
+            // Keep readiness guards and ancillary temporaries within one poll;
+            // none are carried across a readiness wait in the outer future.
+            let result = std::future::poll_fn(|cx| {
+                loop {
+                    let mut guard = match std::task::ready!(self.fd.poll_write_ready(cx)) {
+                        Ok(guard) => guard,
+                        Err(error) => return std::task::Poll::Ready(Err(error)),
+                    };
+                    match guard.try_io(|fd| {
+                        let socket = fd.get_ref();
+                        let iov = [IoSlice::new(&self.bytes_raw[self.bytes_sent..end])];
+                        // Avoid constructing the borrowed-FD array for ordinary writes.
+                        if self.fds_len != 0 {
+                            let mut fds = [socket.as_fd(); FDS_CAPACITY];
+                            for (borrowed, owned) in fds[..self.fds_len]
+                                .iter_mut()
+                                .zip(&self.fds_buf[..self.fds_len])
+                            {
+                                *borrowed =
+                                    owned.as_ref().expect("queued FD slot is populated").as_fd();
+                            }
+                            let mut control = SendAncillaryBuffer::new(&mut self.fds_raw);
+                            if !control.push(SendAncillaryMessage::ScmRights(&fds[..self.fds_len]))
+                            {
+                                return Ok(Err(FdWriterError::AncillaryBufferTooSmall));
+                            }
+                            return sendmsg(socket, &iov, &mut control, SendFlags::NOSIGNAL)
+                                .map(Ok)
+                                .map_err(io::Error::from);
+                        }
+
+                        let mut control = SendAncillaryBuffer::new(&mut self.fds_raw);
+                        sendmsg(socket, &iov, &mut control, SendFlags::NOSIGNAL)
+                            .map(Ok)
+                            .map_err(io::Error::from)
+                    }) {
+                        // try_io clears writable readiness only for WouldBlock.
+                        Err(_) => continue,
+                        Ok(result) => return std::task::Poll::Ready(result),
+                    }
+                }
+            })
+            .await;
+
+            match result {
+                Ok(Ok(0)) => {
+                    self.state = FdWriterState::Closed;
+                    return Err(FdWriterError::WriteZero);
+                }
+                Ok(Ok(size)) => {
+                    self.bytes_sent += size;
+                    // SCM_RIGHTS is sent once, even when sendmsg writes a prefix.
+                    // No await occurs between the send and recording its effects.
+                    for slot in &mut self.fds_buf[..self.fds_len] {
+                        *slot = None;
+                    }
+                    self.fds_len = 0;
+                }
+                Err(error) if error.kind() == io::ErrorKind::Interrupted => continue,
+                Ok(Err(error)) => {
+                    self.state = FdWriterState::Failed;
+                    return Err(error);
+                }
+                Err(error) => {
+                    self.state = match error.kind() {
+                        io::ErrorKind::BrokenPipe
+                        | io::ErrorKind::ConnectionReset
+                        | io::ErrorKind::ConnectionAborted
+                        | io::ErrorKind::NotConnected => FdWriterState::Closed,
+                        _ => FdWriterState::Failed,
+                    };
+                    return Err(FdWriterError::Io(error));
+                }
+            }
+        }
+
+        if retain != 0 {
+            self.bytes_raw[0] = self.bytes_raw[end];
+        }
+        self.bytes_len = retain;
+        self.bytes_sent = 0;
+        Ok(())
+    }
+}
+
+/// Exclusive byte-quota wrapper over an [`FdWriter`].
+///
+/// Quota counts bytes accepted for sending, charged after each successful call;
+/// descriptors do not consume quota. This wrapper does not flush. Once the
+/// quota is exhausted and the wrapper drops, call [`FdWriter::flush`].
+///
+/// Exceeding quota or dropping an incomplete payload fails the writer without
+/// I/O. Intermediate sends cannot be retracted: the application must terminate
+/// the connection after a quota error instead of continuing its message stream.
+/// Cancelled operations are likewise unrecoverable. No payload copies or extra
+/// buffers are made by this wrapper.
+pub struct FdPayloadWriter<'a> {
+    writer: &'a mut FdWriter,
+    quota: usize,
+}
+
+impl<'a> FdPayloadWriter<'a> {
+    /// Writes a UTF-8 string with its length, terminating NUL, and zero padding.
+    /// A complete frame that fits is buffered synchronously without socket I/O.
+    /// Rejects embedded NUL characters and checks the length and quota before writing.
+    ///
+    /// # Errors
+    /// Returns an error for embedded NUL, length overflow, an oversized value,
+    /// insufficient payload quota, or a failed or closed stream.
+    pub async fn next_string(&mut self, value: &str) -> Result<(), FdWriterError> {
+        self.next_nullable_string(Some(value)).await
+    }
+
+    /// Writes a nullable string: None has length zero, and Some("") has length one.
+    ///
+    /// # Errors
+    /// Returns an error for embedded NUL, length overflow, an oversized value,
+    /// insufficient payload quota, or a failed or closed stream.
+    pub async fn next_nullable_string(&mut self, value: Option<&str>) -> Result<(), FdWriterError> {
+        let result = async {
+            let Some(value) = value else {
+                return self.next_u32(0).await;
+            };
+            if !FdWriter::is_valid_string(value) {
+                return Err(FdWriterError::InvalidProtocol);
+            }
+            let len = value
+                .len()
+                .checked_add(1)
+                .ok_or(FdWriterError::InvalidProtocol)?;
+            let wire_len = u32::try_from(len).map_err(|_| FdWriterError::InvalidProtocol)?;
+            let padding = (4 - len % 4) % 4;
+            let total =
+                FdWriter::encoded_string_size(Some(value)).ok_or(FdWriterError::InvalidProtocol)?;
+            if total > self.remaining_quota() {
+                return Err(FdWriterError::InvalidProtocol);
+            }
+            self.writer.check_state()?;
+            if self
+                .writer
+                .try_buffer_frame(value.as_bytes(), wire_len, total)
+            {
+                self.quota -= total;
+                return Ok(());
+            }
+            self.next_u32(wire_len).await?;
+            self.next_bytes(value.as_bytes()).await?;
+            self.next_bytes(&[0; 4][..1 + padding]).await
+        }
+        .await;
+        if result.is_err() {
+            self.writer.state = FdWriterState::Failed;
+        }
+        result
+    }
+
+    /// Writes an array with its byte length and zero padding to four-byte alignment.
+    /// A complete frame that fits is buffered synchronously without socket I/O.
+    /// The encoded array length excludes padding.
+    ///
+    /// # Errors
+    /// Returns an error for length overflow, an oversized value, insufficient
+    /// payload quota, or a failed or closed stream.
+    pub async fn next_array(&mut self, value: &[u8]) -> Result<(), FdWriterError> {
+        let result = async {
+            let len = u32::try_from(value.len()).map_err(|_| FdWriterError::InvalidProtocol)?;
+            let padding = (4 - value.len() % 4) % 4;
+            let total =
+                FdWriter::encoded_array_size(value.len()).ok_or(FdWriterError::InvalidProtocol)?;
+            if total > self.remaining_quota() {
+                return Err(FdWriterError::InvalidProtocol);
+            }
+            self.writer.check_state()?;
+            if self.writer.try_buffer_frame(value, len, total) {
+                self.quota -= total;
+                return Ok(());
+            }
+            self.next_u32(len).await?;
+            self.next_bytes(value).await?;
+            self.next_bytes(&[0; 3][..padding]).await
+        }
+        .await;
+        if result.is_err() {
+            self.writer.state = FdWriterState::Failed;
+        }
+        result
+    }
+
+    /// Creates a writer that owns the supplied nonblocking socket.
+    ///
+    /// # Errors
+    /// Returns an error if the writer is failed, closed, or has an unfinished write.
+    pub fn new(writer: &'a mut FdWriter, quota: usize) -> Result<Self, FdWriterError> {
+        writer.check_state()?;
+        Ok(Self { writer, quota })
+    }
+
+    /// Returns the unconsumed byte quota.
+    pub fn remaining_quota(&self) -> usize {
+        self.quota
+    }
+
+    /// Writes a four-byte signed integer in native byte order.
+    ///
+    /// # Errors
+    /// Returns an error for socket failures, a failed or closed stream, or
+    /// insufficient payload quota.
+    pub async fn next_i32(&mut self, value: i32) -> Result<(), FdWriterError> {
+        const SIZE: usize = size_of::<i32>();
+        self.check_quota(SIZE)?;
+        let result = self.writer.next_i32(value).await;
+        self.finish_write(result, SIZE)
+    }
+
+    /// Writes a four-byte unsigned integer in native byte order.
+    ///
+    /// # Errors
+    /// Returns an error for socket failures, a failed or closed stream, or
+    /// insufficient payload quota.
+    pub async fn next_u32(&mut self, value: u32) -> Result<(), FdWriterError> {
+        const SIZE: usize = size_of::<u32>();
+        self.check_quota(SIZE)?;
+        let result = self.writer.next_u32(value).await;
+        self.finish_write(result, SIZE)
+    }
+
+    /// Encodes four bytes of signed 24.8, regardless of the input f64's size.
+    ///
+    /// # Errors
+    /// Returns an error for non-finite values or values outside signed 24.8
+    /// range, socket failures, a failed or closed stream, or insufficient payload quota.
+    pub async fn next_fixed(&mut self, value: f64) -> Result<(), FdWriterError> {
+        const SIZE: usize = size_of::<i32>();
+        self.check_quota(SIZE)?;
+        let result = self.writer.next_fixed(value).await;
+        self.finish_write(result, SIZE)
+    }
+
+    /// Writes bytes within the remaining payload quota.
+    ///
+    /// # Errors
+    /// Returns an error for socket failures, a failed or closed stream, or
+    /// insufficient payload quota.
+    pub async fn next_bytes(&mut self, bytes: &[u8]) -> Result<(), FdWriterError> {
+        self.check_quota(bytes.len())?;
+        let result = self.writer.next_bytes(bytes).await;
+        self.finish_write(result, bytes.len())
+    }
+
+    /// Queues an owned descriptor without consuming byte quota.
+    ///
+    /// # Errors
+    /// Returns an error for a failed or closed stream or a full descriptor queue.
+    /// The rejected descriptor is closed.
+    pub fn next_fd(&mut self, fd: OwnedFd) -> Result<(), FdWriterError> {
+        let result = self.writer.next_fd(fd);
+        self.finish_write(result, 0)
+    }
+
+    /// Returns the current stream state.
+    pub fn state(&self) -> &FdWriterState {
+        self.writer.state()
+    }
+
+    fn check_quota(&mut self, requested: usize) -> Result<(), FdWriterError> {
+        self.writer.check_state()?;
+        if requested > self.quota {
+            let remaining = self.quota;
+            self.quota = 0;
+            self.writer.state = FdWriterState::Failed;
+            return Err(FdWriterError::QuotaExceeded {
+                requested,
+                remaining,
+            });
+        }
+        Ok(())
+    }
+
+    fn finish_write(
+        &mut self,
+        result: Result<(), FdWriterError>,
+        size: usize,
+    ) -> Result<(), FdWriterError> {
+        if result.is_ok() {
+            self.quota -= size;
+        } else {
+            self.writer.state = FdWriterState::Failed;
+        }
+        result
+    }
+}
+
+impl Drop for FdPayloadWriter<'_> {
+    fn drop(&mut self) {
+        if self.quota != 0 || self.writer.state == FdWriterState::Writing {
+            self.writer.state = FdWriterState::Failed;
+        }
+    }
+}

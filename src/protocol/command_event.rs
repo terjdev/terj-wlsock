@@ -1,0 +1,416 @@
+use crate::protocol::ClientState;
+use crate::protocol::CommandWriter;
+use crate::protocol::core::*;
+use crate::utils::writer::{FdPayloadWriter, FdWriterError};
+use std::sync::{Arc, Mutex};
+
+/// Contains every core-protocol event and delegates encoding to its message structure.
+///
+/// Collects the event elements in [Wayland XML](https://gitlab.freedesktop.org/wayland/wayland/-/blob/main/protocol/wayland.xml).
+/// One source element is shown below:
+/// ```xml
+/// <event name="done" type="destructor">
+///       <description summary="done event">
+///         Notify the client when the related request is done.
+///       </description>
+///       <arg name="callback_data" type="uint" summary="request-specific data for the callback" />
+///     </event>
+/// ```
+/// Each message structure documents its complete XML definition.
+#[derive(Debug)]
+pub enum CommandEvent {
+    /// Event [WlDisplayErrorEvent].
+    WlDisplayError(WlDisplayErrorEvent),
+    /// Event [WlDisplayDeleteIdEvent].
+    WlDisplayDeleteId(WlDisplayDeleteIdEvent),
+    /// Event [WlRegistryGlobalEvent].
+    WlRegistryGlobal(WlRegistryGlobalEvent),
+    /// Event [WlRegistryGlobalRemoveEvent].
+    WlRegistryGlobalRemove(WlRegistryGlobalRemoveEvent),
+    /// Event [WlCallbackDoneEvent].
+    WlCallbackDone(WlCallbackDoneEvent),
+    /// Event [WlShmFormatEvent].
+    WlShmFormat(WlShmFormatEvent),
+    /// Event [WlBufferReleaseEvent].
+    WlBufferRelease(WlBufferReleaseEvent),
+    /// Event [WlDataOfferOfferEvent].
+    WlDataOfferOffer(WlDataOfferOfferEvent),
+    /// Event [WlDataOfferSourceActionsEvent].
+    WlDataOfferSourceActions(WlDataOfferSourceActionsEvent),
+    /// Event [WlDataOfferActionEvent].
+    WlDataOfferAction(WlDataOfferActionEvent),
+    /// Event [WlDataSourceTargetEvent].
+    WlDataSourceTarget(WlDataSourceTargetEvent),
+    /// Event [WlDataSourceSendEvent].
+    WlDataSourceSend(WlDataSourceSendEvent),
+    /// Event [WlDataSourceCancelledEvent].
+    WlDataSourceCancelled(WlDataSourceCancelledEvent),
+    /// Event [WlDataSourceDndDropPerformedEvent].
+    WlDataSourceDndDropPerformed(WlDataSourceDndDropPerformedEvent),
+    /// Event [WlDataSourceDndFinishedEvent].
+    WlDataSourceDndFinished(WlDataSourceDndFinishedEvent),
+    /// Event [WlDataSourceActionEvent].
+    WlDataSourceAction(WlDataSourceActionEvent),
+    /// Event [WlDataDeviceDataOfferEvent].
+    WlDataDeviceDataOffer(WlDataDeviceDataOfferEvent),
+    /// Event [WlDataDeviceEnterEvent].
+    WlDataDeviceEnter(WlDataDeviceEnterEvent),
+    /// Event [WlDataDeviceLeaveEvent].
+    WlDataDeviceLeave(WlDataDeviceLeaveEvent),
+    /// Event [WlDataDeviceMotionEvent].
+    WlDataDeviceMotion(WlDataDeviceMotionEvent),
+    /// Event [WlDataDeviceDropEvent].
+    WlDataDeviceDrop(WlDataDeviceDropEvent),
+    /// Event [WlDataDeviceSelectionEvent].
+    WlDataDeviceSelection(WlDataDeviceSelectionEvent),
+    /// Event [WlShellSurfacePingEvent].
+    WlShellSurfacePing(WlShellSurfacePingEvent),
+    /// Event [WlShellSurfaceConfigureEvent].
+    WlShellSurfaceConfigure(WlShellSurfaceConfigureEvent),
+    /// Event [WlShellSurfacePopupDoneEvent].
+    WlShellSurfacePopupDone(WlShellSurfacePopupDoneEvent),
+    /// Event [WlSurfaceEnterEvent].
+    WlSurfaceEnter(WlSurfaceEnterEvent),
+    /// Event [WlSurfaceLeaveEvent].
+    WlSurfaceLeave(WlSurfaceLeaveEvent),
+    /// Event [WlSurfacePreferredBufferScaleEvent].
+    WlSurfacePreferredBufferScale(WlSurfacePreferredBufferScaleEvent),
+    /// Event [WlSurfacePreferredBufferTransformEvent].
+    WlSurfacePreferredBufferTransform(WlSurfacePreferredBufferTransformEvent),
+    /// Event [WlSeatCapabilitiesEvent].
+    WlSeatCapabilities(WlSeatCapabilitiesEvent),
+    /// Event [WlSeatNameEvent].
+    WlSeatName(WlSeatNameEvent),
+    /// Event [WlPointerEnterEvent].
+    WlPointerEnter(WlPointerEnterEvent),
+    /// Event [WlPointerLeaveEvent].
+    WlPointerLeave(WlPointerLeaveEvent),
+    /// Event [WlPointerMotionEvent].
+    WlPointerMotion(WlPointerMotionEvent),
+    /// Event [WlPointerButtonEvent].
+    WlPointerButton(WlPointerButtonEvent),
+    /// Event [WlPointerAxisEvent].
+    WlPointerAxis(WlPointerAxisEvent),
+    /// Event [WlPointerFrameEvent].
+    WlPointerFrame(WlPointerFrameEvent),
+    /// Event [WlPointerAxisSourceEvent].
+    WlPointerAxisSource(WlPointerAxisSourceEvent),
+    /// Event [WlPointerAxisStopEvent].
+    WlPointerAxisStop(WlPointerAxisStopEvent),
+    /// Event [WlPointerAxisDiscreteEvent].
+    WlPointerAxisDiscrete(WlPointerAxisDiscreteEvent),
+    /// Event [WlPointerAxisValue120Event].
+    WlPointerAxisValue120(WlPointerAxisValue120Event),
+    /// Event [WlPointerAxisRelativeDirectionEvent].
+    WlPointerAxisRelativeDirection(WlPointerAxisRelativeDirectionEvent),
+    /// Event [WlPointerWarpEvent].
+    WlPointerWarp(WlPointerWarpEvent),
+    /// Event [WlKeyboardKeymapEvent].
+    WlKeyboardKeymap(WlKeyboardKeymapEvent),
+    /// Event [WlKeyboardEnterEvent].
+    WlKeyboardEnter(WlKeyboardEnterEvent),
+    /// Event [WlKeyboardLeaveEvent].
+    WlKeyboardLeave(WlKeyboardLeaveEvent),
+    /// Event [WlKeyboardKeyEvent].
+    WlKeyboardKey(WlKeyboardKeyEvent),
+    /// Event [WlKeyboardModifiersEvent].
+    WlKeyboardModifiers(WlKeyboardModifiersEvent),
+    /// Event [WlKeyboardRepeatInfoEvent].
+    WlKeyboardRepeatInfo(WlKeyboardRepeatInfoEvent),
+    /// Event [WlTouchDownEvent].
+    WlTouchDown(WlTouchDownEvent),
+    /// Event [WlTouchUpEvent].
+    WlTouchUp(WlTouchUpEvent),
+    /// Event [WlTouchMotionEvent].
+    WlTouchMotion(WlTouchMotionEvent),
+    /// Event [WlTouchFrameEvent].
+    WlTouchFrame(WlTouchFrameEvent),
+    /// Event [WlTouchCancelEvent].
+    WlTouchCancel(WlTouchCancelEvent),
+    /// Event [WlTouchShapeEvent].
+    WlTouchShape(WlTouchShapeEvent),
+    /// Event [WlTouchOrientationEvent].
+    WlTouchOrientation(WlTouchOrientationEvent),
+    /// Event [WlOutputGeometryEvent].
+    WlOutputGeometry(WlOutputGeometryEvent),
+    /// Event [WlOutputModeEvent].
+    WlOutputMode(WlOutputModeEvent),
+    /// Event [WlOutputDoneEvent].
+    WlOutputDone(WlOutputDoneEvent),
+    /// Event [WlOutputScaleEvent].
+    WlOutputScale(WlOutputScaleEvent),
+    /// Event [WlOutputNameEvent].
+    WlOutputName(WlOutputNameEvent),
+    /// Event [WlOutputDescriptionEvent].
+    WlOutputDescription(WlOutputDescriptionEvent),
+}
+impl CommandWriter for CommandEvent {
+    fn object_id(&self) -> u32 {
+        match self {
+            Self::WlDisplayError(event) => event.object_id(),
+            Self::WlDisplayDeleteId(event) => event.object_id(),
+            Self::WlRegistryGlobal(event) => event.object_id(),
+            Self::WlRegistryGlobalRemove(event) => event.object_id(),
+            Self::WlCallbackDone(event) => event.object_id(),
+            Self::WlShmFormat(event) => event.object_id(),
+            Self::WlBufferRelease(event) => event.object_id(),
+            Self::WlDataOfferOffer(event) => event.object_id(),
+            Self::WlDataOfferSourceActions(event) => event.object_id(),
+            Self::WlDataOfferAction(event) => event.object_id(),
+            Self::WlDataSourceTarget(event) => event.object_id(),
+            Self::WlDataSourceSend(event) => event.object_id(),
+            Self::WlDataSourceCancelled(event) => event.object_id(),
+            Self::WlDataSourceDndDropPerformed(event) => event.object_id(),
+            Self::WlDataSourceDndFinished(event) => event.object_id(),
+            Self::WlDataSourceAction(event) => event.object_id(),
+            Self::WlDataDeviceDataOffer(event) => event.object_id(),
+            Self::WlDataDeviceEnter(event) => event.object_id(),
+            Self::WlDataDeviceLeave(event) => event.object_id(),
+            Self::WlDataDeviceMotion(event) => event.object_id(),
+            Self::WlDataDeviceDrop(event) => event.object_id(),
+            Self::WlDataDeviceSelection(event) => event.object_id(),
+            Self::WlShellSurfacePing(event) => event.object_id(),
+            Self::WlShellSurfaceConfigure(event) => event.object_id(),
+            Self::WlShellSurfacePopupDone(event) => event.object_id(),
+            Self::WlSurfaceEnter(event) => event.object_id(),
+            Self::WlSurfaceLeave(event) => event.object_id(),
+            Self::WlSurfacePreferredBufferScale(event) => event.object_id(),
+            Self::WlSurfacePreferredBufferTransform(event) => event.object_id(),
+            Self::WlSeatCapabilities(event) => event.object_id(),
+            Self::WlSeatName(event) => event.object_id(),
+            Self::WlPointerEnter(event) => event.object_id(),
+            Self::WlPointerLeave(event) => event.object_id(),
+            Self::WlPointerMotion(event) => event.object_id(),
+            Self::WlPointerButton(event) => event.object_id(),
+            Self::WlPointerAxis(event) => event.object_id(),
+            Self::WlPointerFrame(event) => event.object_id(),
+            Self::WlPointerAxisSource(event) => event.object_id(),
+            Self::WlPointerAxisStop(event) => event.object_id(),
+            Self::WlPointerAxisDiscrete(event) => event.object_id(),
+            Self::WlPointerAxisValue120(event) => event.object_id(),
+            Self::WlPointerAxisRelativeDirection(event) => event.object_id(),
+            Self::WlPointerWarp(event) => event.object_id(),
+            Self::WlKeyboardKeymap(event) => event.object_id(),
+            Self::WlKeyboardEnter(event) => event.object_id(),
+            Self::WlKeyboardLeave(event) => event.object_id(),
+            Self::WlKeyboardKey(event) => event.object_id(),
+            Self::WlKeyboardModifiers(event) => event.object_id(),
+            Self::WlKeyboardRepeatInfo(event) => event.object_id(),
+            Self::WlTouchDown(event) => event.object_id(),
+            Self::WlTouchUp(event) => event.object_id(),
+            Self::WlTouchMotion(event) => event.object_id(),
+            Self::WlTouchFrame(event) => event.object_id(),
+            Self::WlTouchCancel(event) => event.object_id(),
+            Self::WlTouchShape(event) => event.object_id(),
+            Self::WlTouchOrientation(event) => event.object_id(),
+            Self::WlOutputGeometry(event) => event.object_id(),
+            Self::WlOutputMode(event) => event.object_id(),
+            Self::WlOutputDone(event) => event.object_id(),
+            Self::WlOutputScale(event) => event.object_id(),
+            Self::WlOutputName(event) => event.object_id(),
+            Self::WlOutputDescription(event) => event.object_id(),
+        }
+    }
+    fn opcode(&self) -> u16 {
+        match self {
+            Self::WlDisplayError(event) => event.opcode(),
+            Self::WlDisplayDeleteId(event) => event.opcode(),
+            Self::WlRegistryGlobal(event) => event.opcode(),
+            Self::WlRegistryGlobalRemove(event) => event.opcode(),
+            Self::WlCallbackDone(event) => event.opcode(),
+            Self::WlShmFormat(event) => event.opcode(),
+            Self::WlBufferRelease(event) => event.opcode(),
+            Self::WlDataOfferOffer(event) => event.opcode(),
+            Self::WlDataOfferSourceActions(event) => event.opcode(),
+            Self::WlDataOfferAction(event) => event.opcode(),
+            Self::WlDataSourceTarget(event) => event.opcode(),
+            Self::WlDataSourceSend(event) => event.opcode(),
+            Self::WlDataSourceCancelled(event) => event.opcode(),
+            Self::WlDataSourceDndDropPerformed(event) => event.opcode(),
+            Self::WlDataSourceDndFinished(event) => event.opcode(),
+            Self::WlDataSourceAction(event) => event.opcode(),
+            Self::WlDataDeviceDataOffer(event) => event.opcode(),
+            Self::WlDataDeviceEnter(event) => event.opcode(),
+            Self::WlDataDeviceLeave(event) => event.opcode(),
+            Self::WlDataDeviceMotion(event) => event.opcode(),
+            Self::WlDataDeviceDrop(event) => event.opcode(),
+            Self::WlDataDeviceSelection(event) => event.opcode(),
+            Self::WlShellSurfacePing(event) => event.opcode(),
+            Self::WlShellSurfaceConfigure(event) => event.opcode(),
+            Self::WlShellSurfacePopupDone(event) => event.opcode(),
+            Self::WlSurfaceEnter(event) => event.opcode(),
+            Self::WlSurfaceLeave(event) => event.opcode(),
+            Self::WlSurfacePreferredBufferScale(event) => event.opcode(),
+            Self::WlSurfacePreferredBufferTransform(event) => event.opcode(),
+            Self::WlSeatCapabilities(event) => event.opcode(),
+            Self::WlSeatName(event) => event.opcode(),
+            Self::WlPointerEnter(event) => event.opcode(),
+            Self::WlPointerLeave(event) => event.opcode(),
+            Self::WlPointerMotion(event) => event.opcode(),
+            Self::WlPointerButton(event) => event.opcode(),
+            Self::WlPointerAxis(event) => event.opcode(),
+            Self::WlPointerFrame(event) => event.opcode(),
+            Self::WlPointerAxisSource(event) => event.opcode(),
+            Self::WlPointerAxisStop(event) => event.opcode(),
+            Self::WlPointerAxisDiscrete(event) => event.opcode(),
+            Self::WlPointerAxisValue120(event) => event.opcode(),
+            Self::WlPointerAxisRelativeDirection(event) => event.opcode(),
+            Self::WlPointerWarp(event) => event.opcode(),
+            Self::WlKeyboardKeymap(event) => event.opcode(),
+            Self::WlKeyboardEnter(event) => event.opcode(),
+            Self::WlKeyboardLeave(event) => event.opcode(),
+            Self::WlKeyboardKey(event) => event.opcode(),
+            Self::WlKeyboardModifiers(event) => event.opcode(),
+            Self::WlKeyboardRepeatInfo(event) => event.opcode(),
+            Self::WlTouchDown(event) => event.opcode(),
+            Self::WlTouchUp(event) => event.opcode(),
+            Self::WlTouchMotion(event) => event.opcode(),
+            Self::WlTouchFrame(event) => event.opcode(),
+            Self::WlTouchCancel(event) => event.opcode(),
+            Self::WlTouchShape(event) => event.opcode(),
+            Self::WlTouchOrientation(event) => event.opcode(),
+            Self::WlOutputGeometry(event) => event.opcode(),
+            Self::WlOutputMode(event) => event.opcode(),
+            Self::WlOutputDone(event) => event.opcode(),
+            Self::WlOutputScale(event) => event.opcode(),
+            Self::WlOutputName(event) => event.opcode(),
+            Self::WlOutputDescription(event) => event.opcode(),
+        }
+    }
+    fn payload_size(&self) -> usize {
+        match self {
+            Self::WlDisplayError(event) => event.payload_size(),
+            Self::WlDisplayDeleteId(event) => event.payload_size(),
+            Self::WlRegistryGlobal(event) => event.payload_size(),
+            Self::WlRegistryGlobalRemove(event) => event.payload_size(),
+            Self::WlCallbackDone(event) => event.payload_size(),
+            Self::WlShmFormat(event) => event.payload_size(),
+            Self::WlBufferRelease(event) => event.payload_size(),
+            Self::WlDataOfferOffer(event) => event.payload_size(),
+            Self::WlDataOfferSourceActions(event) => event.payload_size(),
+            Self::WlDataOfferAction(event) => event.payload_size(),
+            Self::WlDataSourceTarget(event) => event.payload_size(),
+            Self::WlDataSourceSend(event) => event.payload_size(),
+            Self::WlDataSourceCancelled(event) => event.payload_size(),
+            Self::WlDataSourceDndDropPerformed(event) => event.payload_size(),
+            Self::WlDataSourceDndFinished(event) => event.payload_size(),
+            Self::WlDataSourceAction(event) => event.payload_size(),
+            Self::WlDataDeviceDataOffer(event) => event.payload_size(),
+            Self::WlDataDeviceEnter(event) => event.payload_size(),
+            Self::WlDataDeviceLeave(event) => event.payload_size(),
+            Self::WlDataDeviceMotion(event) => event.payload_size(),
+            Self::WlDataDeviceDrop(event) => event.payload_size(),
+            Self::WlDataDeviceSelection(event) => event.payload_size(),
+            Self::WlShellSurfacePing(event) => event.payload_size(),
+            Self::WlShellSurfaceConfigure(event) => event.payload_size(),
+            Self::WlShellSurfacePopupDone(event) => event.payload_size(),
+            Self::WlSurfaceEnter(event) => event.payload_size(),
+            Self::WlSurfaceLeave(event) => event.payload_size(),
+            Self::WlSurfacePreferredBufferScale(event) => event.payload_size(),
+            Self::WlSurfacePreferredBufferTransform(event) => event.payload_size(),
+            Self::WlSeatCapabilities(event) => event.payload_size(),
+            Self::WlSeatName(event) => event.payload_size(),
+            Self::WlPointerEnter(event) => event.payload_size(),
+            Self::WlPointerLeave(event) => event.payload_size(),
+            Self::WlPointerMotion(event) => event.payload_size(),
+            Self::WlPointerButton(event) => event.payload_size(),
+            Self::WlPointerAxis(event) => event.payload_size(),
+            Self::WlPointerFrame(event) => event.payload_size(),
+            Self::WlPointerAxisSource(event) => event.payload_size(),
+            Self::WlPointerAxisStop(event) => event.payload_size(),
+            Self::WlPointerAxisDiscrete(event) => event.payload_size(),
+            Self::WlPointerAxisValue120(event) => event.payload_size(),
+            Self::WlPointerAxisRelativeDirection(event) => event.payload_size(),
+            Self::WlPointerWarp(event) => event.payload_size(),
+            Self::WlKeyboardKeymap(event) => event.payload_size(),
+            Self::WlKeyboardEnter(event) => event.payload_size(),
+            Self::WlKeyboardLeave(event) => event.payload_size(),
+            Self::WlKeyboardKey(event) => event.payload_size(),
+            Self::WlKeyboardModifiers(event) => event.payload_size(),
+            Self::WlKeyboardRepeatInfo(event) => event.payload_size(),
+            Self::WlTouchDown(event) => event.payload_size(),
+            Self::WlTouchUp(event) => event.payload_size(),
+            Self::WlTouchMotion(event) => event.payload_size(),
+            Self::WlTouchFrame(event) => event.payload_size(),
+            Self::WlTouchCancel(event) => event.payload_size(),
+            Self::WlTouchShape(event) => event.payload_size(),
+            Self::WlTouchOrientation(event) => event.payload_size(),
+            Self::WlOutputGeometry(event) => event.payload_size(),
+            Self::WlOutputMode(event) => event.payload_size(),
+            Self::WlOutputDone(event) => event.payload_size(),
+            Self::WlOutputScale(event) => event.payload_size(),
+            Self::WlOutputName(event) => event.payload_size(),
+            Self::WlOutputDescription(event) => event.payload_size(),
+        }
+    }
+    async fn write(
+        self,
+        writer: &mut FdPayloadWriter<'_>,
+        state: &Arc<Mutex<ClientState>>,
+    ) -> Result<(), FdWriterError> {
+        match self {
+            Self::WlDisplayError(event) => event.write(writer, state).await,
+            Self::WlDisplayDeleteId(event) => event.write(writer, state).await,
+            Self::WlRegistryGlobal(event) => event.write(writer, state).await,
+            Self::WlRegistryGlobalRemove(event) => event.write(writer, state).await,
+            Self::WlCallbackDone(event) => event.write(writer, state).await,
+            Self::WlShmFormat(event) => event.write(writer, state).await,
+            Self::WlBufferRelease(event) => event.write(writer, state).await,
+            Self::WlDataOfferOffer(event) => event.write(writer, state).await,
+            Self::WlDataOfferSourceActions(event) => event.write(writer, state).await,
+            Self::WlDataOfferAction(event) => event.write(writer, state).await,
+            Self::WlDataSourceTarget(event) => event.write(writer, state).await,
+            Self::WlDataSourceSend(event) => event.write(writer, state).await,
+            Self::WlDataSourceCancelled(event) => event.write(writer, state).await,
+            Self::WlDataSourceDndDropPerformed(event) => event.write(writer, state).await,
+            Self::WlDataSourceDndFinished(event) => event.write(writer, state).await,
+            Self::WlDataSourceAction(event) => event.write(writer, state).await,
+            Self::WlDataDeviceDataOffer(event) => event.write(writer, state).await,
+            Self::WlDataDeviceEnter(event) => event.write(writer, state).await,
+            Self::WlDataDeviceLeave(event) => event.write(writer, state).await,
+            Self::WlDataDeviceMotion(event) => event.write(writer, state).await,
+            Self::WlDataDeviceDrop(event) => event.write(writer, state).await,
+            Self::WlDataDeviceSelection(event) => event.write(writer, state).await,
+            Self::WlShellSurfacePing(event) => event.write(writer, state).await,
+            Self::WlShellSurfaceConfigure(event) => event.write(writer, state).await,
+            Self::WlShellSurfacePopupDone(event) => event.write(writer, state).await,
+            Self::WlSurfaceEnter(event) => event.write(writer, state).await,
+            Self::WlSurfaceLeave(event) => event.write(writer, state).await,
+            Self::WlSurfacePreferredBufferScale(event) => event.write(writer, state).await,
+            Self::WlSurfacePreferredBufferTransform(event) => event.write(writer, state).await,
+            Self::WlSeatCapabilities(event) => event.write(writer, state).await,
+            Self::WlSeatName(event) => event.write(writer, state).await,
+            Self::WlPointerEnter(event) => event.write(writer, state).await,
+            Self::WlPointerLeave(event) => event.write(writer, state).await,
+            Self::WlPointerMotion(event) => event.write(writer, state).await,
+            Self::WlPointerButton(event) => event.write(writer, state).await,
+            Self::WlPointerAxis(event) => event.write(writer, state).await,
+            Self::WlPointerFrame(event) => event.write(writer, state).await,
+            Self::WlPointerAxisSource(event) => event.write(writer, state).await,
+            Self::WlPointerAxisStop(event) => event.write(writer, state).await,
+            Self::WlPointerAxisDiscrete(event) => event.write(writer, state).await,
+            Self::WlPointerAxisValue120(event) => event.write(writer, state).await,
+            Self::WlPointerAxisRelativeDirection(event) => event.write(writer, state).await,
+            Self::WlPointerWarp(event) => event.write(writer, state).await,
+            Self::WlKeyboardKeymap(event) => event.write(writer, state).await,
+            Self::WlKeyboardEnter(event) => event.write(writer, state).await,
+            Self::WlKeyboardLeave(event) => event.write(writer, state).await,
+            Self::WlKeyboardKey(event) => event.write(writer, state).await,
+            Self::WlKeyboardModifiers(event) => event.write(writer, state).await,
+            Self::WlKeyboardRepeatInfo(event) => event.write(writer, state).await,
+            Self::WlTouchDown(event) => event.write(writer, state).await,
+            Self::WlTouchUp(event) => event.write(writer, state).await,
+            Self::WlTouchMotion(event) => event.write(writer, state).await,
+            Self::WlTouchFrame(event) => event.write(writer, state).await,
+            Self::WlTouchCancel(event) => event.write(writer, state).await,
+            Self::WlTouchShape(event) => event.write(writer, state).await,
+            Self::WlTouchOrientation(event) => event.write(writer, state).await,
+            Self::WlOutputGeometry(event) => event.write(writer, state).await,
+            Self::WlOutputMode(event) => event.write(writer, state).await,
+            Self::WlOutputDone(event) => event.write(writer, state).await,
+            Self::WlOutputScale(event) => event.write(writer, state).await,
+            Self::WlOutputName(event) => event.write(writer, state).await,
+            Self::WlOutputDescription(event) => event.write(writer, state).await,
+        }
+    }
+}
