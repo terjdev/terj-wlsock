@@ -17,6 +17,10 @@ pub enum CreationError {
     ConfigureStream(#[from] std::io::Error),
 }
 
-/// TODO
+/// Reports failure to await completion of the client task.
 #[derive(Error, Debug)]
-pub enum ShutdownError {}
+pub enum ClosingError {
+    /// The client task panicked or was aborted before close completed.
+    #[error("The client task failed to complete close.")]
+    Failed,
+}

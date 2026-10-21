@@ -10,8 +10,12 @@ pub(crate) fn stream_to_async_fd(
     let read_stream = stream.into_std()?;
     let write_stream = read_stream.try_clone()?;
 
-    let fd_read = tokio::io::unix::AsyncFd::new(read_stream)?;
-    let fd_write = tokio::io::unix::AsyncFd::new(write_stream)?;
-
-    Ok((fd_read, fd_write))
+    // SAFETY: Each UnixStream owns a valid descriptor that remains unchanged
+    // and open while owned by its AsyncFd.
+    Ok(unsafe {
+        (
+            tokio::io::unix::AsyncFd::register(read_stream)?,
+            tokio::io::unix::AsyncFd::register(write_stream)?,
+        )
+    })
 }

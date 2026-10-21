@@ -1,4 +1,4 @@
-use crate::utils::writer::FdPayloadWriter;
+use crate::{client::ClosingError, utils::writer::FdPayloadWriter};
 use std::{os::unix::net::UnixStream, sync::Arc, sync::Mutex};
 
 use tokio::{io::unix::AsyncFd, net::UnixStream as TokioUnixStream, runtime::Handle, sync::mpsc};
@@ -55,6 +55,26 @@ impl Socket {
             send_tx,
             recv_rx,
         ))
+    }
+
+    pub async fn close(&mut self) -> Result<(), ClosingError> {
+        self.cancelation_token.cancel();
+
+        let result = match self.worker.as_mut() {
+            Some(worker) => worker.await,
+            None => return Ok(()),
+        };
+
+        self.worker = None;
+        result.map_err(|_| ClosingError::Failed)
+    }
+}
+
+impl Drop for Socket {
+    fn drop(&mut self) {
+        if let Some(worker) = self.worker.take() {
+            worker.abort();
+        }
     }
 }
 
@@ -146,7 +166,6 @@ async fn write_requests(
 
     while let Some(command) = send_rx.recv().await {
         let CommandSend::Request { command } = command;
-
         if let Err(error) = write_request(command, &mut writer, &state).await {
             return DisconnectReason::Error(ClientError::Write(error));
         }

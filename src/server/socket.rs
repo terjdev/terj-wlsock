@@ -251,10 +251,10 @@ async fn handle_client(
                 Err(_) => protocol::DisconnectReason::Server,
             }
         },
-        result = read_commands(id, fd_read, state.clone(), recv_tx) => {
+        result = read_requests(id, fd_read, state.clone(), recv_tx) => {
             return result;
         },
-        result = write_commands(fd_write, state, send_rx) => {
+        result = write_events(fd_write, state, send_rx) => {
             return result;
         },
     }
@@ -307,14 +307,14 @@ async fn send_command(
     Ok(())
 }
 
-async fn write_commands(
+async fn write_events(
     fd: AsyncFd<UnixStream>,
     state: Arc<Mutex<ClientState>>,
     mut send_rx: mpsc::Receiver<protocol::CommandEvent>,
 ) -> protocol::DisconnectReason {
     let mut writer = FdWriter::new(fd);
     while let Some(command) = send_rx.recv().await {
-        if let Err(error) = write_command_event(command, &mut writer, &state).await {
+        if let Err(error) = write_event(command, &mut writer, &state).await {
             return protocol::DisconnectReason::Error(protocol::ClientError::Write(error));
         }
     }
@@ -322,7 +322,7 @@ async fn write_commands(
     protocol::DisconnectReason::Server
 }
 
-async fn write_command_event(
+async fn write_event(
     command: protocol::CommandEvent,
     writer: &mut FdWriter,
     state: &Arc<Mutex<ClientState>>,
@@ -347,7 +347,7 @@ async fn write_command_event(
     Ok(())
 }
 
-async fn read_commands(
+async fn read_requests(
     id: protocol::ClientId,
     fd: AsyncFd<UnixStream>,
     state: Arc<Mutex<ClientState>>,
@@ -368,7 +368,7 @@ async fn read_commands(
             }
         };
 
-        let read_result = match read_command_request(object_id, &mut reader, &state).await {
+        let read_result = match read_request(object_id, &mut reader, &state).await {
             Ok(result) => result,
             Err(error) => {
                 return protocol::DisconnectReason::Error(protocol::ClientError::Read(error));
@@ -391,7 +391,7 @@ async fn read_commands(
     };
 }
 
-async fn read_command_request(
+async fn read_request(
     object_id: u32,
     reader: &mut FdReader,
     state: &Arc<Mutex<ClientState>>,
