@@ -1,6 +1,6 @@
 use crate::protocol;
 use crate::protocol::ClientState;
-use crate::server::{AcceptError, CreationError, Options, SendCommandError, ShutdownError};
+use crate::server::{AcceptError, ClosingError, CreationError, Options, SendCommandError};
 use crate::server::{CommandRecv, CommandSend};
 use crate::utils::reader::FdReaderState;
 use crate::utils::reader::{FdPayloadReader, FdReader, FdReaderError};
@@ -20,7 +20,7 @@ use tokio_util::sync::CancellationToken;
 /// Controls a background Wayland server and its client tasks.
 ///
 /// Dropping this handle requests abrupt cancellation without waiting for resource
-/// cleanup or guaranteeing disconnect notifications. Use [`Self::shutdown`] for
+/// cleanup or guaranteeing disconnect notifications. Use [`Self::close`] for
 /// an orderly shutdown. Closing the listener does not remove its filesystem path.
 pub struct Socket {
     worker: Option<tokio::task::JoinHandle<()>>,
@@ -100,8 +100,8 @@ impl Socket {
     /// returned, subsequent calls return `Ok(())`, including after a reported error.
     ///
     /// # Errors
-    /// Returns [`ShutdownError::Failed`] if the server task panicked or was aborted.
-    pub async fn shutdown(&mut self) -> Result<(), ShutdownError> {
+    /// Returns [`ClosingError::Failed`] if the server task panicked or was aborted.
+    pub async fn close(&mut self) -> Result<(), ClosingError> {
         self.cancelation_token.cancel();
         let result = match self.worker.as_mut() {
             Some(worker) => worker.await,
@@ -111,7 +111,7 @@ impl Socket {
         self.worker = None;
         match result {
             Ok(_) => Ok(()),
-            Err(_) => Err(ShutdownError::Failed),
+            Err(_) => Err(ClosingError::Failed),
         }
     }
 }

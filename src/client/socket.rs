@@ -66,7 +66,10 @@ impl Socket {
         };
 
         self.worker = None;
-        result.map_err(|_| ClosingError::Failed)
+        match result {
+            Ok(_) => Ok(()),
+            Err(_) => Err(ClosingError::Failed),
+        }
     }
 }
 
@@ -102,7 +105,7 @@ async fn handle_client(
         }
     };
 
-    // TODO: review
+    // Ignore send failure: the application has closed the notification receiver.
     let _ = recv_tx.send(CommandRecv::Disconnect { reason }).await;
 }
 

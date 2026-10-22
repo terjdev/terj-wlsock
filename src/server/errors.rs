@@ -20,7 +20,7 @@ pub enum CreationError {
 
 /// Reports failure to await normal completion of the server task.
 #[derive(Error, Debug)]
-pub enum ShutdownError {
+pub enum ClosingError {
     /// The server task panicked or was aborted before shutdown completed.
     #[error("The server task failed to complete shutdown.")]
     Failed,

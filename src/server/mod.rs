@@ -2,7 +2,7 @@
 //!
 //! [`Socket::create`] takes an existing Tokio Unix listener and returns a server
 //! handle, a command sender, and a notification receiver. Keep the handle alive
-//! and continue draining notifications while awaiting [`Socket::shutdown`].
+//! and continue draining notifications while awaiting [`Socket::close`].
 //! The caller owns the lifecycle of the socket's filesystem path.
 
 mod options;
