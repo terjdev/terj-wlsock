@@ -91,17 +91,21 @@ async fn handle_client(
     let state = Arc::new(Mutex::new(ClientState::default()));
 
     let reason = {
+        // Prioritize cancellation without giving either I/O direction a fixed priority.
         tokio::select! {
             biased;
             _ = cancelation_token.cancelled() => {
                 DisconnectReason::Client
             },
-            reason = read_events(fd_read, state.clone(), recv_tx.clone()) => {
-                reason
-            },
-            reason = write_requests(fd_write, state, send_rx) => {
-                reason
-            },
+            reason = async {
+                // A busy reader can exhaust the shared Tokio task budget before
+                // writes are polled. Randomize the I/O polling order to avoid this.
+                // Keep both futures alive so partial I/O is never restarted.
+                tokio::select! {
+                    reason = read_events(fd_read, state.clone(), recv_tx.clone()) => reason,
+                    reason = write_requests(fd_write, state, send_rx) => reason,
+                }
+            } => reason,
         }
     };
 

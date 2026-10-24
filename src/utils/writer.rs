@@ -323,7 +323,7 @@ impl FdWriter {
     /// A full descriptor queue is sent before adding this descriptor. The last
     /// buffered byte is retained when at least two bytes are available; a sole
     /// byte is sent, and the new descriptor waits for subsequent byte writes.
-    /// Sending can suspend on socket readiness or yield cooperatively.
+    /// Sending can suspend on socket readiness or Tokio cooperative scheduling.
     /// Cancellation during a send leaves the writer unusable; the connection
     /// must be closed rather than retried.
     ///
@@ -365,8 +365,7 @@ impl FdWriter {
     /// Sends all buffered bytes and descriptors to the kernel.
     /// Success does not imply that the peer has processed the message.
     /// An empty buffer is allowed only when no descriptors are queued.
-    /// Yields explicitly if sending did not already suspend on readiness,
-    /// including when the buffer is empty.
+    /// An empty flush completes without an explicit scheduling yield.
     ///
     /// # Errors
     /// Returns an error for socket failures, a failed or closed stream,
@@ -397,8 +396,6 @@ impl FdWriter {
 
     /// Drains a prefix, optionally retaining one byte without shifting the buffer.
     /// Called only while the public operation owns the `Writing` state.
-    /// Successful completion yields explicitly unless a readiness poll returned
-    /// Pending during this drain. The same rule applies to an empty drain.
     async fn send_buffered(&mut self, retain: usize) -> Result<(), FdWriterError> {
         if retain > 1 || retain > self.bytes_len {
             self.state = FdWriterState::Failed;
@@ -410,7 +407,6 @@ impl FdWriter {
             return Err(FdWriterError::FdsWithoutBytes);
         }
 
-        let mut yielded = false;
         while self.bytes_sent < end {
             // Keep readiness guards and ancillary temporaries within one poll;
             // none are carried across a readiness wait in the outer future.
@@ -418,7 +414,6 @@ impl FdWriter {
                 loop {
                     let mut guard = match self.fd.poll_write_ready(cx) {
                         std::task::Poll::Pending => {
-                            yielded = true;
                             return std::task::Poll::Pending;
                         }
                         std::task::Poll::Ready(Ok(guard)) => guard,
@@ -502,11 +497,6 @@ impl FdWriter {
         self.bytes_len = retain;
         self.bytes_sent = 0;
 
-        // A readiness wait already yielded to the caller. Otherwise yield only
-        // after all sent bytes and descriptors have been accounted for.
-        if !yielded {
-            tokio::task::yield_now().await;
-        }
         Ok(())
     }
 }

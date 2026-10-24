@@ -243,6 +243,7 @@ async fn handle_client(
     disconnect_rx: oneshot::Receiver<protocol::DisconnectReason>,
 ) -> protocol::DisconnectReason {
     let state = Arc::new(Mutex::new(ClientState::default()));
+    // Prioritize disconnection without giving either I/O direction a fixed priority.
     tokio::select! {
         biased;
         result = disconnect_rx => {
@@ -251,12 +252,15 @@ async fn handle_client(
                 Err(_) => protocol::DisconnectReason::Server,
             }
         },
-        result = read_requests(id, fd_read, state.clone(), recv_tx) => {
-            return result;
-        },
-        result = write_events(fd_write, state, send_rx) => {
-            return result;
-        },
+        result = async {
+            // A busy reader can exhaust the shared Tokio task budget before
+            // writes are polled. Randomize the I/O polling order to avoid this.
+            // Keep both futures alive so partial I/O is never restarted.
+            tokio::select! {
+                result = read_requests(id, fd_read, state.clone(), recv_tx) => result,
+                result = write_events(fd_write, state, send_rx) => result,
+            }
+        } => result,
     }
 }
 

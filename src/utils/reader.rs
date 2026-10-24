@@ -536,8 +536,10 @@ impl FdReader {
         })
         .await;
 
-        // Account for all received bytes and descriptors before yielding. A
-        // readiness suspension resets the budget; resumed receives count anew.
+        // Bound receive bursts to reduce latency under sustained input,
+        // complementing Tokio's operation budget rather than replacing fair I/O
+        // selection. Account for bytes and FDs before yielding; this counter also
+        // restarts when readiness polling returns Pending.
         if result.is_ok() && self.bytes_since_yield >= BYTES_CAPACITY {
             self.bytes_since_yield = 0;
             tokio::task::yield_now().await;
