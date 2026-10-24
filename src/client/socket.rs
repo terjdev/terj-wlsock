@@ -172,6 +172,12 @@ async fn write_requests(
         if let Err(error) = write_request(command, &mut writer, &state).await {
             return DisconnectReason::Error(ClientError::Write(error));
         }
+
+        if send_rx.is_empty() {
+            if let Err(error) = writer.flush().await {
+                return DisconnectReason::Error(ClientError::Write(error));
+            }
+        }
     }
 
     DisconnectReason::Client
@@ -196,11 +202,7 @@ async fn write_request(
     writer.next_u32(object_id).await?;
     writer.next_u32(header_word).await?;
 
-    {
-        let mut payload = FdPayloadWriter::new(writer, payload_size)?;
-        command.write(&mut payload, state).await?;
-    }
-
-    writer.flush().await?;
+    let mut payload = FdPayloadWriter::new(writer, payload_size)?;
+    command.write(&mut payload, state).await?;
     Ok(())
 }

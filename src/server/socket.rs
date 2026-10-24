@@ -317,6 +317,12 @@ async fn write_events(
         if let Err(error) = write_event(command, &mut writer, &state).await {
             return protocol::DisconnectReason::Error(protocol::ClientError::Write(error));
         }
+
+        if send_rx.is_empty() {
+            if let Err(error) = writer.flush().await {
+                return protocol::DisconnectReason::Error(protocol::ClientError::Write(error));
+            }
+        }
     }
 
     protocol::DisconnectReason::Server
@@ -339,11 +345,9 @@ async fn write_event(
 
     writer.next_u32(object_id).await?;
     writer.next_u32(header_word).await?;
-    {
-        let mut payload = FdPayloadWriter::new(writer, payload_size)?;
-        command.write(&mut payload, state).await?;
-    }
-    writer.flush().await?;
+
+    let mut payload = FdPayloadWriter::new(writer, payload_size)?;
+    command.write(&mut payload, state).await?;
     Ok(())
 }
 

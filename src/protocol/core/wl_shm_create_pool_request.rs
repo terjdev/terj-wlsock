@@ -114,7 +114,7 @@ impl CommandWriter for WlShmCreatePoolRequest {
                 .map_err(|_| FdWriterError::InvalidProtocol)?;
         }
         writer.next_u32(self.id).await?;
-        writer.next_fd(self.fd)?;
+        writer.next_fd(self.fd).await?;
         writer.next_i32(self.size).await?;
         Ok(())
     }

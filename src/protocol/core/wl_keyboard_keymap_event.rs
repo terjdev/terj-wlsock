@@ -64,7 +64,7 @@ impl CommandWriter for WlKeyboardKeymapEvent {
             return Err(FdWriterError::InvalidProtocol);
         }
         writer.next_u32(self.format.0).await?;
-        writer.next_fd(self.fd)?;
+        writer.next_fd(self.fd).await?;
         writer.next_u32(self.size).await?;
         Ok(())
     }

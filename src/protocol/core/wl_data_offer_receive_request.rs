@@ -105,7 +105,7 @@ impl CommandWriter for WlDataOfferReceiveRequest {
             return Err(FdWriterError::InvalidProtocol);
         }
         writer.next_string(&self.mime_type).await?;
-        writer.next_fd(self.fd)?;
+        writer.next_fd(self.fd).await?;
         Ok(())
     }
 }

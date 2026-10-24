@@ -33,9 +33,6 @@ pub enum FdWriterError {
     #[error("Payload quota exceeded: requested {requested} bytes, but only {remaining} remain.")]
     QuotaExceeded { requested: usize, remaining: usize },
 
-    #[error("Cannot queue more than {capacity} file descriptors before sending them.")]
-    TooManyFileDescriptors { capacity: usize },
-
     #[error("The ancillary buffer is too small for the queued file descriptors.")]
     AncillaryBufferTooSmall,
 
@@ -67,7 +64,11 @@ pub enum FdWriterState {
 /// A full buffer is sent only when more space is needed, retaining its last
 /// byte so descriptors appended after the bytes can still accompany data.
 /// Call [`Self::flush`] explicitly to send that final byte and any other
-/// buffered data. Dropping the writer performs no I/O and discards its buffers.
+/// buffered data. A full descriptor queue also sends buffered data, retaining
+/// the last byte when more than one byte is available. If only one byte remains,
+/// it is sent and newly queued descriptors wait for subsequent byte writes.
+/// Dropping the writer discards buffers and closes owned descriptors;
+/// it does not send buffered bytes.
 ///
 /// Cancelling an asynchronous operation leaves the state as `Writing`:
 /// buffered or sent prefixes cannot safely be repeated. The next operation
@@ -318,27 +319,54 @@ impl FdWriter {
     }
 
     /// Takes ownership of a descriptor to accompany the next successful send.
-    /// Does not perform I/O. Rejected descriptors are closed automatically.
+    ///
+    /// A full descriptor queue is sent before adding this descriptor. The last
+    /// buffered byte is retained when at least two bytes are available; a sole
+    /// byte is sent, and the new descriptor waits for subsequent byte writes.
+    /// Sending can suspend on socket readiness or yield cooperatively.
+    /// Cancellation during a send leaves the writer unusable; the connection
+    /// must be closed rather than retried.
+    ///
+    /// # Extension codec limitations
+    /// The descriptor queue holds 253 FDs. Unix stream ancillary transfers need
+    /// ordinary bytes: adding the 254th queued FD requires buffered bytes to send
+    /// the previous 253. If none are available, this call fails immediately with
+    /// [`FdWriterError::FdsWithoutBytes`]; writing bytes afterwards cannot recover
+    /// the failed writer.
+    ///
+    /// A descriptor-queue send can consume the sole remaining byte. New FDs may
+    /// then be queued, but more ordinary bytes must be written before another
+    /// queue-overflow send or [`Self::flush`]. A flush with queued FDs and no bytes
+    /// also fails with [`FdWriterError::FdsWithoutBytes`]. Codecs for extensions
+    /// with many FD arguments must account for this buffering limit; it is not
+    /// a Wayland protocol limit on the number of FD arguments in a message.
+    /// Do not insert extra wire bytes as a workaround, since that changes framing.
     ///
     /// # Errors
-    /// Returns an error for a failed or closed stream or a full descriptor queue.
-    /// The rejected descriptor is closed.
-    pub fn next_fd(&mut self, fd: OwnedFd) -> Result<(), FdWriterError> {
+    /// Returns an error for a failed or closed stream, socket failures, or a full
+    /// descriptor queue without buffered bytes. Rejected descriptors are closed
+    /// automatically, as is the supplied descriptor on cancellation.
+    pub async fn next_fd(&mut self, fd: OwnedFd) -> Result<(), FdWriterError> {
         self.check_state()?;
         if self.fds_len == FDS_CAPACITY {
-            self.state = FdWriterState::Failed;
-            return Err(FdWriterError::TooManyFileDescriptors {
-                capacity: FDS_CAPACITY,
-            });
+            // Keep the current message incomplete until its new descriptor can
+            // accompany data. A sole byte must instead serve the queued FDs;
+            // the caller then supplies more bytes before flushing the new FD.
+            let retain = usize::from(self.bytes_len > 1);
+            self.state = FdWriterState::Writing;
+            self.send_buffered(retain).await?;
         }
         self.fds_buf[self.fds_len] = Some(fd);
         self.fds_len += 1;
+        self.state = FdWriterState::Open;
         Ok(())
     }
 
     /// Sends all buffered bytes and descriptors to the kernel.
     /// Success does not imply that the peer has processed the message.
     /// An empty buffer is allowed only when no descriptors are queued.
+    /// Yields explicitly if sending did not already suspend on readiness,
+    /// including when the buffer is empty.
     ///
     /// # Errors
     /// Returns an error for socket failures, a failed or closed stream,
@@ -369,26 +397,34 @@ impl FdWriter {
 
     /// Drains a prefix, optionally retaining one byte without shifting the buffer.
     /// Called only while the public operation owns the `Writing` state.
+    /// Successful completion yields explicitly unless a readiness poll returned
+    /// Pending during this drain. The same rule applies to an empty drain.
     async fn send_buffered(&mut self, retain: usize) -> Result<(), FdWriterError> {
-        debug_assert!(
-            retain <= 1 && retain <= self.bytes_len,
-            "send_buffered may retain at most one buffered byte: retain {retain}, buffered {}",
-            self.bytes_len
-        );
+        if retain > 1 || retain > self.bytes_len {
+            self.state = FdWriterState::Failed;
+            return Err(FdWriterError::InvalidProtocol);
+        }
         let end = self.bytes_len - retain;
         if end == 0 && self.fds_len != 0 {
             self.state = FdWriterState::Failed;
             return Err(FdWriterError::FdsWithoutBytes);
         }
 
+        let mut yielded = false;
         while self.bytes_sent < end {
             // Keep readiness guards and ancillary temporaries within one poll;
             // none are carried across a readiness wait in the outer future.
             let result = std::future::poll_fn(|cx| {
                 loop {
-                    let mut guard = match std::task::ready!(self.fd.poll_write_ready(cx)) {
-                        Ok(guard) => guard,
-                        Err(error) => return std::task::Poll::Ready(Err(error)),
+                    let mut guard = match self.fd.poll_write_ready(cx) {
+                        std::task::Poll::Pending => {
+                            yielded = true;
+                            return std::task::Poll::Pending;
+                        }
+                        std::task::Poll::Ready(Ok(guard)) => guard,
+                        std::task::Poll::Ready(Err(error)) => {
+                            return std::task::Poll::Ready(Err(error));
+                        }
                     };
                     match guard.try_io(|fd| {
                         let socket = fd.get_ref();
@@ -400,8 +436,10 @@ impl FdWriter {
                                 .iter_mut()
                                 .zip(&self.fds_buf[..self.fds_len])
                             {
-                                *borrowed =
-                                    owned.as_ref().expect("queued FD slot is populated").as_fd();
+                                let Some(owned) = owned.as_ref() else {
+                                    return Ok(Err(FdWriterError::WriterFailed));
+                                };
+                                *borrowed = owned.as_fd();
                             }
                             let mut control = SendAncillaryBuffer::new(&mut self.fds_raw);
                             if !control.push(SendAncillaryMessage::ScmRights(&fds[..self.fds_len]))
@@ -463,6 +501,12 @@ impl FdWriter {
         }
         self.bytes_len = retain;
         self.bytes_sent = 0;
+
+        // A readiness wait already yielded to the caller. Otherwise yield only
+        // after all sent bytes and descriptors have been accounted for.
+        if !yielded {
+            tokio::task::yield_now().await;
+        }
         Ok(())
     }
 }
@@ -633,11 +677,24 @@ impl<'a> FdPayloadWriter<'a> {
 
     /// Queues an owned descriptor without consuming byte quota.
     ///
+    /// A full descriptor queue triggers an asynchronous send, retaining the last
+    /// byte when possible. If its sole byte is sent, subsequent byte writes are
+    /// required before flushing newly queued descriptors. Cancellation leaves the
+    /// underlying writer unusable.
+    ///
+    /// # Extension codec limitations
+    /// The 253-FD queue and ordinary-byte requirements of [`FdWriter::next_fd`]
+    /// apply here too. In particular, an exhausted payload byte quota does not
+    /// guarantee that all queued FDs can be sent. Extension codecs must arrange
+    /// enough protocol-defined bytes for descriptor-queue sends and the final
+    /// flush; they must not add bytes outside the declared message payload.
+    ///
     /// # Errors
-    /// Returns an error for a failed or closed stream or a full descriptor queue.
-    /// The rejected descriptor is closed.
-    pub fn next_fd(&mut self, fd: OwnedFd) -> Result<(), FdWriterError> {
-        let result = self.writer.next_fd(fd);
+    /// Returns an error for a failed or closed stream, socket failures, or
+    /// insufficient bytes for a descriptor-queue send. Rejected descriptors close
+    /// automatically. This operation never consumes payload byte quota.
+    pub async fn next_fd(&mut self, fd: OwnedFd) -> Result<(), FdWriterError> {
+        let result = self.writer.next_fd(fd).await;
         self.finish_write(result, 0)
     }
 
