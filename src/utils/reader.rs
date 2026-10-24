@@ -116,6 +116,11 @@ impl AncillaryStorage {
 /// ancillary buffers remain inline. The socket must already be nonblocking,
 /// and its Tokio runtime must remain running. All access requires &mut self.
 ///
+/// Successful socket receives count both direct and read-ahead bytes toward a
+/// cooperative yield threshold equal to the internal byte-buffer capacity.
+/// Pending readiness resets this budget. Buffered reads do not count again;
+/// a single receive can exceed the threshold when reading directly into a destination.
+///
 /// Descriptors remain available after EOF or a read failure. Dropping the reader
 /// closes all queued descriptors.
 pub struct FdReader {
@@ -123,6 +128,7 @@ pub struct FdReader {
     bytes_raw: [u8; BYTES_CAPACITY],
     bytes_read: usize,
     bytes_len: usize,
+    bytes_since_yield: usize,
     fds_raw: AncillaryStorage,
     fds_queue: VecDeque<OwnedFd>,
     number_raw: [u8; 4],
@@ -326,6 +332,7 @@ impl FdReader {
             bytes_raw: [0; BYTES_CAPACITY],
             bytes_read: 0,
             bytes_len: 0,
+            bytes_since_yield: 0,
             fds_raw: AncillaryStorage::new(),
             fds_queue: VecDeque::with_capacity(INLINE_FDS_CAPACITY),
             number_raw: [0; 4],
@@ -474,11 +481,15 @@ impl FdReader {
     async fn receive(&mut self, destination: &mut [u8]) -> Result<usize, FdReaderError> {
         // Readiness guards and recvmsg buffers exist only during poll, rather than
         // becoming large locals carried through nested async_io futures.
-        std::future::poll_fn(|cx| {
+        let result = std::future::poll_fn(|cx| {
             loop {
-                let mut guard = match std::task::ready!(self.fd.poll_read_ready(cx)) {
-                    Ok(guard) => guard,
-                    Err(error) => {
+                let mut guard = match self.fd.poll_read_ready(cx) {
+                    std::task::Poll::Pending => {
+                        self.bytes_since_yield = 0;
+                        return std::task::Poll::Pending;
+                    }
+                    std::task::Poll::Ready(Ok(guard)) => guard,
+                    std::task::Poll::Ready(Err(error)) => {
                         self.state = FdReaderState::Failed;
                         return std::task::Poll::Ready(Err(FdReaderError::Io(error)));
                     }
@@ -515,6 +526,7 @@ impl FdReader {
                             let direct = size.min(destination.len());
                             self.bytes_read = 0;
                             self.bytes_len = size - direct;
+                            self.bytes_since_yield = self.bytes_since_yield.saturating_add(size);
                             direct
                         });
                         return std::task::Poll::Ready(result);
@@ -522,7 +534,15 @@ impl FdReader {
                 }
             }
         })
-        .await
+        .await;
+
+        // Account for all received bytes and descriptors before yielding. A
+        // readiness suspension resets the budget; resumed receives count anew.
+        if result.is_ok() && self.bytes_since_yield >= BYTES_CAPACITY {
+            self.bytes_since_yield = 0;
+            tokio::task::yield_now().await;
+        }
+        result
     }
 
     /// Updates terminal state in one place after a socket receive completes.
