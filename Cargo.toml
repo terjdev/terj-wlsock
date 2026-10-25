@@ -5,7 +5,9 @@ edition = "2024"
 license = "MIT"
 
 [features]
-default = ["wlr-data-control", "wlr-layer-shell", "ext-tablet", "ext-xdg-shell", "ext-dmabuf", "ext-presentation-time", "ext-viewporter"]
+default = ["ext", "wlr"]
+ext = ["ext-tablet", "ext-xdg-shell", "ext-dmabuf", "ext-presentation-time", "ext-viewporter"]
+wlr = ["wlr-data-control", "wlr-layer-shell"]
 ext-presentation-time = []
 ext-viewporter = []
 wlr-data-control = []
