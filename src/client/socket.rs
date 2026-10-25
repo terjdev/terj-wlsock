@@ -121,10 +121,8 @@ async fn read_events(
     let mut reader = FdReader::new(fd);
 
     loop {
-        let object_id = match reader.next_u32().await {
-            Ok(id) => {
-                id // TODO: fix issue when partially received object ID also returns EOF instead of protocol error.
-            }
+        let object_id = match reader.next_id().await {
+            Ok(id) => id,
             Err(FdReaderError::EndOfStream) => {
                 return DisconnectReason::Server;
             }

@@ -418,6 +418,26 @@ impl FdReader {
         Ok(u32::from_ne_bytes(self.next_number_slow().await?))
     }
 
+    /// Reads the receiver ID at the start of a message in native byte order.
+    ///
+    /// Does not validate whether the object exists. Partial progress is retained
+    /// on cancellation, as with [`Self::next_u32`]; resume with this method to
+    /// preserve the distinction between clean EOF and a truncated ID.
+    ///
+    /// # Errors
+    /// Returns [`FdReaderError::EndOfStream`] if EOF occurs before any ID bytes.
+    /// EOF after 1–3 bytes returns [`FdReaderError::InvalidProtocol`] and marks
+    /// the reader as failed. Other errors are propagated from [`Self::next_u32`].
+    pub async fn next_id(&mut self) -> Result<u32, FdReaderError> {
+        match self.next_u32().await {
+            Err(FdReaderError::EndOfStream) if self.number_len != 0 => {
+                self.state = FdReaderState::Failed;
+                Err(FdReaderError::InvalidProtocol)
+            }
+            result => result,
+        }
+    }
+
     /// Reads a signed Wayland 24.8 fixed-point number, exactly represented as f64.
     ///
     /// Partial-read and cancellation behavior is the same as [`Self::next_i32`].

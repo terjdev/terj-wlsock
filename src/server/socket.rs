@@ -363,10 +363,7 @@ async fn read_requests(
 ) -> protocol::DisconnectReason {
     let mut reader = FdReader::new(fd);
     while *reader.state() == FdReaderState::Open {
-        // TODO: next_u32 can return EndOfStream after consuming 1–3 bytes of
-        // the object ID. Update the reader to distinguish a truncated u32 from
-        // EOF at a message boundary so partial headers are reported as errors.
-        let object_id = match reader.next_u32().await {
+        let object_id = match reader.next_id().await {
             Ok(object_id) => object_id,
             Err(FdReaderError::EndOfStream) => {
                 return protocol::DisconnectReason::Client;
