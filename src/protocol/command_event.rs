@@ -54,6 +54,8 @@ impl InterfaceReader for CommandEvent {
                 )
                 .await?,
             )),
+            #[cfg(feature = "ext-viewporter")]
+            ObjectInteface::Viewporter(_) => Err(FdReaderError::InvalidProtocol),
         }
     }
 }

@@ -39,3 +39,11 @@ The Presentation time protocol definitions and documentation excerpts are derive
 [wayland-protocols presentation-time.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/stable/presentation-time/presentation-time.xml).
 The original MIT license and copyright notice are preserved in
 [src/protocol/ext/presentation_time/LICENSE.md](src/protocol/ext/presentation_time/LICENSE.md).
+
+## Third-party notice: Viewporter
+
+The Viewporter protocol definitions and documentation excerpts are derived from
+[wayland-protocols viewporter.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/stable/viewporter/viewporter.xml).
+Copyright © 2013-2016 Collabora, Ltd. The original MIT license and copyright
+notice are preserved in
+[src/protocol/ext/viewporter/LICENSE.md](src/protocol/ext/viewporter/LICENSE.md).

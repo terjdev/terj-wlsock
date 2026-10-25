@@ -3,6 +3,8 @@
 use crate::protocol::core;
 #[cfg(feature = "ext-presentation-time")]
 use crate::protocol::ext::presentation_time;
+#[cfg(feature = "ext-viewporter")]
+use crate::protocol::ext::viewporter;
 
 /// Identifies an object's protocol group, interface, and negotiated version.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -12,6 +14,9 @@ pub(crate) enum ObjectInteface {
     /// A Presentation time interface.
     #[cfg(feature = "ext-presentation-time")]
     PresentationTime(presentation_time::ObjectInteface),
+    /// A Viewporter interface.
+    #[cfg(feature = "ext-viewporter")]
+    Viewporter(viewporter::ObjectInteface),
 }
 
 impl ObjectInteface {
@@ -21,6 +26,8 @@ impl ObjectInteface {
             Self::Core(interface) => interface.name(),
             #[cfg(feature = "ext-presentation-time")]
             Self::PresentationTime(interface) => interface.name(),
+            #[cfg(feature = "ext-viewporter")]
+            Self::Viewporter(interface) => interface.name(),
         }
     }
     /// Returns the negotiated object version.
@@ -29,6 +36,8 @@ impl ObjectInteface {
             Self::Core(interface) => interface.version(),
             #[cfg(feature = "ext-presentation-time")]
             Self::PresentationTime(interface) => interface.version(),
+            #[cfg(feature = "ext-viewporter")]
+            Self::Viewporter(interface) => interface.version(),
         }
     }
     /// Returns the highest supported version of this interface.
@@ -37,6 +46,8 @@ impl ObjectInteface {
             Self::Core(interface) => interface.max_version(),
             #[cfg(feature = "ext-presentation-time")]
             Self::PresentationTime(interface) => interface.max_version(),
+            #[cfg(feature = "ext-viewporter")]
+            Self::Viewporter(interface) => interface.max_version(),
         }
     }
     /// Creates a known interface, rejecting zero or unsupported versions.
@@ -47,6 +58,10 @@ impl ObjectInteface {
         #[cfg(feature = "ext-presentation-time")]
         if let Some(interface) = presentation_time::ObjectInteface::from_name(name, version) {
             return Some(Self::PresentationTime(interface));
+        }
+        #[cfg(feature = "ext-viewporter")]
+        if let Some(interface) = viewporter::ObjectInteface::from_name(name, version) {
+            return Some(Self::Viewporter(interface));
         }
         None
     }

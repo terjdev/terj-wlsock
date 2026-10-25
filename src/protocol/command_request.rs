@@ -1,6 +1,8 @@
 use crate::protocol::core;
 #[cfg(feature = "ext-presentation-time")]
 use crate::protocol::ext::presentation_time;
+#[cfg(feature = "ext-viewporter")]
+use crate::protocol::ext::viewporter;
 use crate::protocol::{
     ClientState, CommandReader, CommandReaderExt, CommandWriter, InterfaceReader, ObjectInteface,
 };
@@ -16,6 +18,9 @@ pub enum CommandRequest {
     /// Presentation time extension commands.
     #[cfg(feature = "ext-presentation-time")]
     PresentationTime(presentation_time::CommandRequest),
+    /// Viewporter extension commands.
+    #[cfg(feature = "ext-viewporter")]
+    Viewporter(viewporter::CommandRequest),
 }
 
 impl CommandReader<Self> for CommandRequest {
@@ -54,6 +59,13 @@ impl InterfaceReader for CommandRequest {
                 )
                 .await?,
             )),
+            #[cfg(feature = "ext-viewporter")]
+            ObjectInteface::Viewporter(_) => Ok(Self::Viewporter(
+                viewporter::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
         }
     }
 }
@@ -64,6 +76,8 @@ impl CommandWriter for CommandRequest {
             Self::Core(command) => command.object_id(),
             #[cfg(feature = "ext-presentation-time")]
             Self::PresentationTime(command) => command.object_id(),
+            #[cfg(feature = "ext-viewporter")]
+            Self::Viewporter(command) => command.object_id(),
         }
     }
     fn opcode(&self) -> u16 {
@@ -71,6 +85,8 @@ impl CommandWriter for CommandRequest {
             Self::Core(command) => command.opcode(),
             #[cfg(feature = "ext-presentation-time")]
             Self::PresentationTime(command) => command.opcode(),
+            #[cfg(feature = "ext-viewporter")]
+            Self::Viewporter(command) => command.opcode(),
         }
     }
     fn payload_size(&self) -> usize {
@@ -78,6 +94,8 @@ impl CommandWriter for CommandRequest {
             Self::Core(command) => command.payload_size(),
             #[cfg(feature = "ext-presentation-time")]
             Self::PresentationTime(command) => command.payload_size(),
+            #[cfg(feature = "ext-viewporter")]
+            Self::Viewporter(command) => command.payload_size(),
         }
     }
     async fn write(
@@ -89,6 +107,8 @@ impl CommandWriter for CommandRequest {
             Self::Core(command) => command.write(writer, state).await,
             #[cfg(feature = "ext-presentation-time")]
             Self::PresentationTime(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-viewporter")]
+            Self::Viewporter(command) => command.write(writer, state).await,
         }
     }
 }
