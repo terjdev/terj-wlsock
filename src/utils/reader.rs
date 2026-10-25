@@ -33,6 +33,10 @@ pub enum FdReaderError {
     #[error("Failed to allocate space in the file descriptor queue: {0}")]
     FdQueueAllocation(#[source] TryReserveError),
 
+    /// The incoming descriptor queue exceeded its per-connection limit.
+    #[error("Cannot queue more than {capacity} incoming file descriptors.")]
+    TooManyFileDescriptors { capacity: usize },
+
     #[error("Received an unsupported ancillary message: {kind}.")]
     UnsupportedAncillaryMessage { kind: &'static str },
 
@@ -56,50 +60,99 @@ pub enum FdReaderState {
     Failed,
 }
 
-// Reserve one Linux SCM_RIGHTS batch up front; retain capacity as the FIFO grows.
-const INLINE_FDS_CAPACITY: usize = 256;
+// Bound descriptors retained across receives, independently of a single SCM_RIGHTS batch.
+const MAX_PENDING_FDS: usize = 256;
 
-/// Processes owned descriptors without performing further socket operations.
-/// The iterator's owner must close all unvisited messages on early return.
-fn collect_descriptors<'a>(
-    messages: &mut impl Iterator<Item = RecvAncillaryMessage<'a>>,
-    queue: &mut VecDeque<OwnedFd>,
-) -> Result<(), FdReaderError> {
-    for message in messages {
-        match message {
-            RecvAncillaryMessage::ScmRights(rights) => {
-                queue
-                    .try_reserve(rights.len())
-                    .map_err(FdReaderError::FdQueueAllocation)?;
-                for fd in rights {
-                    queue.push_back(fd);
-                }
-            }
-            _ => {
-                return Err(FdReaderError::UnsupportedAncillaryMessage {
-                    kind: "Unsupported ancillary message.",
-                });
-            }
-        }
-    }
-    Ok(())
+/// Inline read-ahead bytes, consumption indices, and cooperative receive counter.
+struct BytesStorage {
+    raw: [u8; BYTES_CAPACITY],
+    read: usize,
+    len: usize,
+    bytes_counter: usize,
 }
 
-/// Inline control-message storage aligned to a native integer boundary.
-/// RecvAncillaryBuffer handles the platform's cmsghdr layout and initialization;
-/// alignment preserves the full reserved SCM_RIGHTS capacity on Unix targets.
+impl BytesStorage {
+    fn new() -> Self {
+        Self {
+            raw: [0; BYTES_CAPACITY],
+            read: 0,
+            len: 0,
+            bytes_counter: 0,
+        }
+    }
+}
+
+/// Aligned control-message storage and a bounded FIFO of owned descriptors.
+/// Rustix handles the raw cmsghdr layout and closes unclaimed received FDs.
 #[repr(C)]
 struct AncillaryStorage {
     alignment: [usize; 0],
-    bytes: [MaybeUninit<u8>; ANCILLARY_CAPACITY],
+    raw: [MaybeUninit<u8>; ANCILLARY_CAPACITY],
+    queue: VecDeque<OwnedFd>,
 }
 
 impl AncillaryStorage {
     fn new() -> Self {
         Self {
             alignment: [],
-            bytes: [MaybeUninit::uninit(); ANCILLARY_CAPACITY],
+            raw: [MaybeUninit::uninit(); ANCILLARY_CAPACITY],
+            queue: VecDeque::with_capacity(MAX_PENDING_FDS),
         }
+    }
+
+    fn next_fd(&mut self) -> Option<OwnedFd> {
+        self.queue.pop_front()
+    }
+
+    /// Receives bytes and ancillary data without waiting for socket readiness.
+    /// The nested result distinguishes socket errors from ancillary decoding errors.
+    fn receive(
+        &mut self,
+        socket: &UnixStream,
+        buffers: &mut [IoSliceMut<'_>],
+    ) -> io::Result<Result<usize, FdReaderError>> {
+        let mut control = RecvAncillaryBuffer::new(&mut self.raw);
+        let received = recvmsg(socket, buffers, &mut control, RecvFlags::CMSG_CLOEXEC)
+            .map_err(io::Error::from)?;
+        let mut messages = control.drain();
+        let result = if received.flags.contains(ReturnFlags::CTRUNC) {
+            Err(FdReaderError::AncillaryTruncated)
+        } else {
+            Self::collect_descriptors(&mut messages, &mut self.queue).map(|()| received.bytes)
+        };
+        // Drain the same iterator on error as well, closing all unclaimed FDs.
+        messages.for_each(drop);
+        Ok(result)
+    }
+
+    /// Adds complete SCM_RIGHTS groups without exceeding the queue limit.
+    fn collect_descriptors<'a>(
+        messages: &mut impl Iterator<Item = RecvAncillaryMessage<'a>>,
+        queue: &mut VecDeque<OwnedFd>,
+    ) -> Result<(), FdReaderError> {
+        for message in messages {
+            match message {
+                RecvAncillaryMessage::ScmRights(rights) => {
+                    if rights.len() > MAX_PENDING_FDS.saturating_sub(queue.len()) {
+                        return Err(FdReaderError::TooManyFileDescriptors {
+                            capacity: MAX_PENDING_FDS,
+                        });
+                    }
+                    queue
+                        .try_reserve(rights.len())
+                        .map_err(FdReaderError::FdQueueAllocation)?;
+                    for fd in rights {
+                        queue.push_back(fd);
+                    }
+                }
+                _ => {
+                    return Err(FdReaderError::UnsupportedAncillaryMessage {
+                        kind: "Unsupported ancillary message.",
+                    });
+                }
+            }
+        }
+        Ok(())
     }
 }
 
@@ -112,7 +165,8 @@ impl AncillaryStorage {
 /// nonempty owned values allocate once.
 ///
 /// Construction allocates a FIFO queue with capacity for at least 256 descriptors.
-/// The queue grows as needed and retains its allocation for reuse. Byte and
+/// At most 256 descriptors may remain queued; exceeding this limit fails the reader.
+/// The queue retains its allocation for reuse. Byte and
 /// ancillary buffers remain inline. The socket must already be nonblocking,
 /// and its Tokio runtime must remain running. All access requires &mut self.
 ///
@@ -125,12 +179,8 @@ impl AncillaryStorage {
 /// closes all queued descriptors.
 pub struct FdReader {
     fd: AsyncFd<UnixStream>,
-    bytes_raw: [u8; BYTES_CAPACITY],
-    bytes_read: usize,
-    bytes_len: usize,
-    bytes_since_yield: usize,
-    fds_raw: AncillaryStorage,
-    fds_queue: VecDeque<OwnedFd>,
+    bytes: BytesStorage,
+    ancillary: AncillaryStorage,
     number_raw: [u8; 4],
     number_len: usize,
     state: FdReaderState,
@@ -246,11 +296,11 @@ impl FdReader {
             let mut bytes = Vec::new();
             if STRING && len == 1 {
                 // Empty strings need only the inline terminator, not a heap buffer.
-                if self.bytes_read == self.bytes_len {
+                if self.bytes.read == self.bytes.len {
                     self.refill().await?;
                 }
-                let terminator = self.bytes_raw[self.bytes_read];
-                self.bytes_read += 1;
+                let terminator = self.bytes.raw[self.bytes.read];
+                self.bytes.read += 1;
                 *remaining -= 1;
                 self.skip_bytes(padding).await?;
                 *remaining -= padding;
@@ -283,22 +333,22 @@ impl FdReader {
     /// Uses already buffered bytes once, then fills the reserved final allocation.
     /// The caller supplied an empty Vec and reserved capacity for len bytes.
     async fn fill_vec(&mut self, bytes: &mut Vec<u8>, len: usize) -> Result<(), FdReaderError> {
-        let buffered = len.min(self.bytes_len - self.bytes_read);
+        let buffered = len.min(self.bytes.len - self.bytes.read);
         if buffered != 0 {
             // SAFETY: The caller supplied an empty Vec with capacity for len
             // bytes. buffered <= len, and the source prefix is initialized and
-            // bounded by bytes_len <= BYTES_CAPACITY. The inline source and the
+            // bounded by bytes.len <= BYTES_CAPACITY. The inline source and the
             // fresh heap allocation cannot overlap. Publish only the copied bytes.
             unsafe {
                 std::ptr::copy_nonoverlapping(
-                    self.bytes_raw.as_ptr().add(self.bytes_read),
+                    self.bytes.raw.as_ptr().add(self.bytes.read),
                     bytes.as_mut_ptr(),
                     buffered,
                 );
                 bytes.set_len(buffered);
             }
         }
-        self.bytes_read += buffered;
+        self.bytes.read += buffered;
         let mut initialized = bytes.len();
         if initialized < len {
             // IoSliceMut requires initialized bytes; only the uncached suffix
@@ -315,11 +365,11 @@ impl FdReader {
     /// State and framing were checked by the caller; only refills can fail here.
     async fn skip_bytes(&mut self, mut len: usize) -> Result<(), FdReaderError> {
         while len != 0 {
-            if self.bytes_read == self.bytes_len {
+            if self.bytes.read == self.bytes.len {
                 self.refill().await?;
             }
-            let count = len.min(self.bytes_len - self.bytes_read);
-            self.bytes_read += count;
+            let count = len.min(self.bytes.len - self.bytes.read);
+            self.bytes.read += count;
             len -= count;
         }
         Ok(())
@@ -329,12 +379,8 @@ impl FdReader {
     pub fn new(fd: AsyncFd<UnixStream>) -> Self {
         Self {
             fd,
-            bytes_raw: [0; BYTES_CAPACITY],
-            bytes_read: 0,
-            bytes_len: 0,
-            bytes_since_yield: 0,
-            fds_raw: AncillaryStorage::new(),
-            fds_queue: VecDeque::with_capacity(INLINE_FDS_CAPACITY),
+            bytes: BytesStorage::new(),
+            ancillary: AncillaryStorage::new(),
             number_raw: [0; 4],
             number_len: 0,
             state: FdReaderState::Open,
@@ -405,10 +451,10 @@ impl FdReader {
 
     /// The public entry point checked state and unfinished numeric reads already.
     async fn read_bytes(&mut self, mut destination: &mut [u8]) -> Result<(), FdReaderError> {
-        let count = destination.len().min(self.bytes_len - self.bytes_read);
+        let count = destination.len().min(self.bytes.len - self.bytes.read);
         let (buffered, rest) = destination.split_at_mut(count);
-        buffered.copy_from_slice(&self.bytes_raw[self.bytes_read..self.bytes_read + count]);
-        self.bytes_read += count;
+        buffered.copy_from_slice(&self.bytes.raw[self.bytes.read..self.bytes.read + count]);
+        self.bytes.read += count;
         destination = rest;
         while !destination.is_empty() {
             let received = self.receive(destination).await?;
@@ -422,7 +468,7 @@ impl FdReader {
     /// Descriptors already stored remain accessible after EOF or a read error.
     /// Dropping the reader closes all descriptors that have not been taken.
     pub fn next_fd(&mut self) -> Option<OwnedFd> {
-        self.fds_queue.pop_front()
+        self.ancillary.next_fd()
     }
 
     /// Returns the current stream state.
@@ -442,12 +488,12 @@ impl FdReader {
     /// A partial numeric read must be completed through the slow path instead.
     #[inline]
     fn buffered_number(&mut self) -> Option<[u8; 4]> {
-        if self.number_len != 0 || self.bytes_len - self.bytes_read < 4 {
+        if self.number_len != 0 || self.bytes.len - self.bytes.read < 4 {
             return None;
         }
         let mut number = [0; 4];
-        number.copy_from_slice(&self.bytes_raw[self.bytes_read..self.bytes_read + 4]);
-        self.bytes_read += 4;
+        number.copy_from_slice(&self.bytes.raw[self.bytes.read..self.bytes.read + 4]);
+        self.bytes.read += 4;
         Some(number)
     }
 
@@ -455,14 +501,14 @@ impl FdReader {
     /// Only the checked numeric entry points may call this operation.
     async fn next_number_slow(&mut self) -> Result<[u8; 4], FdReaderError> {
         while self.number_len < 4 {
-            if self.bytes_read == self.bytes_len {
+            if self.bytes.read == self.bytes.len {
                 self.refill().await?;
             }
 
-            let count = (4 - self.number_len).min(self.bytes_len - self.bytes_read);
+            let count = (4 - self.number_len).min(self.bytes.len - self.bytes.read);
             self.number_raw[self.number_len..self.number_len + count]
-                .copy_from_slice(&self.bytes_raw[self.bytes_read..self.bytes_read + count]);
-            self.bytes_read += count;
+                .copy_from_slice(&self.bytes.raw[self.bytes.read..self.bytes.read + count]);
+            self.bytes.read += count;
             self.number_len += count;
         }
 
@@ -485,7 +531,7 @@ impl FdReader {
             loop {
                 let mut guard = match self.fd.poll_read_ready(cx) {
                     std::task::Poll::Pending => {
-                        self.bytes_since_yield = 0;
+                        self.bytes.bytes_counter = 0;
                         return std::task::Poll::Pending;
                     }
                     std::task::Poll::Ready(Ok(guard)) => guard,
@@ -498,23 +544,10 @@ impl FdReader {
                     let empty = destination.is_empty();
                     let mut iov = [
                         IoSliceMut::new(destination),
-                        IoSliceMut::new(&mut self.bytes_raw),
+                        IoSliceMut::new(&mut self.bytes.raw),
                     ];
                     let iov = if empty { &mut iov[1..] } else { &mut iov[..] };
-                    let mut control = RecvAncillaryBuffer::new(&mut self.fds_raw.bytes);
-                    let received = recvmsg(fd, iov, &mut control, RecvFlags::CMSG_CLOEXEC)
-                        .map_err(io::Error::from)?;
-                    let mut messages = control.drain();
-                    let result = if received.flags.contains(ReturnFlags::CTRUNC) {
-                        Err(FdReaderError::AncillaryTruncated)
-                    } else {
-                        collect_descriptors(&mut messages, &mut self.fds_queue)
-                            .map(|()| received.bytes)
-                    };
-                    // Continue the same iterator even after an error: dropping
-                    // each remaining rights iterator closes its unclaimed FDs.
-                    messages.for_each(drop);
-                    Ok(result)
+                    self.ancillary.receive(fd.get_ref(), iov)
                 });
                 drop(guard);
                 match result {
@@ -524,9 +557,10 @@ impl FdReader {
                     Ok(result) => {
                         let result = self.finish_receive(result).map(|size| {
                             let direct = size.min(destination.len());
-                            self.bytes_read = 0;
-                            self.bytes_len = size - direct;
-                            self.bytes_since_yield = self.bytes_since_yield.saturating_add(size);
+                            self.bytes.read = 0;
+                            self.bytes.len = size - direct;
+                            self.bytes.bytes_counter =
+                                self.bytes.bytes_counter.saturating_add(size);
                             direct
                         });
                         return std::task::Poll::Ready(result);
@@ -540,8 +574,8 @@ impl FdReader {
         // complementing Tokio's operation budget rather than replacing fair I/O
         // selection. Account for bytes and FDs before yielding; this counter also
         // restarts when readiness polling returns Pending.
-        if result.is_ok() && self.bytes_since_yield >= BYTES_CAPACITY {
-            self.bytes_since_yield = 0;
+        if result.is_ok() && self.bytes.bytes_counter >= BYTES_CAPACITY {
+            self.bytes.bytes_counter = 0;
             tokio::task::yield_now().await;
         }
         result
