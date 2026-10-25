@@ -1,4 +1,4 @@
-//! Defines core Wayland object interfaces and their negotiated versions.
+//! Defines Wayland object interfaces and their negotiated versions.
 
 /// Identifies a client object interface and its negotiated protocol version.
 ///
@@ -121,12 +121,22 @@ pub(crate) enum ObjectInteface {
     /// <interface name="wl_fixes" version="2" />
     /// ```
     WlFixes { version: u32 },
+    /// Object of interface `wp_presentation`; maximum supported version: 3.
+    #[cfg(feature = "ext-presentation-time")]
+    WpPresentation { version: u32 },
+    /// Object of interface `wp_presentation_feedback`; maximum supported version: 3.
+    #[cfg(feature = "ext-presentation-time")]
+    WpPresentationFeedback { version: u32 },
 }
 impl ObjectInteface {
     /// Returns the interface name defined in XML.
     pub(crate) fn name(self) -> &'static str {
         match self {
             Self::WlDisplay { .. } => "wl_display",
+            #[cfg(feature = "ext-presentation-time")]
+            Self::WpPresentationFeedback { .. } => "wp_presentation_feedback",
+            #[cfg(feature = "ext-presentation-time")]
+            Self::WpPresentation { .. } => "wp_presentation",
             Self::WlRegistry { .. } => "wl_registry",
             Self::WlCallback { .. } => "wl_callback",
             Self::WlCompositor { .. } => "wl_compositor",
@@ -155,6 +165,10 @@ impl ObjectInteface {
     pub(crate) fn version(self) -> u32 {
         match self {
             Self::WlDisplay { version } => version,
+            #[cfg(feature = "ext-presentation-time")]
+            Self::WpPresentationFeedback { version } => version,
+            #[cfg(feature = "ext-presentation-time")]
+            Self::WpPresentation { version } => version,
             Self::WlRegistry { version } => version,
             Self::WlCallback { version } => version,
             Self::WlCompositor { version } => version,
@@ -183,6 +197,10 @@ impl ObjectInteface {
     pub(crate) fn max_version(self) -> u32 {
         match self {
             Self::WlDisplay { .. } => 1,
+            #[cfg(feature = "ext-presentation-time")]
+            Self::WpPresentationFeedback { .. } => 3,
+            #[cfg(feature = "ext-presentation-time")]
+            Self::WpPresentation { .. } => 3,
             Self::WlRegistry { .. } => 1,
             Self::WlCallback { .. } => 1,
             Self::WlCompositor { .. } => 7,
@@ -211,6 +229,10 @@ impl ObjectInteface {
     pub(crate) fn from_name(name: &str, version: u32) -> Option<Self> {
         let interface = match name {
             "wl_display" => Self::WlDisplay { version },
+            #[cfg(feature = "ext-presentation-time")]
+            "wp_presentation_feedback" => Self::WpPresentationFeedback { version },
+            #[cfg(feature = "ext-presentation-time")]
+            "wp_presentation" => Self::WpPresentation { version },
             "wl_registry" => Self::WlRegistry { version },
             "wl_callback" => Self::WlCallback { version },
             "wl_compositor" => Self::WlCompositor { version },

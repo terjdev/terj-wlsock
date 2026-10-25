@@ -1,6 +1,7 @@
 //! Defines protocol command interfaces, connection identifiers, and transport messages.
 
 pub mod core;
+pub mod ext;
 
 mod object_interface;
 pub(crate) use object_interface::ObjectInteface;

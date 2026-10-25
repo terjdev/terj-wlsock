@@ -1,13 +1,17 @@
 use crate::protocol::ClientState;
 use crate::protocol::CommandWriter;
 use crate::protocol::core::*;
+#[cfg(feature = "ext-presentation-time")]
+use crate::protocol::ext::presentation_time::{
+    WpPresentationDestroyRequest, WpPresentationFeedbackRequest,
+};
 use crate::protocol::{CommandReader, CommandReaderExt};
 use crate::protocol::{InterfaceReader, ObjectInteface};
 use crate::utils::reader::{FdPayloadReader, FdReaderError};
 use crate::utils::writer::{FdPayloadWriter, FdWriterError};
 use std::sync::{Arc, Mutex};
 
-/// Contains every core-protocol request and delegates its encoding and decoding.
+/// Contains every enabled protocol request and delegates its encoding and decoding.
 ///
 /// Collects the request elements in [Wayland XML](https://gitlab.freedesktop.org/wayland/wayland/-/blob/main/protocol/wayland.xml).
 /// One source element is shown below:
@@ -176,6 +180,12 @@ pub enum CommandRequest {
     WlFixesDestroyRegistry(WlFixesDestroyRegistryRequest),
     /// Request [WlFixesAckGlobalRemoveRequest].
     WlFixesAckGlobalRemove(WlFixesAckGlobalRemoveRequest),
+    /// Request [WpPresentationDestroyRequest].
+    #[cfg(feature = "ext-presentation-time")]
+    WpPresentationDestroy(WpPresentationDestroyRequest),
+    /// Request [WpPresentationFeedbackRequest].
+    #[cfg(feature = "ext-presentation-time")]
+    WpPresentationFeedback(WpPresentationFeedbackRequest),
 }
 impl CommandReader<Self> for CommandRequest {
     async fn read(
@@ -188,6 +198,22 @@ impl CommandReader<Self> for CommandRequest {
             .object_interface(object_id)
             .ok_or(FdReaderError::InvalidProtocol)?;
         match interface {
+            #[cfg(feature = "ext-presentation-time")]
+            ObjectInteface::WpPresentation { .. } => match opcode {
+                WpPresentationDestroyRequest::OPCODE => Ok(Self::WpPresentationDestroy(
+                    WpPresentationDestroyRequest::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
+                )),
+                WpPresentationFeedbackRequest::OPCODE => Ok(Self::WpPresentationFeedback(
+                    WpPresentationFeedbackRequest::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
+                )),
+                _ => Err(FdReaderError::InvalidProtocol),
+            },
             ObjectInteface::WlDisplay { .. } => match opcode {
                 WlDisplaySyncRequest::OPCODE => Ok(Self::WlDisplaySync(
                     WlDisplaySyncRequest::read_with_interface(
@@ -704,6 +730,10 @@ impl CommandReader<Self> for CommandRequest {
 impl CommandWriter for CommandRequest {
     fn object_id(&self) -> u32 {
         match self {
+            #[cfg(feature = "ext-presentation-time")]
+            Self::WpPresentationDestroy(request) => request.object_id(),
+            #[cfg(feature = "ext-presentation-time")]
+            Self::WpPresentationFeedback(request) => request.object_id(),
             Self::WlDisplaySync(request) => request.object_id(),
             Self::WlDisplayGetRegistry(request) => request.object_id(),
             Self::WlRegistryBind(request) => request.object_id(),
@@ -780,6 +810,10 @@ impl CommandWriter for CommandRequest {
     }
     fn opcode(&self) -> u16 {
         match self {
+            #[cfg(feature = "ext-presentation-time")]
+            Self::WpPresentationDestroy(request) => request.opcode(),
+            #[cfg(feature = "ext-presentation-time")]
+            Self::WpPresentationFeedback(request) => request.opcode(),
             Self::WlDisplaySync(request) => request.opcode(),
             Self::WlDisplayGetRegistry(request) => request.opcode(),
             Self::WlRegistryBind(request) => request.opcode(),
@@ -856,6 +890,10 @@ impl CommandWriter for CommandRequest {
     }
     fn payload_size(&self) -> usize {
         match self {
+            #[cfg(feature = "ext-presentation-time")]
+            Self::WpPresentationDestroy(request) => request.payload_size(),
+            #[cfg(feature = "ext-presentation-time")]
+            Self::WpPresentationFeedback(request) => request.payload_size(),
             Self::WlDisplaySync(request) => request.payload_size(),
             Self::WlDisplayGetRegistry(request) => request.payload_size(),
             Self::WlRegistryBind(request) => request.payload_size(),
@@ -936,6 +974,10 @@ impl CommandWriter for CommandRequest {
         state: &Arc<Mutex<ClientState>>,
     ) -> Result<(), FdWriterError> {
         match self {
+            #[cfg(feature = "ext-presentation-time")]
+            Self::WpPresentationDestroy(request) => request.write(writer, state).await,
+            #[cfg(feature = "ext-presentation-time")]
+            Self::WpPresentationFeedback(request) => request.write(writer, state).await,
             Self::WlDisplaySync(request) => request.write(writer, state).await,
             Self::WlDisplayGetRegistry(request) => request.write(writer, state).await,
             Self::WlRegistryBind(request) => request.write(writer, state).await,

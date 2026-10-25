@@ -4,6 +4,10 @@ version = "1.0.0"
 edition = "2024"
 license = "MIT"
 
+[features]
+default = ["ext-presentation-time"]
+ext-presentation-time = []
+
 [dependencies]
 tokio = { version = "1", features = ["rt", "net", "sync", "macros", "io-util"] }
 tokio-util = { version = "0.7", features = ["rt"] }

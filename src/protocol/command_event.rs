@@ -1,13 +1,18 @@
 use crate::protocol::ClientState;
 use crate::protocol::CommandWriter;
 use crate::protocol::core::*;
+#[cfg(feature = "ext-presentation-time")]
+use crate::protocol::ext::presentation_time::{
+    WpPresentationClockIdEvent, WpPresentationFeedbackDiscardedEvent,
+    WpPresentationFeedbackPresentedEvent, WpPresentationFeedbackSyncOutputEvent,
+};
 use crate::protocol::{CommandReader, CommandReaderExt};
 use crate::protocol::{InterfaceReader, ObjectInteface};
 use crate::utils::reader::{FdPayloadReader, FdReaderError};
 use crate::utils::writer::{FdPayloadWriter, FdWriterError};
 use std::sync::{Arc, Mutex};
 
-/// Contains every core-protocol event and delegates encoding and decoding to its message structure.
+/// Contains every enabled protocol event and delegates encoding and decoding to its message structure.
 ///
 /// Collects the event elements in [Wayland XML](https://gitlab.freedesktop.org/wayland/wayland/-/blob/main/protocol/wayland.xml).
 /// One source element is shown below:
@@ -146,10 +151,30 @@ pub enum CommandEvent {
     WlOutputName(WlOutputNameEvent),
     /// Event [WlOutputDescriptionEvent].
     WlOutputDescription(WlOutputDescriptionEvent),
+    /// Event [WpPresentationClockIdEvent].
+    #[cfg(feature = "ext-presentation-time")]
+    WpPresentationClockId(WpPresentationClockIdEvent),
+    /// Event [WpPresentationFeedbackSyncOutputEvent].
+    #[cfg(feature = "ext-presentation-time")]
+    WpPresentationFeedbackSyncOutput(WpPresentationFeedbackSyncOutputEvent),
+    /// Event [WpPresentationFeedbackPresentedEvent].
+    #[cfg(feature = "ext-presentation-time")]
+    WpPresentationFeedbackPresented(WpPresentationFeedbackPresentedEvent),
+    /// Event [WpPresentationFeedbackDiscardedEvent].
+    #[cfg(feature = "ext-presentation-time")]
+    WpPresentationFeedbackDiscarded(WpPresentationFeedbackDiscardedEvent),
 }
 impl CommandWriter for CommandEvent {
     fn object_id(&self) -> u32 {
         match self {
+            #[cfg(feature = "ext-presentation-time")]
+            Self::WpPresentationClockId(event) => event.object_id(),
+            #[cfg(feature = "ext-presentation-time")]
+            Self::WpPresentationFeedbackSyncOutput(event) => event.object_id(),
+            #[cfg(feature = "ext-presentation-time")]
+            Self::WpPresentationFeedbackPresented(event) => event.object_id(),
+            #[cfg(feature = "ext-presentation-time")]
+            Self::WpPresentationFeedbackDiscarded(event) => event.object_id(),
             Self::WlDisplayError(event) => event.object_id(),
             Self::WlDisplayDeleteId(event) => event.object_id(),
             Self::WlRegistryGlobal(event) => event.object_id(),
@@ -216,6 +241,14 @@ impl CommandWriter for CommandEvent {
     }
     fn opcode(&self) -> u16 {
         match self {
+            #[cfg(feature = "ext-presentation-time")]
+            Self::WpPresentationClockId(event) => event.opcode(),
+            #[cfg(feature = "ext-presentation-time")]
+            Self::WpPresentationFeedbackSyncOutput(event) => event.opcode(),
+            #[cfg(feature = "ext-presentation-time")]
+            Self::WpPresentationFeedbackPresented(event) => event.opcode(),
+            #[cfg(feature = "ext-presentation-time")]
+            Self::WpPresentationFeedbackDiscarded(event) => event.opcode(),
             Self::WlDisplayError(event) => event.opcode(),
             Self::WlDisplayDeleteId(event) => event.opcode(),
             Self::WlRegistryGlobal(event) => event.opcode(),
@@ -282,6 +315,14 @@ impl CommandWriter for CommandEvent {
     }
     fn payload_size(&self) -> usize {
         match self {
+            #[cfg(feature = "ext-presentation-time")]
+            Self::WpPresentationClockId(event) => event.payload_size(),
+            #[cfg(feature = "ext-presentation-time")]
+            Self::WpPresentationFeedbackSyncOutput(event) => event.payload_size(),
+            #[cfg(feature = "ext-presentation-time")]
+            Self::WpPresentationFeedbackPresented(event) => event.payload_size(),
+            #[cfg(feature = "ext-presentation-time")]
+            Self::WpPresentationFeedbackDiscarded(event) => event.payload_size(),
             Self::WlDisplayError(event) => event.payload_size(),
             Self::WlDisplayDeleteId(event) => event.payload_size(),
             Self::WlRegistryGlobal(event) => event.payload_size(),
@@ -352,6 +393,14 @@ impl CommandWriter for CommandEvent {
         state: &Arc<Mutex<ClientState>>,
     ) -> Result<(), FdWriterError> {
         match self {
+            #[cfg(feature = "ext-presentation-time")]
+            Self::WpPresentationClockId(event) => event.write(writer, state).await,
+            #[cfg(feature = "ext-presentation-time")]
+            Self::WpPresentationFeedbackSyncOutput(event) => event.write(writer, state).await,
+            #[cfg(feature = "ext-presentation-time")]
+            Self::WpPresentationFeedbackPresented(event) => event.write(writer, state).await,
+            #[cfg(feature = "ext-presentation-time")]
+            Self::WpPresentationFeedbackDiscarded(event) => event.write(writer, state).await,
             Self::WlDisplayError(event) => event.write(writer, state).await,
             Self::WlDisplayDeleteId(event) => event.write(writer, state).await,
             Self::WlRegistryGlobal(event) => event.write(writer, state).await,
@@ -429,6 +478,44 @@ impl CommandReader<Self> for CommandEvent {
             .object_interface(object_id)
             .ok_or(FdReaderError::InvalidProtocol)?;
         match interface {
+            #[cfg(feature = "ext-presentation-time")]
+            ObjectInteface::WpPresentation { .. } => match opcode {
+                WpPresentationClockIdEvent::OPCODE => Ok(Self::WpPresentationClockId(
+                    WpPresentationClockIdEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
+                )),
+                _ => Err(FdReaderError::InvalidProtocol),
+            },
+            #[cfg(feature = "ext-presentation-time")]
+            ObjectInteface::WpPresentationFeedback { .. } => match opcode {
+                WpPresentationFeedbackSyncOutputEvent::OPCODE => {
+                    Ok(Self::WpPresentationFeedbackSyncOutput(
+                        WpPresentationFeedbackSyncOutputEvent::read_with_interface(
+                            object_id, opcode, interface, reader, state,
+                        )
+                        .await?,
+                    ))
+                }
+                WpPresentationFeedbackPresentedEvent::OPCODE => {
+                    Ok(Self::WpPresentationFeedbackPresented(
+                        WpPresentationFeedbackPresentedEvent::read_with_interface(
+                            object_id, opcode, interface, reader, state,
+                        )
+                        .await?,
+                    ))
+                }
+                WpPresentationFeedbackDiscardedEvent::OPCODE => {
+                    Ok(Self::WpPresentationFeedbackDiscarded(
+                        WpPresentationFeedbackDiscardedEvent::read_with_interface(
+                            object_id, opcode, interface, reader, state,
+                        )
+                        .await?,
+                    ))
+                }
+                _ => Err(FdReaderError::InvalidProtocol),
+            },
             ObjectInteface::WlBuffer { .. } => match opcode {
                 WlBufferReleaseEvent::OPCODE => Ok(Self::WlBufferRelease(
                     WlBufferReleaseEvent::read_with_interface(
