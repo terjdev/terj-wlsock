@@ -60,7 +60,18 @@ ext = [
     "ext-presentation-time",
     "ext-viewporter",
 ]
-wlr = ["wlr-screencopy", "wlr-virtual-pointer", "wlr-data-control", "wlr-layer-shell"]
+wlr = [
+    "wlr-export-dmabuf",
+    "wlr-foreign-toplevel-management",
+    "wlr-gamma-control",
+    "wlr-input-inhibitor",
+    "wlr-output-management",
+    "wlr-output-power-management",
+    "wlr-screencopy",
+    "wlr-virtual-pointer",
+    "wlr-data-control",
+    "wlr-layer-shell",
+]
 ext-presentation-time = []
 ext-viewporter = []
 ext-xwayland-shell = []
@@ -118,6 +129,13 @@ ext-xdg-decoration = []
 ext-xdg-foreign = []
 ext-xdg-output = []
 ext-xwayland-keyboard-grab = []
+
+wlr-export-dmabuf = []
+wlr-foreign-toplevel-management = []
+wlr-gamma-control = []
+wlr-input-inhibitor = []
+wlr-output-management = []
+wlr-output-power-management = []
 
 [dependencies]
 tokio = { version = "1", features = ["rt", "net", "sync", "macros", "io-util"] }

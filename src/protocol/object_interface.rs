@@ -107,8 +107,20 @@ use crate::protocol::ext::xwayland_keyboard_grab;
 use crate::protocol::ext::xwayland_shell;
 #[cfg(feature = "wlr-data-control")]
 use crate::protocol::wlr::data_control;
+#[cfg(feature = "wlr-export-dmabuf")]
+use crate::protocol::wlr::export_dmabuf;
+#[cfg(feature = "wlr-foreign-toplevel-management")]
+use crate::protocol::wlr::foreign_toplevel_management;
+#[cfg(feature = "wlr-gamma-control")]
+use crate::protocol::wlr::gamma_control;
+#[cfg(feature = "wlr-input-inhibitor")]
+use crate::protocol::wlr::input_inhibitor;
 #[cfg(feature = "wlr-layer-shell")]
 use crate::protocol::wlr::layer_shell;
+#[cfg(feature = "wlr-output-management")]
+use crate::protocol::wlr::output_management;
+#[cfg(feature = "wlr-output-power-management")]
+use crate::protocol::wlr::output_power_management;
 #[cfg(feature = "wlr-screencopy")]
 use crate::protocol::wlr::screencopy;
 #[cfg(feature = "wlr-virtual-pointer")]
@@ -119,6 +131,24 @@ use crate::protocol::wlr::virtual_pointer;
 pub(crate) enum ObjectInteface {
     /// A core Wayland interface.
     Core(core::ObjectInteface),
+    /// A output power management interface.
+    #[cfg(feature = "wlr-output-power-management")]
+    WlrOutputPowerManagement(output_power_management::ObjectInteface),
+    /// A output management interface.
+    #[cfg(feature = "wlr-output-management")]
+    WlrOutputManagement(output_management::ObjectInteface),
+    /// A input inhibitor interface.
+    #[cfg(feature = "wlr-input-inhibitor")]
+    WlrInputInhibitor(input_inhibitor::ObjectInteface),
+    /// A gamma control interface.
+    #[cfg(feature = "wlr-gamma-control")]
+    WlrGammaControl(gamma_control::ObjectInteface),
+    /// A foreign toplevel management interface.
+    #[cfg(feature = "wlr-foreign-toplevel-management")]
+    WlrForeignToplevelManagement(foreign_toplevel_management::ObjectInteface),
+    /// A export dmabuf interface.
+    #[cfg(feature = "wlr-export-dmabuf")]
+    WlrExportDmabuf(export_dmabuf::ObjectInteface),
     /// A xwayland keyboard grab interface.
     #[cfg(feature = "ext-xwayland-keyboard-grab")]
     XwaylandKeyboardGrab(xwayland_keyboard_grab::ObjectInteface),
@@ -294,6 +324,18 @@ impl ObjectInteface {
     pub(crate) fn name(self) -> &'static str {
         match self {
             Self::Core(interface) => interface.name(),
+            #[cfg(feature = "wlr-output-power-management")]
+            Self::WlrOutputPowerManagement(interface) => interface.name(),
+            #[cfg(feature = "wlr-output-management")]
+            Self::WlrOutputManagement(interface) => interface.name(),
+            #[cfg(feature = "wlr-input-inhibitor")]
+            Self::WlrInputInhibitor(interface) => interface.name(),
+            #[cfg(feature = "wlr-gamma-control")]
+            Self::WlrGammaControl(interface) => interface.name(),
+            #[cfg(feature = "wlr-foreign-toplevel-management")]
+            Self::WlrForeignToplevelManagement(interface) => interface.name(),
+            #[cfg(feature = "wlr-export-dmabuf")]
+            Self::WlrExportDmabuf(interface) => interface.name(),
             #[cfg(feature = "ext-xwayland-keyboard-grab")]
             Self::XwaylandKeyboardGrab(interface) => interface.name(),
             #[cfg(feature = "ext-xdg-output")]
@@ -412,6 +454,18 @@ impl ObjectInteface {
     pub(crate) fn version(self) -> u32 {
         match self {
             Self::Core(interface) => interface.version(),
+            #[cfg(feature = "wlr-output-power-management")]
+            Self::WlrOutputPowerManagement(interface) => interface.version(),
+            #[cfg(feature = "wlr-output-management")]
+            Self::WlrOutputManagement(interface) => interface.version(),
+            #[cfg(feature = "wlr-input-inhibitor")]
+            Self::WlrInputInhibitor(interface) => interface.version(),
+            #[cfg(feature = "wlr-gamma-control")]
+            Self::WlrGammaControl(interface) => interface.version(),
+            #[cfg(feature = "wlr-foreign-toplevel-management")]
+            Self::WlrForeignToplevelManagement(interface) => interface.version(),
+            #[cfg(feature = "wlr-export-dmabuf")]
+            Self::WlrExportDmabuf(interface) => interface.version(),
             #[cfg(feature = "ext-xwayland-keyboard-grab")]
             Self::XwaylandKeyboardGrab(interface) => interface.version(),
             #[cfg(feature = "ext-xdg-output")]
@@ -530,6 +584,18 @@ impl ObjectInteface {
     pub(crate) fn max_version(self) -> u32 {
         match self {
             Self::Core(interface) => interface.max_version(),
+            #[cfg(feature = "wlr-output-power-management")]
+            Self::WlrOutputPowerManagement(interface) => interface.max_version(),
+            #[cfg(feature = "wlr-output-management")]
+            Self::WlrOutputManagement(interface) => interface.max_version(),
+            #[cfg(feature = "wlr-input-inhibitor")]
+            Self::WlrInputInhibitor(interface) => interface.max_version(),
+            #[cfg(feature = "wlr-gamma-control")]
+            Self::WlrGammaControl(interface) => interface.max_version(),
+            #[cfg(feature = "wlr-foreign-toplevel-management")]
+            Self::WlrForeignToplevelManagement(interface) => interface.max_version(),
+            #[cfg(feature = "wlr-export-dmabuf")]
+            Self::WlrExportDmabuf(interface) => interface.max_version(),
             #[cfg(feature = "ext-xwayland-keyboard-grab")]
             Self::XwaylandKeyboardGrab(interface) => interface.max_version(),
             #[cfg(feature = "ext-xdg-output")]
@@ -876,6 +942,32 @@ impl ObjectInteface {
         #[cfg(feature = "ext-xwayland-keyboard-grab")]
         if let Some(interface) = xwayland_keyboard_grab::ObjectInteface::from_name(name, version) {
             return Some(Self::XwaylandKeyboardGrab(interface));
+        }
+        #[cfg(feature = "wlr-export-dmabuf")]
+        if let Some(interface) = export_dmabuf::ObjectInteface::from_name(name, version) {
+            return Some(Self::WlrExportDmabuf(interface));
+        }
+        #[cfg(feature = "wlr-foreign-toplevel-management")]
+        if let Some(interface) =
+            foreign_toplevel_management::ObjectInteface::from_name(name, version)
+        {
+            return Some(Self::WlrForeignToplevelManagement(interface));
+        }
+        #[cfg(feature = "wlr-gamma-control")]
+        if let Some(interface) = gamma_control::ObjectInteface::from_name(name, version) {
+            return Some(Self::WlrGammaControl(interface));
+        }
+        #[cfg(feature = "wlr-input-inhibitor")]
+        if let Some(interface) = input_inhibitor::ObjectInteface::from_name(name, version) {
+            return Some(Self::WlrInputInhibitor(interface));
+        }
+        #[cfg(feature = "wlr-output-management")]
+        if let Some(interface) = output_management::ObjectInteface::from_name(name, version) {
+            return Some(Self::WlrOutputManagement(interface));
+        }
+        #[cfg(feature = "wlr-output-power-management")]
+        if let Some(interface) = output_power_management::ObjectInteface::from_name(name, version) {
+            return Some(Self::WlrOutputPowerManagement(interface));
         }
         None
     }

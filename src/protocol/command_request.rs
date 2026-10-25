@@ -105,8 +105,20 @@ use crate::protocol::ext::xwayland_keyboard_grab;
 use crate::protocol::ext::xwayland_shell;
 #[cfg(feature = "wlr-data-control")]
 use crate::protocol::wlr::data_control;
+#[cfg(feature = "wlr-export-dmabuf")]
+use crate::protocol::wlr::export_dmabuf;
+#[cfg(feature = "wlr-foreign-toplevel-management")]
+use crate::protocol::wlr::foreign_toplevel_management;
+#[cfg(feature = "wlr-gamma-control")]
+use crate::protocol::wlr::gamma_control;
+#[cfg(feature = "wlr-input-inhibitor")]
+use crate::protocol::wlr::input_inhibitor;
 #[cfg(feature = "wlr-layer-shell")]
 use crate::protocol::wlr::layer_shell;
+#[cfg(feature = "wlr-output-management")]
+use crate::protocol::wlr::output_management;
+#[cfg(feature = "wlr-output-power-management")]
+use crate::protocol::wlr::output_power_management;
 #[cfg(feature = "wlr-screencopy")]
 use crate::protocol::wlr::screencopy;
 #[cfg(feature = "wlr-virtual-pointer")]
@@ -123,6 +135,24 @@ use std::sync::{Arc, Mutex};
 pub enum CommandRequest {
     /// Core Wayland protocol commands.
     Core(core::CommandRequest),
+    /// output power management messages.
+    #[cfg(feature = "wlr-output-power-management")]
+    WlrOutputPowerManagement(output_power_management::CommandRequest),
+    /// output management messages.
+    #[cfg(feature = "wlr-output-management")]
+    WlrOutputManagement(output_management::CommandRequest),
+    /// input inhibitor messages.
+    #[cfg(feature = "wlr-input-inhibitor")]
+    WlrInputInhibitor(input_inhibitor::CommandRequest),
+    /// gamma control messages.
+    #[cfg(feature = "wlr-gamma-control")]
+    WlrGammaControl(gamma_control::CommandRequest),
+    /// foreign toplevel management messages.
+    #[cfg(feature = "wlr-foreign-toplevel-management")]
+    WlrForeignToplevelManagement(foreign_toplevel_management::CommandRequest),
+    /// export dmabuf messages.
+    #[cfg(feature = "wlr-export-dmabuf")]
+    WlrExportDmabuf(export_dmabuf::CommandRequest),
     /// xwayland keyboard grab messages.
     #[cfg(feature = "ext-xwayland-keyboard-grab")]
     XwaylandKeyboardGrab(xwayland_keyboard_grab::CommandRequest),
@@ -696,6 +726,50 @@ impl InterfaceReader for CommandRequest {
                 )
                 .await?,
             )),
+            #[cfg(feature = "wlr-export-dmabuf")]
+            ObjectInteface::WlrExportDmabuf(_) => Ok(Self::WlrExportDmabuf(
+                export_dmabuf::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "wlr-foreign-toplevel-management")]
+            ObjectInteface::WlrForeignToplevelManagement(_) => {
+                Ok(Self::WlrForeignToplevelManagement(
+                    foreign_toplevel_management::CommandRequest::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
+                ))
+            }
+            #[cfg(feature = "wlr-gamma-control")]
+            ObjectInteface::WlrGammaControl(_) => Ok(Self::WlrGammaControl(
+                gamma_control::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "wlr-input-inhibitor")]
+            ObjectInteface::WlrInputInhibitor(_) => Ok(Self::WlrInputInhibitor(
+                input_inhibitor::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "wlr-output-management")]
+            ObjectInteface::WlrOutputManagement(_) => Ok(Self::WlrOutputManagement(
+                output_management::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "wlr-output-power-management")]
+            ObjectInteface::WlrOutputPowerManagement(_) => Ok(Self::WlrOutputPowerManagement(
+                output_power_management::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
             ObjectInteface::Core(_) => Ok(Self::Core(
                 core::CommandRequest::read_with_interface(
                     object_id, opcode, interface, reader, state,
@@ -724,6 +798,18 @@ impl CommandWriter for CommandRequest {
     fn object_id(&self) -> u32 {
         match self {
             Self::Core(command) => command.object_id(),
+            #[cfg(feature = "wlr-output-power-management")]
+            Self::WlrOutputPowerManagement(command) => command.object_id(),
+            #[cfg(feature = "wlr-output-management")]
+            Self::WlrOutputManagement(command) => command.object_id(),
+            #[cfg(feature = "wlr-input-inhibitor")]
+            Self::WlrInputInhibitor(command) => command.object_id(),
+            #[cfg(feature = "wlr-gamma-control")]
+            Self::WlrGammaControl(command) => command.object_id(),
+            #[cfg(feature = "wlr-foreign-toplevel-management")]
+            Self::WlrForeignToplevelManagement(command) => command.object_id(),
+            #[cfg(feature = "wlr-export-dmabuf")]
+            Self::WlrExportDmabuf(command) => command.object_id(),
             #[cfg(feature = "ext-xwayland-keyboard-grab")]
             Self::XwaylandKeyboardGrab(command) => command.object_id(),
             #[cfg(feature = "ext-xdg-output")]
@@ -841,6 +927,18 @@ impl CommandWriter for CommandRequest {
     fn opcode(&self) -> u16 {
         match self {
             Self::Core(command) => command.opcode(),
+            #[cfg(feature = "wlr-output-power-management")]
+            Self::WlrOutputPowerManagement(command) => command.opcode(),
+            #[cfg(feature = "wlr-output-management")]
+            Self::WlrOutputManagement(command) => command.opcode(),
+            #[cfg(feature = "wlr-input-inhibitor")]
+            Self::WlrInputInhibitor(command) => command.opcode(),
+            #[cfg(feature = "wlr-gamma-control")]
+            Self::WlrGammaControl(command) => command.opcode(),
+            #[cfg(feature = "wlr-foreign-toplevel-management")]
+            Self::WlrForeignToplevelManagement(command) => command.opcode(),
+            #[cfg(feature = "wlr-export-dmabuf")]
+            Self::WlrExportDmabuf(command) => command.opcode(),
             #[cfg(feature = "ext-xwayland-keyboard-grab")]
             Self::XwaylandKeyboardGrab(command) => command.opcode(),
             #[cfg(feature = "ext-xdg-output")]
@@ -958,6 +1056,18 @@ impl CommandWriter for CommandRequest {
     fn payload_size(&self) -> usize {
         match self {
             Self::Core(command) => command.payload_size(),
+            #[cfg(feature = "wlr-output-power-management")]
+            Self::WlrOutputPowerManagement(command) => command.payload_size(),
+            #[cfg(feature = "wlr-output-management")]
+            Self::WlrOutputManagement(command) => command.payload_size(),
+            #[cfg(feature = "wlr-input-inhibitor")]
+            Self::WlrInputInhibitor(command) => command.payload_size(),
+            #[cfg(feature = "wlr-gamma-control")]
+            Self::WlrGammaControl(command) => command.payload_size(),
+            #[cfg(feature = "wlr-foreign-toplevel-management")]
+            Self::WlrForeignToplevelManagement(command) => command.payload_size(),
+            #[cfg(feature = "wlr-export-dmabuf")]
+            Self::WlrExportDmabuf(command) => command.payload_size(),
             #[cfg(feature = "ext-xwayland-keyboard-grab")]
             Self::XwaylandKeyboardGrab(command) => command.payload_size(),
             #[cfg(feature = "ext-xdg-output")]
@@ -1079,6 +1189,18 @@ impl CommandWriter for CommandRequest {
     ) -> Result<(), FdWriterError> {
         match self {
             Self::Core(command) => command.write(writer, state).await,
+            #[cfg(feature = "wlr-output-power-management")]
+            Self::WlrOutputPowerManagement(command) => command.write(writer, state).await,
+            #[cfg(feature = "wlr-output-management")]
+            Self::WlrOutputManagement(command) => command.write(writer, state).await,
+            #[cfg(feature = "wlr-input-inhibitor")]
+            Self::WlrInputInhibitor(command) => command.write(writer, state).await,
+            #[cfg(feature = "wlr-gamma-control")]
+            Self::WlrGammaControl(command) => command.write(writer, state).await,
+            #[cfg(feature = "wlr-foreign-toplevel-management")]
+            Self::WlrForeignToplevelManagement(command) => command.write(writer, state).await,
+            #[cfg(feature = "wlr-export-dmabuf")]
+            Self::WlrExportDmabuf(command) => command.write(writer, state).await,
             #[cfg(feature = "ext-xwayland-keyboard-grab")]
             Self::XwaylandKeyboardGrab(command) => command.write(writer, state).await,
             #[cfg(feature = "ext-xdg-output")]

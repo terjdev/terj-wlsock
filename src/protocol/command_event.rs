@@ -67,8 +67,18 @@ use crate::protocol::ext::xdg_shell;
 use crate::protocol::ext::xdg_toplevel_icon;
 #[cfg(feature = "wlr-data-control")]
 use crate::protocol::wlr::data_control;
+#[cfg(feature = "wlr-export-dmabuf")]
+use crate::protocol::wlr::export_dmabuf;
+#[cfg(feature = "wlr-foreign-toplevel-management")]
+use crate::protocol::wlr::foreign_toplevel_management;
+#[cfg(feature = "wlr-gamma-control")]
+use crate::protocol::wlr::gamma_control;
 #[cfg(feature = "wlr-layer-shell")]
 use crate::protocol::wlr::layer_shell;
+#[cfg(feature = "wlr-output-management")]
+use crate::protocol::wlr::output_management;
+#[cfg(feature = "wlr-output-power-management")]
+use crate::protocol::wlr::output_power_management;
 #[cfg(feature = "wlr-screencopy")]
 use crate::protocol::wlr::screencopy;
 use crate::protocol::{
@@ -83,6 +93,21 @@ use std::sync::{Arc, Mutex};
 pub enum CommandEvent {
     /// Core Wayland protocol commands.
     Core(core::CommandEvent),
+    /// output power management messages.
+    #[cfg(feature = "wlr-output-power-management")]
+    WlrOutputPowerManagement(output_power_management::CommandEvent),
+    /// output management messages.
+    #[cfg(feature = "wlr-output-management")]
+    WlrOutputManagement(output_management::CommandEvent),
+    /// gamma control messages.
+    #[cfg(feature = "wlr-gamma-control")]
+    WlrGammaControl(gamma_control::CommandEvent),
+    /// foreign toplevel management messages.
+    #[cfg(feature = "wlr-foreign-toplevel-management")]
+    WlrForeignToplevelManagement(foreign_toplevel_management::CommandEvent),
+    /// export dmabuf messages.
+    #[cfg(feature = "wlr-export-dmabuf")]
+    WlrExportDmabuf(export_dmabuf::CommandEvent),
     /// xdg output messages.
     #[cfg(feature = "ext-xdg-output")]
     XdgOutput(xdg_output::CommandEvent),
@@ -216,6 +241,8 @@ impl InterfaceReader for CommandEvent {
         state: &Arc<Mutex<ClientState>>,
     ) -> Result<Self, FdReaderError> {
         match interface {
+            #[cfg(feature = "wlr-input-inhibitor")]
+            ObjectInteface::WlrInputInhibitor(_) => Err(FdReaderError::InvalidProtocol),
             #[cfg(feature = "ext-xwayland-keyboard-grab")]
             ObjectInteface::XwaylandKeyboardGrab(_) => Err(FdReaderError::InvalidProtocol),
             #[cfg(feature = "ext-idle-inhibit")]
@@ -501,6 +528,43 @@ impl InterfaceReader for CommandEvent {
                 )
                 .await?,
             )),
+            #[cfg(feature = "wlr-export-dmabuf")]
+            ObjectInteface::WlrExportDmabuf(_) => Ok(Self::WlrExportDmabuf(
+                export_dmabuf::CommandEvent::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "wlr-foreign-toplevel-management")]
+            ObjectInteface::WlrForeignToplevelManagement(_) => {
+                Ok(Self::WlrForeignToplevelManagement(
+                    foreign_toplevel_management::CommandEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
+                ))
+            }
+            #[cfg(feature = "wlr-gamma-control")]
+            ObjectInteface::WlrGammaControl(_) => Ok(Self::WlrGammaControl(
+                gamma_control::CommandEvent::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "wlr-output-management")]
+            ObjectInteface::WlrOutputManagement(_) => Ok(Self::WlrOutputManagement(
+                output_management::CommandEvent::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "wlr-output-power-management")]
+            ObjectInteface::WlrOutputPowerManagement(_) => Ok(Self::WlrOutputPowerManagement(
+                output_power_management::CommandEvent::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
             ObjectInteface::Core(_) => Ok(Self::Core(
                 core::CommandEvent::read_with_interface(
                     object_id, opcode, interface, reader, state,
@@ -524,6 +588,16 @@ impl CommandWriter for CommandEvent {
     fn object_id(&self) -> u32 {
         match self {
             Self::Core(command) => command.object_id(),
+            #[cfg(feature = "wlr-output-power-management")]
+            Self::WlrOutputPowerManagement(command) => command.object_id(),
+            #[cfg(feature = "wlr-output-management")]
+            Self::WlrOutputManagement(command) => command.object_id(),
+            #[cfg(feature = "wlr-gamma-control")]
+            Self::WlrGammaControl(command) => command.object_id(),
+            #[cfg(feature = "wlr-foreign-toplevel-management")]
+            Self::WlrForeignToplevelManagement(command) => command.object_id(),
+            #[cfg(feature = "wlr-export-dmabuf")]
+            Self::WlrExportDmabuf(command) => command.object_id(),
             #[cfg(feature = "ext-xdg-output")]
             Self::XdgOutput(command) => command.object_id(),
             #[cfg(feature = "ext-xdg-foreign")]
@@ -601,6 +675,16 @@ impl CommandWriter for CommandEvent {
     fn opcode(&self) -> u16 {
         match self {
             Self::Core(command) => command.opcode(),
+            #[cfg(feature = "wlr-output-power-management")]
+            Self::WlrOutputPowerManagement(command) => command.opcode(),
+            #[cfg(feature = "wlr-output-management")]
+            Self::WlrOutputManagement(command) => command.opcode(),
+            #[cfg(feature = "wlr-gamma-control")]
+            Self::WlrGammaControl(command) => command.opcode(),
+            #[cfg(feature = "wlr-foreign-toplevel-management")]
+            Self::WlrForeignToplevelManagement(command) => command.opcode(),
+            #[cfg(feature = "wlr-export-dmabuf")]
+            Self::WlrExportDmabuf(command) => command.opcode(),
             #[cfg(feature = "ext-xdg-output")]
             Self::XdgOutput(command) => command.opcode(),
             #[cfg(feature = "ext-xdg-foreign")]
@@ -678,6 +762,16 @@ impl CommandWriter for CommandEvent {
     fn payload_size(&self) -> usize {
         match self {
             Self::Core(command) => command.payload_size(),
+            #[cfg(feature = "wlr-output-power-management")]
+            Self::WlrOutputPowerManagement(command) => command.payload_size(),
+            #[cfg(feature = "wlr-output-management")]
+            Self::WlrOutputManagement(command) => command.payload_size(),
+            #[cfg(feature = "wlr-gamma-control")]
+            Self::WlrGammaControl(command) => command.payload_size(),
+            #[cfg(feature = "wlr-foreign-toplevel-management")]
+            Self::WlrForeignToplevelManagement(command) => command.payload_size(),
+            #[cfg(feature = "wlr-export-dmabuf")]
+            Self::WlrExportDmabuf(command) => command.payload_size(),
             #[cfg(feature = "ext-xdg-output")]
             Self::XdgOutput(command) => command.payload_size(),
             #[cfg(feature = "ext-xdg-foreign")]
@@ -759,6 +853,16 @@ impl CommandWriter for CommandEvent {
     ) -> Result<(), FdWriterError> {
         match self {
             Self::Core(command) => command.write(writer, state).await,
+            #[cfg(feature = "wlr-output-power-management")]
+            Self::WlrOutputPowerManagement(command) => command.write(writer, state).await,
+            #[cfg(feature = "wlr-output-management")]
+            Self::WlrOutputManagement(command) => command.write(writer, state).await,
+            #[cfg(feature = "wlr-gamma-control")]
+            Self::WlrGammaControl(command) => command.write(writer, state).await,
+            #[cfg(feature = "wlr-foreign-toplevel-management")]
+            Self::WlrForeignToplevelManagement(command) => command.write(writer, state).await,
+            #[cfg(feature = "wlr-export-dmabuf")]
+            Self::WlrExportDmabuf(command) => command.write(writer, state).await,
             #[cfg(feature = "ext-xdg-output")]
             Self::XdgOutput(command) => command.write(writer, state).await,
             #[cfg(feature = "ext-xdg-foreign")]

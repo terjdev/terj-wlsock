@@ -415,3 +415,39 @@ Original copyright notices and permission terms are preserved in
 Protocol definitions and documentation excerpts are derived from [xwayland-keyboard-grab-unstable-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/unstable/xwayland-keyboard-grab/xwayland-keyboard-grab-unstable-v1.xml).
 Original copyright notices and permission terms are preserved in
 [src/protocol/ext/xwayland_keyboard_grab/LICENSE.md](src/protocol/ext/xwayland_keyboard_grab/LICENSE.md).
+
+## Third-party notice: export dmabuf
+
+Protocol definitions and documentation excerpts are derived from [wlr-export-dmabuf-unstable-v1.xml](https://gitlab.freedesktop.org/wlroots/wlr-protocols/-/blob/master/unstable/wlr-export-dmabuf-unstable-v1.xml).
+Original copyright notices and permission terms are preserved in
+[src/protocol/wlr/export_dmabuf/LICENSE.md](src/protocol/wlr/export_dmabuf/LICENSE.md).
+
+## Third-party notice: foreign toplevel management
+
+Protocol definitions and documentation excerpts are derived from [wlr-foreign-toplevel-management-unstable-v1.xml](https://gitlab.freedesktop.org/wlroots/wlr-protocols/-/blob/master/unstable/wlr-foreign-toplevel-management-unstable-v1.xml).
+Original copyright notices and permission terms are preserved in
+[src/protocol/wlr/foreign_toplevel_management/LICENSE.md](src/protocol/wlr/foreign_toplevel_management/LICENSE.md).
+
+## Third-party notice: gamma control
+
+Protocol definitions and documentation excerpts are derived from [wlr-gamma-control-unstable-v1.xml](https://gitlab.freedesktop.org/wlroots/wlr-protocols/-/blob/master/unstable/wlr-gamma-control-unstable-v1.xml).
+Original copyright notices and permission terms are preserved in
+[src/protocol/wlr/gamma_control/LICENSE.md](src/protocol/wlr/gamma_control/LICENSE.md).
+
+## Third-party notice: input inhibitor
+
+Protocol definitions and documentation excerpts are derived from [wlr-input-inhibitor-unstable-v1.xml](https://gitlab.freedesktop.org/wlroots/wlr-protocols/-/blob/master/unstable/wlr-input-inhibitor-unstable-v1.xml).
+Original copyright notices and permission terms are preserved in
+[src/protocol/wlr/input_inhibitor/LICENSE.md](src/protocol/wlr/input_inhibitor/LICENSE.md).
+
+## Third-party notice: output management
+
+Protocol definitions and documentation excerpts are derived from [wlr-output-management-unstable-v1.xml](https://gitlab.freedesktop.org/wlroots/wlr-protocols/-/blob/master/unstable/wlr-output-management-unstable-v1.xml).
+Original copyright notices and permission terms are preserved in
+[src/protocol/wlr/output_management/LICENSE.md](src/protocol/wlr/output_management/LICENSE.md).
+
+## Third-party notice: output power management
+
+Protocol definitions and documentation excerpts are derived from [wlr-output-power-management-unstable-v1.xml](https://gitlab.freedesktop.org/wlroots/wlr-protocols/-/blob/master/unstable/wlr-output-power-management-unstable-v1.xml).
+Original copyright notices and permission terms are preserved in
+[src/protocol/wlr/output_power_management/LICENSE.md](src/protocol/wlr/output_power_management/LICENSE.md).
