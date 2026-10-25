@@ -1,3 +1,9 @@
+//! Provides buffered Unix-socket codecs for Wayland values and file descriptors.
+//!
+//! The reader and writer operate on nonblocking sockets registered with Tokio.
+//! Message framing and protocol object validation are handled by the protocol
+//! and socket layers; payload wrappers enforce each message's byte quota.
+
 pub mod reader;
 pub mod writer;
 

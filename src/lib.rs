@@ -1,4 +1,4 @@
-//! Provides server-side Wayland socket transport and core protocol messages.
+//! Provides client and server Wayland socket transport and core protocol messages.
 //!
 //! The package license and third-party notices are included below.
 #![doc = include_str!("../LICENSE.md")]

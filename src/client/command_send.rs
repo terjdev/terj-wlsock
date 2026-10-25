@@ -1,12 +1,16 @@
 use crate::protocol;
 
-/// Sends an event or requests disconnection of a client.
+/// Queues requests for transmission to the Wayland compositor.
 ///
-/// Successful channel submission only queues the command for server processing;
-/// it does not acknowledge delivery to the client.
+/// Successful channel submission only queues a request for encoding and writing;
+/// it does not acknowledge delivery or processing by the compositor.
 #[derive(Debug)]
 pub enum CommandSend {
-    Request { command: protocol::CommandRequest },
+    /// Sends a core-protocol request on this connection.
+    Request {
+        /// Request containing its receiving object ID and wire arguments.
+        command: protocol::CommandRequest,
+    },
 }
 
 #[cfg(test)]

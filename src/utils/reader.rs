@@ -19,44 +19,72 @@ const ANCILLARY_CAPACITY: usize = rustix::cmsg_space!(ScmRights(FDS_PER_RECV_CAP
 // The 16-bit wire size includes an eight-byte header and must be four-byte aligned.
 const MAX_WAYLAND_PAYLOAD_BYTES: usize = (u16::MAX as usize & !3) - 8;
 
+/// Reports socket, framing, descriptor, and payload-quota failures while reading.
 #[derive(Error, Debug)]
 pub enum FdReaderError {
+    /// The peer closed its outgoing stream before the requested read completed.
     #[error("End of stream.")]
     EndOfStream,
 
+    /// An underlying Unix-socket operation failed.
     #[error("Failed to read from the Unix socket: {0}")]
     Io(#[source] io::Error),
 
+    /// The ancillary buffer could not hold all received control data.
     #[error("Received ancillary data was truncated; the connection can no longer be decoded.")]
     AncillaryTruncated,
 
+    /// Allocating storage for received descriptors failed.
     #[error("Failed to allocate space in the file descriptor queue: {0}")]
     FdQueueAllocation(#[source] TryReserveError),
 
     /// The incoming descriptor queue exceeded its per-connection limit.
     #[error("Cannot queue more than {capacity} incoming file descriptors.")]
-    TooManyFileDescriptors { capacity: usize },
+    TooManyFileDescriptors {
+        /// Maximum number of descriptors retained by the reader.
+        capacity: usize,
+    },
 
+    /// A received control message was not supported by this codec.
     #[error("Received an unsupported ancillary message: {kind}.")]
-    UnsupportedAncillaryMessage { kind: &'static str },
+    UnsupportedAncillaryMessage {
+        /// Description of the unsupported control message.
+        kind: &'static str,
+    },
 
+    /// A byte read was attempted before a partial numeric read was completed.
     #[error("Cannot read bytes: finish the partially read four-byte number ({read} bytes read).")]
-    UnfinishedNumber { read: usize },
+    UnfinishedNumber {
+        /// Number of bytes already consumed for the unfinished four-byte number.
+        read: usize,
+    },
 
+    /// Reading cannot continue after an unrecoverable failure or incomplete payload.
     #[error("The reader cannot read bytes after an unrecoverable error or an incomplete payload.")]
     ReaderFailed,
 
+    /// An operation requested more bytes than its remaining payload quota.
     #[error("Payload quota exceeded: requested {requested} bytes, but only {remaining} remain.")]
-    QuotaExceeded { requested: usize, remaining: usize },
+    QuotaExceeded {
+        /// Number of bytes requested by the operation.
+        requested: usize,
+        /// Number of bytes available in the payload quota.
+        remaining: usize,
+    },
 
+    /// An incoming value, message layout, or object metadata was invalid.
     #[error("Invalid protocol.")]
     InvalidProtocol,
 }
 
+/// Describes whether the reader can continue receiving protocol values.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum FdReaderState {
+    /// The reader can consume buffered data and receive more bytes.
     Open,
+    /// The peer has closed its outgoing stream.
     EndOfStream,
+    /// An unrecoverable error prevents further reading.
     Failed,
 }
 

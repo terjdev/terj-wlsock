@@ -13,12 +13,37 @@ use crate::{
     },
 };
 
+/// Controls a background client connection independently of its application channels.
+///
+/// Dropping the handle requests abrupt cancellation without awaiting resource
+/// cleanup or guaranteeing a disconnect notification. Use [`Self::close`] to
+/// request cancellation and wait for the connection task to finish.
 pub struct Socket {
     worker: Option<tokio::task::JoinHandle<()>>,
     cancelation_token: CancellationToken,
 }
 
 impl Socket {
+    /// Starts exchanging protocol messages over an already connected Unix stream.
+    ///
+    /// Returns `(socket, command_sender, notification_receiver)`. The sender may
+    /// be cloned and the receiver may be drained independently of this handle.
+    /// Successful command submission does not acknowledge delivery or processing
+    /// by the compositor. Dropping all senders ends the connection after pending
+    /// requests have been processed by the writer, unless another shutdown cause
+    /// interrupts them. Dropping the notification receiver prevents delivery.
+    ///
+    /// Takes ownership of `stream`, including on error. This call requires a
+    /// current Tokio runtime with I/O enabled; it converts and registers the stream
+    /// with that runtime. The runtime must remain active while serving the stream.
+    /// The application handles fatal protocol error events and socket-path selection.
+    ///
+    /// # Errors
+    /// Returns [`CreationError`] for zero queue capacities, a missing current Tokio
+    /// context, or failure to prepare and register the stream.
+    ///
+    /// # Panics
+    /// Panics if the current Tokio runtime does not have an I/O driver enabled.
     pub fn create(
         stream: TokioUnixStream,
         options: Options,
@@ -57,6 +82,21 @@ impl Socket {
         ))
     }
 
+    /// Requests disconnection and waits for the connection task to finish.
+    ///
+    /// This cancels reading and writing; queued requests and partially sent messages
+    /// may be discarded. It does not flush all pending application requests.
+    /// Continue draining the notification receiver concurrently until it returns
+    /// `None`: the task queues a final disconnect notification when possible and
+    /// may wait indefinitely for space in that queue. Completion does not imply
+    /// that the application has processed the queued notifications.
+    ///
+    /// Cancelling this future retains the task handle and leaves cancellation
+    /// requested, so a later call can resume waiting. After a completed call,
+    /// subsequent calls return `Ok(())`, including after a reported error.
+    ///
+    /// # Errors
+    /// Returns [`ClosingError::Failed`] if the connection task panicked or was aborted.
     pub async fn close(&mut self) -> Result<(), ClosingError> {
         self.cancelation_token.cancel();
 

@@ -16,41 +16,61 @@ const BYTES_CAPACITY: usize = 8192;
 const FDS_CAPACITY: usize = 253;
 const ANCILLARY_CAPACITY: usize = rustix::cmsg_space!(ScmRights(FDS_CAPACITY));
 
+/// Reports socket, encoding, descriptor, and payload-quota failures while writing.
 #[derive(Error, Debug)]
 pub enum FdWriterError {
+    /// An underlying Unix-socket operation failed.
     #[error("Failed to write to the Unix socket: {0}")]
     Io(#[source] io::Error),
 
+    /// The writer has already detected that its connection is closed.
     #[error("The Unix socket connection is closed.")]
     ConnectionClosed,
 
+    /// A socket send returned zero despite having ordinary bytes to transmit.
     #[error("The Unix socket accepted zero bytes from a nonempty write.")]
     WriteZero,
 
+    /// A value could not be represented as a signed Wayland 24.8 fixed-point number.
     #[error("The fixed-point value must be finite and within the signed 24.8 range.")]
     InvalidFixed,
 
+    /// An operation requested more bytes than its remaining payload quota.
     #[error("Payload quota exceeded: requested {requested} bytes, but only {remaining} remain.")]
-    QuotaExceeded { requested: usize, remaining: usize },
+    QuotaExceeded {
+        /// Number of bytes requested by the operation.
+        requested: usize,
+        /// Number of bytes available in the payload quota.
+        remaining: usize,
+    },
 
+    /// The control-message buffer could not hold the queued descriptors.
     #[error("The ancillary buffer is too small for the queued file descriptors.")]
     AncillaryBufferTooSmall,
 
+    /// Descriptors could not be sent because no ordinary bytes were buffered.
     #[error("Cannot send file descriptors without at least one ordinary byte.")]
     FdsWithoutBytes,
 
+    /// Writing cannot continue after a failure, cancelled send, or incomplete payload.
     #[error("The writer cannot continue after an error, cancelled write, or incomplete payload.")]
     WriterFailed,
 
+    /// An outgoing value, message layout, or object metadata was invalid.
     #[error("Invalid protocol.")]
     InvalidProtocol,
 }
 
+/// Describes the lifecycle of buffered socket output.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum FdWriterState {
+    /// The writer accepts new values and flush requests.
     Open,
+    /// An operation is in progress; cancellation leaves this state unrecoverable.
     Writing,
+    /// A send detected that the connection is closed.
     Closed,
+    /// An unrecoverable error prevents further writing.
     Failed,
 }
 

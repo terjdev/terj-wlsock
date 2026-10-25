@@ -1,10 +1,18 @@
 use crate::protocol;
 
-/// Reports connection lifecycle changes, incoming requests, and transport errors.
+/// Reports incoming compositor events and the end of the client connection.
 #[derive(Debug)]
 pub enum CommandRecv {
-    Event { command: protocol::CommandEvent },
-    Disconnect { reason: protocol::DisconnectReason },
+    /// The compositor sent a decoded core-protocol event.
+    Event {
+        /// Event containing its receiving object ID and wire arguments.
+        command: protocol::CommandEvent,
+    },
+    /// The connection was closed and socket I/O has ended.
+    Disconnect {
+        /// Endpoint or failure that caused the connection to close.
+        reason: protocol::DisconnectReason,
+    },
 }
 
 #[cfg(test)]
