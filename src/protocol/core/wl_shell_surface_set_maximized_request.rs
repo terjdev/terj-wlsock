@@ -1,6 +1,7 @@
 use crate::protocol::ClientState;
 use crate::protocol::{CommandReader, CommandReaderExt};
 use crate::protocol::{CommandWriter, CommandWriterExt};
+use crate::protocol::{InterfaceReader, ObjectInteface};
 use crate::utils::reader::{FdPayloadReader, FdReaderError};
 use crate::utils::writer::{FdPayloadWriter, FdWriterError};
 use std::sync::{Arc, Mutex};
@@ -60,14 +61,27 @@ impl CommandReader<Self> for WlShellSurfaceSetMaximizedRequest {
         reader: &mut FdPayloadReader<'_>,
         state: &Arc<Mutex<ClientState>>,
     ) -> Result<Self, FdReaderError> {
-        Self::reader_request_interface(
-            state,
-            object_id,
-            opcode,
-            Self::OPCODE,
-            "wl_shell_surface",
-            Self::SINCE,
-        )?;
+        let interface = Self::reader_state(state)?
+            .object_interface(object_id)
+            .ok_or(FdReaderError::InvalidProtocol)?;
+        Self::read_with_interface(object_id, opcode, interface, reader, state).await
+    }
+}
+
+impl InterfaceReader for WlShellSurfaceSetMaximizedRequest {
+    async fn read_with_interface(
+        object_id: u32,
+        opcode: u16,
+        interface: ObjectInteface,
+        reader: &mut FdPayloadReader<'_>,
+        _state: &Arc<Mutex<ClientState>>,
+    ) -> Result<Self, FdReaderError> {
+        if !matches!(interface, ObjectInteface::WlShellSurface { .. })
+            || opcode != Self::OPCODE
+            || interface.version() < Self::SINCE
+        {
+            return Err(FdReaderError::InvalidProtocol);
+        }
         let output = {
             let id = reader.next_u32().await?;
             (id != 0).then_some(id)

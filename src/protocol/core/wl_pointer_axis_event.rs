@@ -2,6 +2,7 @@ use super::WlPointerAxis;
 use crate::protocol::ClientState;
 use crate::protocol::{CommandReader, CommandReaderExt};
 use crate::protocol::{CommandWriter, CommandWriterExt};
+use crate::protocol::{InterfaceReader, ObjectInteface};
 use crate::utils::reader::{FdPayloadReader, FdReaderError};
 use crate::utils::writer::{FdPayloadWriter, FdWriter, FdWriterError};
 use std::sync::{Arc, Mutex};
@@ -90,14 +91,27 @@ impl CommandReader<Self> for WlPointerAxisEvent {
         reader: &mut FdPayloadReader<'_>,
         state: &Arc<Mutex<ClientState>>,
     ) -> Result<Self, FdReaderError> {
-        Self::reader_event_interface(
-            state,
-            object_id,
-            opcode,
-            Self::OPCODE,
-            "wl_pointer",
-            Self::SINCE,
-        )?;
+        let interface = Self::reader_state(state)?
+            .object_interface(object_id)
+            .ok_or(FdReaderError::InvalidProtocol)?;
+        Self::read_with_interface(object_id, opcode, interface, reader, state).await
+    }
+}
+
+impl InterfaceReader for WlPointerAxisEvent {
+    async fn read_with_interface(
+        object_id: u32,
+        opcode: u16,
+        interface: ObjectInteface,
+        reader: &mut FdPayloadReader<'_>,
+        state: &Arc<Mutex<ClientState>>,
+    ) -> Result<Self, FdReaderError> {
+        if !matches!(interface, ObjectInteface::WlPointer { .. })
+            || opcode != Self::OPCODE
+            || interface.version() < Self::SINCE
+        {
+            return Err(FdReaderError::InvalidProtocol);
+        }
         let time = reader.next_u32().await?;
         let axis = WlPointerAxis::read(object_id, opcode, reader, state).await?;
         let value = reader.next_fixed().await?;

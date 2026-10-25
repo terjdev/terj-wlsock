@@ -1,6 +1,7 @@
 use crate::protocol::ClientState;
 use crate::protocol::{CommandReader, CommandReaderExt};
 use crate::protocol::{CommandWriter, CommandWriterExt};
+use crate::protocol::{InterfaceReader, ObjectInteface};
 use crate::utils::reader::{FdPayloadReader, FdReaderError};
 use crate::utils::writer::{FdPayloadWriter, FdWriterError};
 use std::sync::{Arc, Mutex};
@@ -42,14 +43,27 @@ impl CommandReader<Self> for WlShmReleaseRequest {
         reader: &mut FdPayloadReader<'_>,
         state: &Arc<Mutex<ClientState>>,
     ) -> Result<Self, FdReaderError> {
-        Self::reader_request_interface(
-            state,
-            object_id,
-            opcode,
-            Self::OPCODE,
-            "wl_shm",
-            Self::SINCE,
-        )?;
+        let interface = Self::reader_state(state)?
+            .object_interface(object_id)
+            .ok_or(FdReaderError::InvalidProtocol)?;
+        Self::read_with_interface(object_id, opcode, interface, reader, state).await
+    }
+}
+
+impl InterfaceReader for WlShmReleaseRequest {
+    async fn read_with_interface(
+        object_id: u32,
+        opcode: u16,
+        interface: ObjectInteface,
+        reader: &mut FdPayloadReader<'_>,
+        state: &Arc<Mutex<ClientState>>,
+    ) -> Result<Self, FdReaderError> {
+        if !matches!(interface, ObjectInteface::WlShm { .. })
+            || opcode != Self::OPCODE
+            || interface.version() < Self::SINCE
+        {
+            return Err(FdReaderError::InvalidProtocol);
+        }
         if reader.remaining_quota() != 0 {
             return Err(FdReaderError::InvalidProtocol);
         }

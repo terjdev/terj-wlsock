@@ -2,6 +2,7 @@ use crate::protocol::ClientState;
 use crate::protocol::CommandWriter;
 use crate::protocol::core::*;
 use crate::protocol::{CommandReader, CommandReaderExt};
+use crate::protocol::{InterfaceReader, ObjectInteface};
 use crate::utils::reader::{FdPayloadReader, FdReaderError};
 use crate::utils::writer::{FdPayloadWriter, FdWriterError};
 use std::sync::{Arc, Mutex};
@@ -427,249 +428,429 @@ impl CommandReader<Self> for CommandEvent {
         let interface = Self::reader_state(state)?
             .object_interface(object_id)
             .ok_or(FdReaderError::InvalidProtocol)?;
-        match interface.name() {
-            "wl_buffer" => match opcode {
+        match interface {
+            ObjectInteface::WlBuffer { .. } => match opcode {
                 WlBufferReleaseEvent::OPCODE => Ok(Self::WlBufferRelease(
-                    WlBufferReleaseEvent::read(object_id, opcode, reader, state).await?,
+                    WlBufferReleaseEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 _ => Err(FdReaderError::InvalidProtocol),
             },
-            "wl_callback" => match opcode {
+            ObjectInteface::WlCallback { .. } => match opcode {
                 WlCallbackDoneEvent::OPCODE => Ok(Self::WlCallbackDone(
-                    WlCallbackDoneEvent::read(object_id, opcode, reader, state).await?,
+                    WlCallbackDoneEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 _ => Err(FdReaderError::InvalidProtocol),
             },
-            "wl_data_device" => match opcode {
+            ObjectInteface::WlDataDevice { .. } => match opcode {
                 WlDataDeviceDataOfferEvent::OPCODE => Ok(Self::WlDataDeviceDataOffer(
-                    WlDataDeviceDataOfferEvent::read(object_id, opcode, reader, state).await?,
+                    WlDataDeviceDataOfferEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlDataDeviceDropEvent::OPCODE => Ok(Self::WlDataDeviceDrop(
-                    WlDataDeviceDropEvent::read(object_id, opcode, reader, state).await?,
+                    WlDataDeviceDropEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlDataDeviceEnterEvent::OPCODE => Ok(Self::WlDataDeviceEnter(
-                    WlDataDeviceEnterEvent::read(object_id, opcode, reader, state).await?,
+                    WlDataDeviceEnterEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlDataDeviceLeaveEvent::OPCODE => Ok(Self::WlDataDeviceLeave(
-                    WlDataDeviceLeaveEvent::read(object_id, opcode, reader, state).await?,
+                    WlDataDeviceLeaveEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlDataDeviceMotionEvent::OPCODE => Ok(Self::WlDataDeviceMotion(
-                    WlDataDeviceMotionEvent::read(object_id, opcode, reader, state).await?,
+                    WlDataDeviceMotionEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlDataDeviceSelectionEvent::OPCODE => Ok(Self::WlDataDeviceSelection(
-                    WlDataDeviceSelectionEvent::read(object_id, opcode, reader, state).await?,
+                    WlDataDeviceSelectionEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 _ => Err(FdReaderError::InvalidProtocol),
             },
-            "wl_data_offer" => match opcode {
+            ObjectInteface::WlDataOffer { .. } => match opcode {
                 WlDataOfferActionEvent::OPCODE => Ok(Self::WlDataOfferAction(
-                    WlDataOfferActionEvent::read(object_id, opcode, reader, state).await?,
+                    WlDataOfferActionEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlDataOfferOfferEvent::OPCODE => Ok(Self::WlDataOfferOffer(
-                    WlDataOfferOfferEvent::read(object_id, opcode, reader, state).await?,
+                    WlDataOfferOfferEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlDataOfferSourceActionsEvent::OPCODE => Ok(Self::WlDataOfferSourceActions(
-                    WlDataOfferSourceActionsEvent::read(object_id, opcode, reader, state).await?,
+                    WlDataOfferSourceActionsEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 _ => Err(FdReaderError::InvalidProtocol),
             },
-            "wl_data_source" => match opcode {
+            ObjectInteface::WlDataSource { .. } => match opcode {
                 WlDataSourceActionEvent::OPCODE => Ok(Self::WlDataSourceAction(
-                    WlDataSourceActionEvent::read(object_id, opcode, reader, state).await?,
+                    WlDataSourceActionEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlDataSourceCancelledEvent::OPCODE => Ok(Self::WlDataSourceCancelled(
-                    WlDataSourceCancelledEvent::read(object_id, opcode, reader, state).await?,
+                    WlDataSourceCancelledEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlDataSourceDndDropPerformedEvent::OPCODE => {
                     Ok(Self::WlDataSourceDndDropPerformed(
-                        WlDataSourceDndDropPerformedEvent::read(object_id, opcode, reader, state)
-                            .await?,
+                        WlDataSourceDndDropPerformedEvent::read_with_interface(
+                            object_id, opcode, interface, reader, state,
+                        )
+                        .await?,
                     ))
                 }
                 WlDataSourceDndFinishedEvent::OPCODE => Ok(Self::WlDataSourceDndFinished(
-                    WlDataSourceDndFinishedEvent::read(object_id, opcode, reader, state).await?,
+                    WlDataSourceDndFinishedEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlDataSourceSendEvent::OPCODE => Ok(Self::WlDataSourceSend(
-                    WlDataSourceSendEvent::read(object_id, opcode, reader, state).await?,
+                    WlDataSourceSendEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlDataSourceTargetEvent::OPCODE => Ok(Self::WlDataSourceTarget(
-                    WlDataSourceTargetEvent::read(object_id, opcode, reader, state).await?,
+                    WlDataSourceTargetEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 _ => Err(FdReaderError::InvalidProtocol),
             },
-            "wl_display" => match opcode {
+            ObjectInteface::WlDisplay { .. } => match opcode {
                 WlDisplayDeleteIdEvent::OPCODE => Ok(Self::WlDisplayDeleteId(
-                    WlDisplayDeleteIdEvent::read(object_id, opcode, reader, state).await?,
+                    WlDisplayDeleteIdEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlDisplayErrorEvent::OPCODE => Ok(Self::WlDisplayError(
-                    WlDisplayErrorEvent::read(object_id, opcode, reader, state).await?,
+                    WlDisplayErrorEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 _ => Err(FdReaderError::InvalidProtocol),
             },
-            "wl_keyboard" => match opcode {
+            ObjectInteface::WlKeyboard { .. } => match opcode {
                 WlKeyboardEnterEvent::OPCODE => Ok(Self::WlKeyboardEnter(
-                    WlKeyboardEnterEvent::read(object_id, opcode, reader, state).await?,
+                    WlKeyboardEnterEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlKeyboardKeyEvent::OPCODE => Ok(Self::WlKeyboardKey(
-                    WlKeyboardKeyEvent::read(object_id, opcode, reader, state).await?,
+                    WlKeyboardKeyEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlKeyboardKeymapEvent::OPCODE => Ok(Self::WlKeyboardKeymap(
-                    WlKeyboardKeymapEvent::read(object_id, opcode, reader, state).await?,
+                    WlKeyboardKeymapEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlKeyboardLeaveEvent::OPCODE => Ok(Self::WlKeyboardLeave(
-                    WlKeyboardLeaveEvent::read(object_id, opcode, reader, state).await?,
+                    WlKeyboardLeaveEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlKeyboardModifiersEvent::OPCODE => Ok(Self::WlKeyboardModifiers(
-                    WlKeyboardModifiersEvent::read(object_id, opcode, reader, state).await?,
+                    WlKeyboardModifiersEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlKeyboardRepeatInfoEvent::OPCODE => Ok(Self::WlKeyboardRepeatInfo(
-                    WlKeyboardRepeatInfoEvent::read(object_id, opcode, reader, state).await?,
+                    WlKeyboardRepeatInfoEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 _ => Err(FdReaderError::InvalidProtocol),
             },
-            "wl_output" => match opcode {
+            ObjectInteface::WlOutput { .. } => match opcode {
                 WlOutputDescriptionEvent::OPCODE => Ok(Self::WlOutputDescription(
-                    WlOutputDescriptionEvent::read(object_id, opcode, reader, state).await?,
+                    WlOutputDescriptionEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlOutputDoneEvent::OPCODE => Ok(Self::WlOutputDone(
-                    WlOutputDoneEvent::read(object_id, opcode, reader, state).await?,
+                    WlOutputDoneEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlOutputGeometryEvent::OPCODE => Ok(Self::WlOutputGeometry(
-                    WlOutputGeometryEvent::read(object_id, opcode, reader, state).await?,
+                    WlOutputGeometryEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlOutputModeEvent::OPCODE => Ok(Self::WlOutputMode(
-                    WlOutputModeEvent::read(object_id, opcode, reader, state).await?,
+                    WlOutputModeEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlOutputNameEvent::OPCODE => Ok(Self::WlOutputName(
-                    WlOutputNameEvent::read(object_id, opcode, reader, state).await?,
+                    WlOutputNameEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlOutputScaleEvent::OPCODE => Ok(Self::WlOutputScale(
-                    WlOutputScaleEvent::read(object_id, opcode, reader, state).await?,
+                    WlOutputScaleEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 _ => Err(FdReaderError::InvalidProtocol),
             },
-            "wl_pointer" => match opcode {
+            ObjectInteface::WlPointer { .. } => match opcode {
                 WlPointerAxisDiscreteEvent::OPCODE => Ok(Self::WlPointerAxisDiscrete(
-                    WlPointerAxisDiscreteEvent::read(object_id, opcode, reader, state).await?,
+                    WlPointerAxisDiscreteEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlPointerAxisEvent::OPCODE => Ok(Self::WlPointerAxis(
-                    WlPointerAxisEvent::read(object_id, opcode, reader, state).await?,
+                    WlPointerAxisEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlPointerAxisRelativeDirectionEvent::OPCODE => {
                     Ok(Self::WlPointerAxisRelativeDirection(
-                        WlPointerAxisRelativeDirectionEvent::read(object_id, opcode, reader, state)
-                            .await?,
+                        WlPointerAxisRelativeDirectionEvent::read_with_interface(
+                            object_id, opcode, interface, reader, state,
+                        )
+                        .await?,
                     ))
                 }
                 WlPointerAxisSourceEvent::OPCODE => Ok(Self::WlPointerAxisSource(
-                    WlPointerAxisSourceEvent::read(object_id, opcode, reader, state).await?,
+                    WlPointerAxisSourceEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlPointerAxisStopEvent::OPCODE => Ok(Self::WlPointerAxisStop(
-                    WlPointerAxisStopEvent::read(object_id, opcode, reader, state).await?,
+                    WlPointerAxisStopEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlPointerAxisValue120Event::OPCODE => Ok(Self::WlPointerAxisValue120(
-                    WlPointerAxisValue120Event::read(object_id, opcode, reader, state).await?,
+                    WlPointerAxisValue120Event::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlPointerButtonEvent::OPCODE => Ok(Self::WlPointerButton(
-                    WlPointerButtonEvent::read(object_id, opcode, reader, state).await?,
+                    WlPointerButtonEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlPointerEnterEvent::OPCODE => Ok(Self::WlPointerEnter(
-                    WlPointerEnterEvent::read(object_id, opcode, reader, state).await?,
+                    WlPointerEnterEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlPointerFrameEvent::OPCODE => Ok(Self::WlPointerFrame(
-                    WlPointerFrameEvent::read(object_id, opcode, reader, state).await?,
+                    WlPointerFrameEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlPointerLeaveEvent::OPCODE => Ok(Self::WlPointerLeave(
-                    WlPointerLeaveEvent::read(object_id, opcode, reader, state).await?,
+                    WlPointerLeaveEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlPointerMotionEvent::OPCODE => Ok(Self::WlPointerMotion(
-                    WlPointerMotionEvent::read(object_id, opcode, reader, state).await?,
+                    WlPointerMotionEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlPointerWarpEvent::OPCODE => Ok(Self::WlPointerWarp(
-                    WlPointerWarpEvent::read(object_id, opcode, reader, state).await?,
+                    WlPointerWarpEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 _ => Err(FdReaderError::InvalidProtocol),
             },
-            "wl_registry" => match opcode {
+            ObjectInteface::WlRegistry { .. } => match opcode {
                 WlRegistryGlobalEvent::OPCODE => Ok(Self::WlRegistryGlobal(
-                    WlRegistryGlobalEvent::read(object_id, opcode, reader, state).await?,
+                    WlRegistryGlobalEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlRegistryGlobalRemoveEvent::OPCODE => Ok(Self::WlRegistryGlobalRemove(
-                    WlRegistryGlobalRemoveEvent::read(object_id, opcode, reader, state).await?,
+                    WlRegistryGlobalRemoveEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 _ => Err(FdReaderError::InvalidProtocol),
             },
-            "wl_seat" => match opcode {
+            ObjectInteface::WlSeat { .. } => match opcode {
                 WlSeatCapabilitiesEvent::OPCODE => Ok(Self::WlSeatCapabilities(
-                    WlSeatCapabilitiesEvent::read(object_id, opcode, reader, state).await?,
+                    WlSeatCapabilitiesEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlSeatNameEvent::OPCODE => Ok(Self::WlSeatName(
-                    WlSeatNameEvent::read(object_id, opcode, reader, state).await?,
+                    WlSeatNameEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 _ => Err(FdReaderError::InvalidProtocol),
             },
-            "wl_shell_surface" => match opcode {
+            ObjectInteface::WlShellSurface { .. } => match opcode {
                 WlShellSurfaceConfigureEvent::OPCODE => Ok(Self::WlShellSurfaceConfigure(
-                    WlShellSurfaceConfigureEvent::read(object_id, opcode, reader, state).await?,
+                    WlShellSurfaceConfigureEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlShellSurfacePingEvent::OPCODE => Ok(Self::WlShellSurfacePing(
-                    WlShellSurfacePingEvent::read(object_id, opcode, reader, state).await?,
+                    WlShellSurfacePingEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlShellSurfacePopupDoneEvent::OPCODE => Ok(Self::WlShellSurfacePopupDone(
-                    WlShellSurfacePopupDoneEvent::read(object_id, opcode, reader, state).await?,
+                    WlShellSurfacePopupDoneEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 _ => Err(FdReaderError::InvalidProtocol),
             },
-            "wl_shm" => match opcode {
+            ObjectInteface::WlShm { .. } => match opcode {
                 WlShmFormatEvent::OPCODE => Ok(Self::WlShmFormat(
-                    WlShmFormatEvent::read(object_id, opcode, reader, state).await?,
+                    WlShmFormatEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 _ => Err(FdReaderError::InvalidProtocol),
             },
-            "wl_surface" => match opcode {
+            ObjectInteface::WlSurface { .. } => match opcode {
                 WlSurfaceEnterEvent::OPCODE => Ok(Self::WlSurfaceEnter(
-                    WlSurfaceEnterEvent::read(object_id, opcode, reader, state).await?,
+                    WlSurfaceEnterEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlSurfaceLeaveEvent::OPCODE => Ok(Self::WlSurfaceLeave(
-                    WlSurfaceLeaveEvent::read(object_id, opcode, reader, state).await?,
+                    WlSurfaceLeaveEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlSurfacePreferredBufferScaleEvent::OPCODE => {
                     Ok(Self::WlSurfacePreferredBufferScale(
-                        WlSurfacePreferredBufferScaleEvent::read(object_id, opcode, reader, state)
-                            .await?,
+                        WlSurfacePreferredBufferScaleEvent::read_with_interface(
+                            object_id, opcode, interface, reader, state,
+                        )
+                        .await?,
                     ))
                 }
                 WlSurfacePreferredBufferTransformEvent::OPCODE => {
                     Ok(Self::WlSurfacePreferredBufferTransform(
-                        WlSurfacePreferredBufferTransformEvent::read(
-                            object_id, opcode, reader, state,
+                        WlSurfacePreferredBufferTransformEvent::read_with_interface(
+                            object_id, opcode, interface, reader, state,
                         )
                         .await?,
                     ))
                 }
                 _ => Err(FdReaderError::InvalidProtocol),
             },
-            "wl_touch" => match opcode {
+            ObjectInteface::WlTouch { .. } => match opcode {
                 WlTouchCancelEvent::OPCODE => Ok(Self::WlTouchCancel(
-                    WlTouchCancelEvent::read(object_id, opcode, reader, state).await?,
+                    WlTouchCancelEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlTouchDownEvent::OPCODE => Ok(Self::WlTouchDown(
-                    WlTouchDownEvent::read(object_id, opcode, reader, state).await?,
+                    WlTouchDownEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlTouchFrameEvent::OPCODE => Ok(Self::WlTouchFrame(
-                    WlTouchFrameEvent::read(object_id, opcode, reader, state).await?,
+                    WlTouchFrameEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlTouchMotionEvent::OPCODE => Ok(Self::WlTouchMotion(
-                    WlTouchMotionEvent::read(object_id, opcode, reader, state).await?,
+                    WlTouchMotionEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlTouchOrientationEvent::OPCODE => Ok(Self::WlTouchOrientation(
-                    WlTouchOrientationEvent::read(object_id, opcode, reader, state).await?,
+                    WlTouchOrientationEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlTouchShapeEvent::OPCODE => Ok(Self::WlTouchShape(
-                    WlTouchShapeEvent::read(object_id, opcode, reader, state).await?,
+                    WlTouchShapeEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 WlTouchUpEvent::OPCODE => Ok(Self::WlTouchUp(
-                    WlTouchUpEvent::read(object_id, opcode, reader, state).await?,
+                    WlTouchUpEvent::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
                 )),
                 _ => Err(FdReaderError::InvalidProtocol),
             },

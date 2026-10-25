@@ -1,4 +1,5 @@
 use crate::protocol::ClientState;
+use crate::protocol::InterfaceReader;
 use crate::protocol::{CommandReader, CommandReaderExt, ObjectInteface};
 use crate::protocol::{CommandWriter, CommandWriterExt};
 use crate::utils::reader::{FdPayloadReader, FdReaderError};
@@ -46,14 +47,28 @@ impl CommandReader<Self> for WlDataDeviceManagerGetDataDeviceRequest {
         reader: &mut FdPayloadReader<'_>,
         state: &Arc<Mutex<ClientState>>,
     ) -> Result<Self, FdReaderError> {
-        let receiver_interface = Self::reader_request_interface(
-            state,
-            object_id,
-            opcode,
-            Self::OPCODE,
-            "wl_data_device_manager",
-            Self::SINCE,
-        )?;
+        let interface = Self::reader_state(state)?
+            .object_interface(object_id)
+            .ok_or(FdReaderError::InvalidProtocol)?;
+        Self::read_with_interface(object_id, opcode, interface, reader, state).await
+    }
+}
+
+impl InterfaceReader for WlDataDeviceManagerGetDataDeviceRequest {
+    async fn read_with_interface(
+        object_id: u32,
+        opcode: u16,
+        interface: ObjectInteface,
+        reader: &mut FdPayloadReader<'_>,
+        state: &Arc<Mutex<ClientState>>,
+    ) -> Result<Self, FdReaderError> {
+        if !matches!(interface, ObjectInteface::WlDataDeviceManager { .. })
+            || opcode != Self::OPCODE
+            || interface.version() < Self::SINCE
+        {
+            return Err(FdReaderError::InvalidProtocol);
+        }
+        let receiver_interface = interface;
         let id = reader.next_u32().await?;
         let seat = reader.next_u32().await?;
         if reader.remaining_quota() != 0 {

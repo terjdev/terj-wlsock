@@ -48,46 +48,30 @@ trait CommandReaderExt: CommandReader<Self> + Sized {
     ) -> Result<MutexGuard<'_, ClientState>, FdReaderError> {
         state.lock().map_err(|_| FdReaderError::InvalidProtocol)
     }
-
-    /// Checks an event receiver, opcode, interface, and negotiated version.
-    fn reader_event_interface(
-        state: &Arc<Mutex<ClientState>>,
-        id: u32,
-        opcode: u16,
-        expected_opcode: u16,
-        name: &str,
-        since: u32,
-    ) -> Result<ObjectInteface, FdReaderError> {
-        let interface = Self::reader_state(state)?
-            .object_interface(id)
-            .ok_or(FdReaderError::InvalidProtocol)?;
-        if opcode != expected_opcode || interface.name() != name || interface.version() < since {
-            return Err(FdReaderError::InvalidProtocol);
-        }
-        Ok(interface)
-    }
-
-    /// Checks the request receiver, opcode, interface, and minimum version.
-    /// Returns a copy of the interface without retaining a lock across I/O.
-    fn reader_request_interface(
-        state: &Arc<Mutex<ClientState>>,
-        id: u32,
-        opcode: u16,
-        expected_opcode: u16,
-        name: &str,
-        since: u32,
-    ) -> Result<ObjectInteface, FdReaderError> {
-        let ifc = Self::reader_state(state)?
-            .object_interface(id)
-            .ok_or(FdReaderError::InvalidProtocol)?;
-        if opcode != expected_opcode || ifc.name() != name || ifc.version() < since {
-            return Err(FdReaderError::InvalidProtocol);
-        }
-        Ok(ifc)
-    }
 }
 
 impl<T: CommandReader<T>> CommandReaderExt for T {}
+
+/// Decodes a complete message using previously resolved receiver metadata.
+///
+/// Dispatchers resolve the receiver once; standalone public decoders perform
+/// their own lookup before calling this shared path. Each implementation checks
+/// the interface variant, opcode, and minimum version before reading payload.
+/// Metadata is a snapshot for this message only; state mutations still acquire
+/// their own locks, and no state guard may be retained across socket I/O.
+trait InterfaceReader: CommandReader<Self> + Sized {
+    /// Reads and validates a payload without looking up its receiver again.
+    ///
+    /// The caller supplies metadata copied from `state` for `object_id` before
+    /// decoding. Payload, descriptor, and object-state errors remain unchanged.
+    fn read_with_interface(
+        object_id: u32,
+        opcode: u16,
+        interface: ObjectInteface,
+        reader: &mut FdPayloadReader<'_>,
+        state: &Arc<Mutex<ClientState>>,
+    ) -> impl Future<Output = Result<Self, FdReaderError>> + Send;
+}
 
 /// Encodes a command payload and reports the metadata needed for its header.
 ///
