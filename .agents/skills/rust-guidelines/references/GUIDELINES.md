@@ -11,7 +11,9 @@ This file contains all guidelines concatenated for easy reference.
 
 
 
-## Design with AI use in mind (M-DESIGN-FOR-AI) { #M-DESIGN-FOR-AI }
+<a id="M-DESIGN-FOR-AI"></a>
+
+## Design with AI use in mind (M-DESIGN-FOR-AI)
 
 <why>To maximize the utility you get from letting agents work in your code base.</why>
 
@@ -25,25 +27,25 @@ With that said, there are a few guidelines which are particularly important to h
 
 * **Create Idiomatic Rust API Patterns**. The more your APIs, whether public or internal, look and feel like the majority of
 Rust code in the world, the better it is for AI. Follow the [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/checklist.html)
-along with the guidelines from [Library / UX](../libs/ux).
+along with the guidelines from [Library / UX](#libraries--ux-guidelines).
 
 * **Provide Thorough Docs**. Agents love good detailed docs. Include docs for all of your modules and public items in your crate.
 Assume the reader has a solid, but not expert, level of understanding of Rust, and that the reader understands the standard library.
 Follow
-[C-CRATE-DOC](https://rust-lang.github.io/api-guidelines/checklist.html#c-crate-doc),
-[C-FAILURE](https://rust-lang.github.io/api-guidelines/checklist.html#c-failure),
-[C-LINK](https://rust-lang.github.io/api-guidelines/checklist.html#c-link), and
-[M-MODULE-DOCS](../docs/#M-MODULE-DOCS)
-[M-CANONICAL-DOCS](../docs/#M-CANONICAL-DOCS).
+[C-CRATE-DOC](https://rust-lang.github.io/api-guidelines/documentation.html#c-crate-doc),
+[C-FAILURE](https://rust-lang.github.io/api-guidelines/documentation.html#c-failure),
+[C-LINK](https://rust-lang.github.io/api-guidelines/documentation.html#c-link), and
+[M-MODULE-DOCS](#M-MODULE-DOCS)
+[M-CANONICAL-DOCS](#M-CANONICAL-DOCS).
 
 * **Provide Thorough Examples**. Your documentation should have directly usable examples, the repository should include more elaborate ones.
 Follow
-[C-EXAMPLE](https://rust-lang.github.io/api-guidelines/checklist.html#c-example)
-[C-QUESTION-MARK](https://rust-lang.github.io/api-guidelines/checklist.html#c-question-mark).
+[C-EXAMPLE](https://rust-lang.github.io/api-guidelines/documentation.html#c-example)
+[C-QUESTION-MARK](https://rust-lang.github.io/api-guidelines/documentation.html#c-question-mark).
 
 * **Use Strong Types**. Avoid [primitive obsession](https://refactoring.guru/smells/primitive-obsession) by using strong types with strict well-documented semantics.
 Follow
-[C-NEWTYPE](https://rust-lang.github.io/api-guidelines/checklist.html#c-newtype).
+[C-NEWTYPE](https://rust-lang.github.io/api-guidelines/type-safety.html#c-newtype).
 
 * **Make Your APIs Testable**. Design APIs which allow your customers to test their use of your API in unit tests. This might involve introducing some mocks, fakes,
 or cargo features. AI agents need to be able to iterate quickly to prove that the code they are writing that calls your API is working
@@ -54,7 +56,9 @@ This enables agents to work in a mostly hands-off mode when refactoring.
 
 
 
-## Avoid meta design documentation (M-NO-META-DESIGN-DOCUMENTATION) { #M-NO-META-DESIGN-DOCUMENTATION }
+<a id="M-NO-META-DESIGN-DOCUMENTATION"></a>
+
+## Avoid meta design documentation (M-NO-META-DESIGN-DOCUMENTATION)
 
 <why>to avoid confusing users with information not relevant to them.</why>
 
@@ -77,7 +81,9 @@ This kind of content describes process, not behaviour, and goes stale over time.
 
 
 
-## Rust code solves Rust problems (M-RUST-SHAPED) { #M-RUST-SHAPED }
+<a id="M-RUST-SHAPED"></a>
+
+## Rust code solves Rust problems (M-RUST-SHAPED)
 
 <why>To ensure code is idiomatic.</why>
 
@@ -95,13 +101,15 @@ However, many patterns exist to solve problems particular to the ecosystem they 
 - structural differences between interfaces and traits,
 - and many others.
 
-While some language constructs simply don't translate at all (e.g., compared to C#, Rust does not have any meaningful reflection), others are deceptively similar and might only bite months down the line (e.g., statics, compare [M-AVOID-STATICS](../libs/resilience/#M-AVOID-STATICS)).
+While some language constructs simply don't translate at all (e.g., compared to C#, Rust does not have any meaningful reflection), others are deceptively similar and might only bite months down the line (e.g., statics, compare [M-AVOID-STATICS](#M-AVOID-STATICS)).
 
 As a rule of thumb, structs and their methods can have vaguely similar names, flows, inputs and outputs, as far as their business functionality is concerned. However, any striking technical similarity between Rust and { C#, Java, Python, ... } implementations is indicative of deeper architectural problems; a `throw_if_null()` never makes sense.
 
 
 
-## Items are only visible through one path (M-SINGLE-ITEM-PATH) { #M-SINGLE-ITEM-PATH }
+<a id="M-SINGLE-ITEM-PATH"></a>
+
+## Items are only visible through one path (M-SINGLE-ITEM-PATH)
 
 <why>to avoid confusion and clutter from offering the same type multiple times.</why>
 
@@ -129,13 +137,15 @@ pub(crate) mod db {
 pub use db::Connection;
 ```
 
-Similarly, re-exports of foreign items are not covered by this rule, although they should follow [M-FOREIGN-REEXPORTS](../libs/interop/#M-FOREIGN-REEXPORTS).
+Similarly, re-exports of foreign items are not covered by this rule, although they should follow [M-FOREIGN-REEXPORTS](#M-FOREIGN-REEXPORTS).
 
-Likewise, this rule also does not apply to public-but-hidden `_private` modules needed by macros, compare [M-MACRO-HELPERS](../macros/#M-MACRO-HELPERS).
+Likewise, this rule also does not apply to public-but-hidden `_private` modules needed by macros, compare [M-MACRO-HELPERS](#M-MACRO-HELPERS).
 
 
 
-## Tests do not assert ground truth (M-TAUTOLOGICAL-TESTS) { #M-TAUTOLOGICAL-TESTS }
+<a id="M-TAUTOLOGICAL-TESTS"></a>
+
+## Tests do not assert ground truth (M-TAUTOLOGICAL-TESTS)
 
 <why>to avoid adding noise without value.</why>
 
@@ -164,13 +174,15 @@ Instead, a meaningful test would check a property the constants are supposed to 
 
 
 
-## Applications may use Anyhow or derivatives (M-APP-ERROR) { #M-APP-ERROR }
+<a id="M-APP-ERROR"></a>
+
+## Applications may use Anyhow or derivatives (M-APP-ERROR)
 
 <why>To simplify application-level error handling.</why>
 
 > Note, this guideline is primarily a relaxation and clarification of [M-ERRORS-CANONICAL-STRUCTS].
 
-Applications, and crates in your own repository exclusively used from your application, may use [ohno::AppError](https://docs.rs/crate/ohno/latest#structs), [anyhow](https://github.com/dtolnay/anyhow),
+Applications, and crates in your own repository exclusively used from your application, may use [ohno::AppError](https://docs.rs/ohno/latest/ohno/struct.AppError.html), [anyhow](https://github.com/dtolnay/anyhow),
 [eyre](https://github.com/eyre-rs/eyre) or similar application-level error crates instead of implementing their own types.
 
 For example, in your application crates you may just re-export and use eyre's common `Result` type, which should be able to automatically
@@ -191,11 +203,13 @@ application-level error types.
 
 Libraries (crates used by more than one crate) should always follow [M-ERRORS-CANONICAL-STRUCTS] instead.
 
-[M-ERRORS-CANONICAL-STRUCTS]: ../libs/ux/#M-ERRORS-CANONICAL-STRUCTS
+[M-ERRORS-CANONICAL-STRUCTS]: #M-ERRORS-CANONICAL-STRUCTS
 
 
 
-## Use mimalloc for apps (M-MIMALLOC-APPS) { #M-MIMALLOC-APPS }
+<a id="M-MIMALLOC-APPS"></a>
+
+## Use mimalloc for apps (M-MIMALLOC-APPS)
 
 <why>To get significant performance for free.</why>
 
@@ -220,7 +234,9 @@ static GLOBAL: MiMalloc = MiMalloc;
 
 
 
-## Applications target highest viable target-cpu (M-TARGET-CPU) { #M-TARGET-CPU }
+<a id="M-TARGET-CPU"></a>
+
+## Applications target highest viable target-cpu (M-TARGET-CPU)
 
 <why>to improve fleet performance.</why>
 
@@ -248,13 +264,15 @@ Note this guideline applies only to applications, as target settings are ignored
 
 
 
-## Panic continuation is last resort (M-PANIC-CONTINUATION) { #M-PANIC-CONTINUATION }
+<a id="M-PANIC-CONTINUATION"></a>
+
+## Panic continuation is last resort (M-PANIC-CONTINUATION)
 
 <why>to avoid subtle bugs and state corruption.</why>
 
 Panic recovery via `catch_unwind()` is a matter of last resort and must generally be followed by a controlled application restart.
 
-Panics indicate the program has reached an unrecoverable state (compare [M-PANIC-IS-STOP](./#M-PANIC-IS-STOP) and [M-PANIC-ON-BUG](./#M-PANIC-ON-BUG)). Library code in particular should not attempt to catch a panic and continue execution, as there is a risk of observing otherwise impossible state:
+Panics indicate the program has reached an unrecoverable state (compare [M-PANIC-IS-STOP](#M-PANIC-IS-STOP) and [M-PANIC-ON-BUG](#M-PANIC-ON-BUG)). Library code in particular should not attempt to catch a panic and continue execution, as there is a risk of observing otherwise impossible state:
 
 ```rust,ignore
 thread_local! {
@@ -282,7 +300,9 @@ Systems where many unrelated tasks are in flight (e.g., server request handlers)
 
 
 
-## Panic means 'stop the program' (M-PANIC-IS-STOP) { #M-PANIC-IS-STOP }
+<a id="M-PANIC-IS-STOP"></a>
+
+## Panic means 'stop the program' (M-PANIC-IS-STOP)
 
 <why>To ensure soundness and predictability.</why>
 
@@ -313,7 +333,9 @@ Any of those are directly or indirectly linked to programming errors.
 
 
 
-## Custom panics have a helpful message (M-PANIC-MESSAGE) { #M-PANIC-MESSAGE }
+<a id="M-PANIC-MESSAGE"></a>
+
+## Custom panics have a helpful message (M-PANIC-MESSAGE)
 
 <why>to lower the time it takes to understand bugs.</why>
 
@@ -333,7 +355,9 @@ Panic messages in tests are not generally needed.
 
 
 
-## Detected programming bugs are panics, not errors (M-PANIC-ON-BUG) { #M-PANIC-ON-BUG }
+<a id="M-PANIC-ON-BUG"></a>
+
+## Detected programming bugs are panics, not errors (M-PANIC-ON-BUG)
 
 <why>To avoid impossible error handling code and ensure runtime consistency.</why>
 
@@ -373,11 +397,13 @@ fn parse_uri(s: &str) -> Result<Uri, ParseError> { };
 > For any user input or calling sequence that would otherwise panic, you should also explore if you can use the type
 > system to avoid panicking code paths altogether.
 
-[M-PANIC-IS-STOP]: ./#M-PANIC-IS-STOP
+[M-PANIC-IS-STOP]: #M-PANIC-IS-STOP
 
 
 
-## Unsafe needs reason, should be avoided (M-UNSAFE) { #M-UNSAFE }
+<a id="M-UNSAFE"></a>
+
+## Unsafe needs reason, should be avoided (M-UNSAFE)
 
 <why>To prevent undefined behavior, attack surface, and similar 'happy little accidents'.</why>
 
@@ -435,7 +461,9 @@ In any case, `unsafe` must follow the guidelines outlined below.
 
 
 
-## Unsafe implies undefined behavior (M-UNSAFE-IMPLIES-UB) { #M-UNSAFE-IMPLIES-UB }
+<a id="M-UNSAFE-IMPLIES-UB"></a>
+
+## Unsafe implies undefined behavior (M-UNSAFE-IMPLIES-UB)
 
 <why>To ensure semantic consistency and prevent warning fatigue.</why>
 
@@ -452,7 +480,9 @@ unsafe fn delete_database() { }
 
 
 
-## All code must be sound (M-UNSOUND) { #M-UNSOUND }
+<a id="M-UNSOUND"></a>
+
+## All code must be sound (M-UNSOUND)
 
 <why>To prevent unexpected runtime behavior, leading to potential bugs and incompatibilities.</why>
 
@@ -524,7 +554,9 @@ While you may break most guidelines if you have a good enough reason, there are 
 
 
 
-## Documentation has canonical sections (M-CANONICAL-DOCS) { #M-CANONICAL-DOCS }
+<a id="M-CANONICAL-DOCS"></a>
+
+## Documentation has canonical sections (M-CANONICAL-DOCS)
 
 <why>To follow established and expected Rust best practices.</why>
 
@@ -578,14 +610,14 @@ fn copy(src: File, dst: File) {}
 
 
 
-## Mark `pub use` items with `#[doc(inline)]` (M-DOC-INLINE) { #M-DOC-INLINE }
+<a id="M-DOC-INLINE"></a>
+
+## Mark `pub use` items with `#[doc(inline)]` (M-DOC-INLINE)
 
 <why>To make re-exported items 'fit in' with their non re-exported siblings.</why>
 
 When publicly re-exporting crate items via `pub use foo::Foo` or `pub use foo::*`, they show up in an opaque re-export block. In most cases, this is not
-helpful to the reader:
-
-![TEXT](M-DOC-INLINE_BAD.png)
+helpful to the reader.
 
 Instead, you should annotate them with `#[doc(inline)]` at the `use` site, for them to be inlined organically:
 
@@ -600,19 +632,19 @@ pub use foo::*;
 pub use foo::Foo;
 ```
 
-![TEXT](M-DOC-INLINE_GOOD.png)
-
 This does not apply to `std` or 3rd party types; these should always be re-exported without inlining to make it clear they are external.
 
 > ### <alert></alert> Still avoid glob exports
 >
 > The `#[doc(inline)]` trick above does not change [M-NO-GLOB-REEXPORTS]; you generally should not re-export items via wildcards.
 
-[M-NO-GLOB-REEXPORTS]: ../libs/resilience/#M-NO-GLOB-REEXPORTS
+[M-NO-GLOB-REEXPORTS]: #M-NO-GLOB-REEXPORTS
 
 
 
-## First sentence is one line; approx. 15 words (M-FIRST-DOC-SENTENCE) { #M-FIRST-DOC-SENTENCE }
+<a id="M-FIRST-DOC-SENTENCE"></a>
+
+## First sentence is one line; approx. 15 words (M-FIRST-DOC-SENTENCE)
 
 <why>To make API docs easily skimmable.</why>
 
@@ -629,23 +661,19 @@ fn some_item() { }
 Since Rust API documentation is rendered with a fixed max width, there is a naturally preferred sentence length you should not
 exceed to keep things tidy on most screens.
 
-If you keep things in a line, your docs will become easily skimmable. Compare, for example, the standard library:
-
-![TEXT](M-FIRST-DOC-SENTENCE_GOOD.png)
-
-Otherwise, you might end up with _widows_ and a generally unpleasant reading flow:
-
-![TEXT](M-FIRST-DOC-SENTENCE_BAD.png)
+Keeping the summary sentence on one line makes your docs easily skimmable. Longer summaries can wrap onto additional lines, leaving isolated words (_widows_) and disrupting the reading flow.
 
 As a rule of thumb, the first sentence should not exceed **15 words**.
 
 
 
-## Has comprehensive module documentation (M-MODULE-DOCS) { #M-MODULE-DOCS }
+<a id="M-MODULE-DOCS"></a>
+
+## Has comprehensive module documentation (M-MODULE-DOCS)
 
 <why>To allow for better API docs navigation.</why>
 
-Any public library module must have `//!` module documentation, and the first sentence must follow [M-DOC-FIRST-SENTENCE].
+Any public library module must have `//!` module documentation, and the first sentence must follow [M-FIRST-DOC-SENTENCE].
 
 ```rust,edition2021,ignore
 pub mod ffi {
@@ -673,7 +701,7 @@ The rest of the module documentation should be comprehensive, i.e., cover the mo
 This does not mean every module should contain all of these items. But if there is something to say about the interaction of the contained types,
 their module documentation is the right place.
 
-[M-DOC-FIRST-SENTENCE]: ./#M-DOC-FIRST-SENTENCE
+[M-FIRST-DOC-SENTENCE]: #M-FIRST-DOC-SENTENCE
 
 
 ---
@@ -683,7 +711,9 @@ their module documentation is the right place.
 
 
 
-## FFI crates follow established naming conventions (M-FFI-NAMING) { #M-FFI-NAMING }
+<a id="M-FFI-NAMING"></a>
+
+## FFI crates follow established naming conventions (M-FFI-NAMING)
 
 <why>to make the role of crates immediately recognizable across projects.</why>
 
@@ -696,7 +726,9 @@ There are slight variations of this scheme (e.g., `-sys2` when a previous `-sys`
 
 
 
-## Business logic belongs in core crates, FFI only translates (M-FFI-TRANSLATES) { #M-FFI-TRANSLATES }
+<a id="M-FFI-TRANSLATES"></a>
+
+## Business logic belongs in core crates, FFI only translates (M-FFI-TRANSLATES)
 
 <why>maximal safe code and a clean separation of concerns.</why>
 
@@ -747,7 +779,9 @@ pub struct Message {
 
 
 
-## Isolate DLL state between FFI libraries (M-ISOLATE-DLL-STATE) { #M-ISOLATE-DLL-STATE }
+<a id="M-ISOLATE-DLL-STATE"></a>
+
+## Isolate DLL state between FFI libraries (M-ISOLATE-DLL-STATE)
 
 <why>data integrity and defined behavior across DLL boundaries.</why>
 
@@ -812,7 +846,9 @@ fn use_common_service(common: &CommonService) {
 
 
 
-## Prefer 'macros by example' over proc macros (M-EXAMPLE-OVER-PROC) { #M-EXAMPLE-OVER-PROC }
+<a id="M-EXAMPLE-OVER-PROC"></a>
+
+## Prefer 'macros by example' over proc macros (M-EXAMPLE-OVER-PROC)
 
 <why>easy macro inspection and fast compilation.</why>
 
@@ -832,7 +868,9 @@ make_new_id!(MyId);
 
 
 
-## Third party items come from hidden `_private` module (M-MACRO-HELPERS) { #M-MACRO-HELPERS }
+<a id="M-MACRO-HELPERS"></a>
+
+## Third party items come from hidden `_private` module (M-MACRO-HELPERS)
 
 <why>predictable compilation.</why>
 
@@ -857,7 +895,9 @@ impl ::foo::_private::Bar for MyType { ... }
 
 
 
-## Macros are a last resort (M-MACRO-LAST-RESORT) { #M-MACRO-LAST-RESORT }
+<a id="M-MACRO-LAST-RESORT"></a>
+
+## Macros are a last resort (M-MACRO-LAST-RESORT)
 
 <why>minimal complexity.</why>
 
@@ -877,7 +917,9 @@ Counterintuitively, the more structurally complex the result of a macro expansio
 
 
 
-## Macros assume main crate (M-MACRO-MAIN-CRATE) { #M-MACRO-MAIN-CRATE }
+<a id="M-MACRO-MAIN-CRATE"></a>
+
+## Macros assume main crate (M-MACRO-MAIN-CRATE)
 
 <why>simple macro logic.</why>
 
@@ -895,7 +937,9 @@ This also implies you should not attempt to support use cases where your crate i
 
 
 
-## Macros don't lie about signatures (M-MACROS-DONT-LIE) { #M-MACROS-DONT-LIE }
+<a id="M-MACROS-DONT-LIE"></a>
+
+## Macros don't lie about signatures (M-MACROS-DONT-LIE)
 
 <why>clarity for users and LLMs.</why>
 
@@ -921,7 +965,9 @@ foo(token).await
 
 
 
-## Proc macros should have separate impl crate incl. tests (M-PROC-IMPL) { #M-PROC-IMPL }
+<a id="M-PROC-IMPL"></a>
+
+## Proc macros should have separate impl crate incl. tests (M-PROC-IMPL)
 
 <why>thoroughly testable proc macros.</why>
 
@@ -954,7 +1000,9 @@ Inside the core crate, we also recommend adding [trybuild](https://docs.rs/trybu
 
 
 
-## Proc macros don't produce implied or hidden items (M-PROC-IMPLIED-ITEMS) { #M-PROC-IMPLIED-ITEMS }
+<a id="M-PROC-IMPLIED-ITEMS"></a>
+
+## Proc macros don't produce implied or hidden items (M-PROC-IMPLIED-ITEMS)
 
 <why>clear errors and correct hygiene and visibility.</why>
 
@@ -1013,7 +1061,9 @@ is an esoteric property of names (e.g., `fn foo`, `struct Bar {}`, `moo!`) that 
 
 
 
-## Hot `async` functions reduce stack size (M-ASYNC-STACK-SIZE) { #M-ASYNC-STACK-SIZE }
+<a id="M-ASYNC-STACK-SIZE"></a>
+
+## Hot `async` functions reduce stack size (M-ASYNC-STACK-SIZE)
 
 <why>small async stack sizes and low memcpy overhead.</why>
 
@@ -1091,7 +1141,9 @@ fn hot(args: Args) -> impl Future<Output = Result<T>> {
 
 
 
-## Nested type hierarchies should avoid needless indirection (M-AVOID-INDIRECTION) { #M-AVOID-INDIRECTION }
+<a id="M-AVOID-INDIRECTION"></a>
+
+## Nested type hierarchies should avoid needless indirection (M-AVOID-INDIRECTION)
 
 <why>fast, cache-friendly memory access.</why>
 
@@ -1137,13 +1189,15 @@ impl Item {
 
 
 
-## Use boxed slices and strings for immutable owned sequences (M-BOX-DST) { #M-BOX-DST }
+<a id="M-BOX-DST"></a>
+
+## Use boxed slices and strings for immutable owned sequences (M-BOX-DST)
 
 <why>low memory consumption and good cache utilization.</why>
 
 Frequently used, internal, immutable sequences that will not be resized after construction should be stored as `Box<[T]>`, `Arc<str>` or similar, rather than their original  `Vec<T>` or `String` counterparts.
 
-Regular growable collections consist of a `(ptr, len, capacity)` triple. Converting them to boxed slices makes them immutable, executes a [shrink-to-fit](./#M-SHRINK-TO-FIT), and drops the `capacity` bit, reducing their handle size by 1/3.  For this pattern to be useful, the following preconditions should apply:
+Regular growable collections consist of a `(ptr, len, capacity)` triple. Converting them to boxed slices makes them immutable, executes a [shrink-to-fit](#M-SHRINK-TO-FIT), and drops the `capacity` bit, reducing their handle size by 1/3.  For this pattern to be useful, the following preconditions should apply:
 
 - the sequence should be frequently instantiated (e.g., >1000's of instances),
 - it must be immutable,
@@ -1167,7 +1221,9 @@ struct Data {
 
 
 
-## Use a fast hasher where possible (M-FAST-HASHER) { #M-FAST-HASHER }
+<a id="M-FAST-HASHER"></a>
+
+## Use a fast hasher where possible (M-FAST-HASHER)
 
 <why>hashing performance.</why>
 
@@ -1181,10 +1237,13 @@ let lookup = HashMap::<UserID, Data>::with_capacity(1024);
 
 // Good, uses faster foldhash for internal keys.
 let lookup = foldhash::HashMap<UserID, Data>::with_capacity(1024);
+```
 
 
 
-## Identify, profile, optimize the hot path early (M-HOTPATH) { #M-HOTPATH }
+<a id="M-HOTPATH"></a>
+
+## Identify, profile, optimize the hot path early (M-HOTPATH)
 
 <why>high-performance code.</why>
 
@@ -1228,7 +1287,9 @@ sharing screenshots of your latest profiling hot spots.
 
 
 
-## Collections are created with sufficient initial capacity (M-INITIAL-CAPACITY) { #M-INITIAL-CAPACITY }
+<a id="M-INITIAL-CAPACITY"></a>
+
+## Collections are created with sufficient initial capacity (M-INITIAL-CAPACITY)
 
 <why>efficient collection creation.</why>
 
@@ -1259,7 +1320,9 @@ let rval: Vec<_> = other.iter().map(convert).collect();
 
 
 
-## Library telemetry does not tank performance (M-LOG-OVERHEAD) { #M-LOG-OVERHEAD }
+<a id="M-LOG-OVERHEAD"></a>
+
+## Library telemetry does not tank performance (M-LOG-OVERHEAD)
 
 <why>low-overhead telemetry during diagnosis.</why>
 
@@ -1287,7 +1350,9 @@ for m in messages { ... }
 
 
 
-## Reuse allocations where possible (M-MEM-REUSE) { #M-MEM-REUSE }
+<a id="M-MEM-REUSE"></a>
+
+## Reuse allocations where possible (M-MEM-REUSE)
 
 <why>low allocation overhead and fast hot paths.</why>
 
@@ -1337,11 +1402,13 @@ fn client_do_work(query: &mut Query) {
 
 
 
-## Shrink collections to fit after building (M-SHRINK-TO-FIT) { #M-SHRINK-TO-FIT }
+<a id="M-SHRINK-TO-FIT"></a>
+
+## Shrink collections to fit after building (M-SHRINK-TO-FIT)
 
 <why>a minimal memory footprint.</why>
 
-Where large, long-lived, growable collections such as `Vec` or `String` were built without an exact size reservation (compare [M-INITIAL-CAPACITY](./#M-INITIAL-CAPACITY)), the resulting collection should be shrunk via `shrink_to_fit` before storing it.
+Where large, long-lived, growable collections such as `Vec` or `String` were built without an exact size reservation (compare [M-INITIAL-CAPACITY](#M-INITIAL-CAPACITY)), the resulting collection should be shrunk via `shrink_to_fit` before storing it.
 
 Many Rust collections grow by powers of two when iteratively adding elements. In the worst case a collection might therefore use ~2x of its needed memory.
 
@@ -1356,11 +1423,13 @@ for x in large_iter {
 long_lived.shrink_to_fit();
 ```
 
-Note that this does not apply to conversions done via `into_boxed_*` and friends (compare [M-BOX-DST](./#M-BOX-DST)), as these generally shrink before converting already.
+Note that this does not apply to conversions done via `into_boxed_*` and friends (compare [M-BOX-DST](#M-BOX-DST)), as these generally shrink before converting already.
 
 
 
-## Optimize for throughput, avoid empty cycles (M-THROUGHPUT) { #M-THROUGHPUT }
+<a id="M-THROUGHPUT"></a>
+
+## Optimize for throughput, avoid empty cycles (M-THROUGHPUT)
 
 <why>COGS savings at scale.</why>
 
@@ -1387,11 +1456,13 @@ You should not:
 
 Shared state should only be used if the cost of sharing is less than the cost of re-computation.
 
-[M-YIELD-POINTS]: ./#M-YIELD-POINTS
+[M-YIELD-POINTS]: #M-YIELD-POINTS
 
 
 
-## Long-running tasks should have yield points (M-YIELD-POINTS) { #M-YIELD-POINTS }
+<a id="M-YIELD-POINTS"></a>
+
+## Long-running tasks should have yield points (M-YIELD-POINTS)
 
 <why>fair CPU time for all tasks.</why>
 
@@ -1441,7 +1512,9 @@ related APIs to query your hosting runtime.
 
 
 
-## Common settings come from the workspace Cargo.toml (M-CARGO-WORKSPACE) { #M-CARGO-WORKSPACE }
+<a id="M-CARGO-WORKSPACE"></a>
+
+## Common settings come from the workspace Cargo.toml (M-CARGO-WORKSPACE)
 
 <why>consistent, maintainable project configuration.</why>
 
@@ -1451,7 +1524,9 @@ Where a dependency is crate-specific, it should still be defined in the workspac
 
 
 
-## All crates are siblings in one folder (M-CRATES-FLAT-FOLDER) { #M-CRATES-FLAT-FOLDER }
+<a id="M-CRATES-FLAT-FOLDER"></a>
+
+## All crates are siblings in one folder (M-CRATES-FLAT-FOLDER)
 
 <why>simple project navigation and a standard Rust layout.</why>
 
@@ -1497,7 +1572,9 @@ Rare exceptions to this rule can occur if your crate is in the business of proce
 
 
 
-## The workspace lists and versions all crates (M-CRATES-IN-WORKSPACE) { #M-CRATES-IN-WORKSPACE }
+<a id="M-CRATES-IN-WORKSPACE"></a>
+
+## The workspace lists and versions all crates (M-CRATES-IN-WORKSPACE)
 
 <why>simple inter-crate dependencies and debugging.</why>
 
@@ -1519,7 +1596,9 @@ sibling = { path = "crates/sibling", version = "0.5.2" }
 
 
 
-## New crates target latest edition (M-LATEST-EDITION) { #M-LATEST-EDITION }
+<a id="M-LATEST-EDITION"></a>
+
+## New crates target latest edition (M-LATEST-EDITION)
 
 <why>access to the latest Rust features.</why>
 
@@ -1529,7 +1608,9 @@ Using an older edition generally has no upsides for new projects, but forces you
 
 
 
-## MSRV is conservatively updated (M-MSRV) { #M-MSRV }
+<a id="M-MSRV"></a>
+
+## MSRV is conservatively updated (M-MSRV)
 
 <why>modern features with stability for users.</why>
 
@@ -1553,7 +1634,9 @@ Bumping MSRV therefore does not require a major release, but can be handled thro
 
 
 
-## Magic values are documented (M-DOCUMENTED-MAGIC) { #M-DOCUMENTED-MAGIC }
+<a id="M-DOCUMENTED-MAGIC"></a>
+
+## Magic values are documented (M-DOCUMENTED-MAGIC)
 
 <why>maintainability and safe refactoring.</why>
 
@@ -1588,7 +1671,9 @@ const UPSTREAM_SERVER_TIMEOUT: Duration = Duration::from_secs(60 * 60 * 24);
 
 
 
-## Lint overrides should use `#[expect]` (M-LINT-OVERRIDE-EXPECT) { #M-LINT-OVERRIDE-EXPECT }
+<a id="M-LINT-OVERRIDE-EXPECT"></a>
+
+## Lint overrides should use `#[expect]` (M-LINT-OVERRIDE-EXPECT)
 
 <why>a current, tidy lint set.</why>
 
@@ -1608,7 +1693,9 @@ pub async fn ping_server() {
 
 
 
-## Use structured logging with message templates (M-LOG-STRUCTURED) { #M-LOG-STRUCTURED }
+<a id="M-LOG-STRUCTURED"></a>
+
+## Use structured logging with message templates (M-LOG-STRUCTURED)
 
 <why>low-cost logging with strong filtering.</why>
 
@@ -1724,7 +1811,9 @@ file contents with PII, temporary file paths with session IDs and more. Consider
 
 
 
-## Public types are Debug (M-PUBLIC-DEBUG) { #M-PUBLIC-DEBUG }
+<a id="M-PUBLIC-DEBUG"></a>
+
+## Public types are Debug (M-PUBLIC-DEBUG)
 
 <why>easy debugging without leaking sensitive data.</why>
 
@@ -1762,7 +1851,9 @@ fn test() {
 
 
 
-## Public types meant to be read are Display (M-PUBLIC-DISPLAY) { #M-PUBLIC-DISPLAY }
+<a id="M-PUBLIC-DISPLAY"></a>
+
+## Public types meant to be read are Display (M-PUBLIC-DISPLAY)
 
 <why>usability.</why>
 
@@ -1774,11 +1865,13 @@ If your type is expected to be read by upstream consumers, be it developers or e
 Implementations of `Display` should follow Rust customs; this includes rendering newlines and escape sequences.
 The handling of sensitive data outlined in [M-PUBLIC-DEBUG] applies analogously.
 
-[M-PUBLIC-DEBUG]: ./#M-PUBLIC-DEBUG
+[M-PUBLIC-DEBUG]: #M-PUBLIC-DEBUG
 
 
 
-## Prefer regular over associated functions (M-REGULAR-FN) { #M-REGULAR-FN }
+<a id="M-REGULAR-FN"></a>
+
+## Prefer regular over associated functions (M-REGULAR-FN)
 
 <why>readability.</why>
 
@@ -1823,7 +1916,9 @@ impl Default for Foo {
 
 
 
-## Names of items are short (M-SHORT-NAMES) { #M-SHORT-NAMES }
+<a id="M-SHORT-NAMES"></a>
+
+## Names of items are short (M-SHORT-NAMES)
 
 <why>idiomatic code.</why>
 
@@ -1837,7 +1932,9 @@ Any of these rules can be broken where it makes local sense, but on a per-crate 
 
 
 
-## If in doubt, split the crate (M-SMALLER-CRATES) { #M-SMALLER-CRATES }
+<a id="M-SMALLER-CRATES"></a>
+
+## If in doubt, split the crate (M-SMALLER-CRATES)
 
 <why>fast compile times and good modularity.</why>
 
@@ -1876,7 +1973,9 @@ Functionality split for technical reasons (e.g., a `foo_proc` proc macro crate) 
 
 
 
-## Use static verification (M-STATIC-VERIFICATION) { #M-STATIC-VERIFICATION }
+<a id="M-STATIC-VERIFICATION"></a>
+
+## Use static verification (M-STATIC-VERIFICATION)
 
 <why>consistency and freedom from common issues.</why>
 
@@ -1957,7 +2056,9 @@ literal_string_with_formatting_args = "allow"
 
 
 
-## Follow the upstream guidelines (M-UPSTREAM-GUIDELINES) { #M-UPSTREAM-GUIDELINES }
+<a id="M-UPSTREAM-GUIDELINES"></a>
+
+## Follow the upstream guidelines (M-UPSTREAM-GUIDELINES)
 
 <why>a codebase that reflects community lessons and does not surprise users or contributors.</why>
 
@@ -1984,7 +2085,9 @@ We recommend you read through these as well, and apply them in addition to this 
 
 
 
-## Names are free of weasel words (M-WEASEL-WORDS) { #M-WEASEL-WORDS }
+<a id="M-WEASEL-WORDS"></a>
+
+## Names are free of weasel words (M-WEASEL-WORDS)
 
 <why>readability.</why>
 
@@ -2002,12 +2105,12 @@ exceptions, life cycle issues should likewise not be made the subject of some ma
 way they are needed, their disposal is governed by `Drop`, and only `Drop`.
 
 Regarding factories, at least the term should be avoided. While the concept `FooFactory` has its use, its canonical
-Rust name is `Builder` (compare [M-INIT-BUILDER](../libs/ux/#M-INIT-BUILDER)). A builder that can produce items repeatedly is still a builder.
+Rust name is `Builder` (compare [M-INIT-BUILDER](#M-INIT-BUILDER)). A builder that can produce items repeatedly is still a builder.
 
 In addition, accepting factories (builders) as parameters is an unidiomatic import of OO concepts into Rust. If
 repeatable instantiation is required, functions should ask for an `impl Fn() -> Foo` over a `FooBuilder` or
 similar. In contrast, standalone builders have their use, but primarily to reduce parametric permutation complexity
-around optional values (again, [M-INIT-BUILDER](../libs/ux/#M-INIT-BUILDER)).
+around optional values (again, [M-INIT-BUILDER](#M-INIT-BUILDER)).
 
 
 ---
@@ -2017,7 +2120,9 @@ around optional values (again, [M-INIT-BUILDER](../libs/ux/#M-INIT-BUILDER)).
 
 
 
-## Features are additive (M-FEATURES-ADDITIVE) { #M-FEATURES-ADDITIVE }
+<a id="M-FEATURES-ADDITIVE"></a>
+
+## Features are additive (M-FEATURES-ADDITIVE)
 
 <why>reliable compilation in large, complex projects.</why>
 
@@ -2036,7 +2141,9 @@ Further Reading
 
 
 
-## Libraries work out of the box (M-OOBE) { #M-OOBE }
+<a id="M-OOBE"></a>
+
+## Libraries work out of the box (M-OOBE)
 
 <why>easy adoption across the Rust ecosystem.</why>
 
@@ -2102,7 +2209,9 @@ If a dependency is known to be platform specific, the parent must use conditiona
 
 
 
-## Native `-sys` crates compile without dependencies (M-SYS-CRATES) { #M-SYS-CRATES }
+<a id="M-SYS-CRATES"></a>
+
+## Native `-sys` crates compile without dependencies (M-SYS-CRATES)
 
 <why>libraries that just work on all platforms.</why>
 
@@ -2128,7 +2237,7 @@ comparable to crates.io should be used. In addition, the specific hashes of acce
 
 Downloading sources can fail on hermetic build environments, therefore alternative source roots should also be specifiable (e.g., via environment variables).
 
-[M-OOBE]: ./#M-OOBE
+[M-OOBE]: #M-OOBE
 
 
 ---
@@ -2138,7 +2247,9 @@ Downloading sources can fail on hermetic build environments, therefore alternati
 
 
 
-## Don't leak external types (M-DONT-LEAK-TYPES) { #M-DONT-LEAK-TYPES }
+<a id="M-DONT-LEAK-TYPES"></a>
+
+## Don't leak external types (M-DONT-LEAK-TYPES)
 
 <why>stable APIs and low long-term maintenance cost.</why>
 
@@ -2169,7 +2280,9 @@ expected to only interact with the umbrella, siblings may leak each others types
 
 
 
-## Native escape hatches (M-ESCAPE-HATCHES) { #M-ESCAPE-HATCHES }
+<a id="M-ESCAPE-HATCHES"></a>
+
+## Native escape hatches (M-ESCAPE-HATCHES)
 
 <why>workarounds for unsupported use cases until alternatives exist.</why>
 
@@ -2202,7 +2315,9 @@ impl Handle {
 
 
 
-## Items come from their original crate (M-FOREIGN-REEXPORTS) { #M-FOREIGN-REEXPORTS }
+<a id="M-FOREIGN-REEXPORTS"></a>
+
+## Items come from their original crate (M-FOREIGN-REEXPORTS)
 
 <why>unambiguous type identity.</why>
 
@@ -2210,13 +2325,15 @@ Crates should generally not re-export items from other crates. For example, if y
 
 When a crate accepts or returns a type defined in some third-party crate, users are expected to depend on that third-party crate directly and import the type from there. That said, there are a few valid exceptions to this rule:
 
-- Umbrella crates (compare [M-DONT-LEAK-TYPES](./#M-DONT-LEAK-TYPES)) by definition re-export other types
+- Umbrella crates (compare [M-DONT-LEAK-TYPES](#M-DONT-LEAK-TYPES)) by definition re-export other types
 - Crates split for technical reasons (e.g., exporting `foo_core::Url` from `foo`)
 - Macro use to provide stable paths, e.g., via some hidden `foo::__private::Url`
 
 
 
-## Accept `impl AsRef<>` where feasible (M-IMPL-ASREF) { #M-IMPL-ASREF }
+<a id="M-IMPL-ASREF"></a>
+
+## Accept `impl AsRef<>` where feasible (M-IMPL-ASREF)
 
 <why>flexibility for callers to use their own types.</why>
 
@@ -2263,7 +2380,9 @@ struct User {
 
 
 
-## Accept `impl 'IO'` where feasible ('sans IO') (M-IMPL-IO) { #M-IMPL-IO }
+<a id="M-IMPL-IO"></a>
+
+## Accept `impl 'IO'` where feasible ('sans IO') (M-IMPL-IO)
 
 <why>business logic untangled from I/O, with N*M composability.</why>
 
@@ -2290,13 +2409,14 @@ fn parse_data(data: impl std::io::Read) {}
 Synchronous functions should use [`std::io::Read`](https://doc.rust-lang.org/std/io/trait.Read.html) and
 [`std::io::Write`](https://doc.rust-lang.org/std/io/trait.Write.html). Asynchronous _functions_ targeting more than one runtime should use
 [`futures::io::AsyncRead`](https://docs.rs/futures/latest/futures/io/trait.AsyncRead.html) and similar.
-_Types_ that need to perform runtime-specific, continuous I/O should follow [M-RUNTIME-ABSTRACTED] instead.
-
-[M-RUNTIME-ABSTRACTED]: ./#M-RUNTIME-ABSTRACTED
+_Types_ that need to perform runtime-specific, continuous I/O should encapsulate runtime-specific operations behind an abstraction instead.
 
 
 
-## Accept `impl RangeBounds<>` where feasible (M-IMPL-RANGEBOUNDS) { #M-IMPL-RANGEBOUNDS }
+
+<a id="M-IMPL-RANGEBOUNDS"></a>
+
+## Accept `impl RangeBounds<>` where feasible (M-IMPL-RANGEBOUNDS)
 
 <why>flexibility and clarity when specifying ranges.</why>
 
@@ -2324,7 +2444,9 @@ fn select_any(r: impl RangeBounds<usize>) {}
 
 
 
-## Types are Send (M-TYPES-SEND) { #M-TYPES-SEND }
+<a id="M-TYPES-SEND"></a>
+
+## Types are Send (M-TYPES-SEND)
 
 <why>use in Tokio and behind runtime abstractions.</why>
 
@@ -2409,12 +2531,6 @@ async fn foo() {
 >
 > The good news is, in most cases atomics and uncontended locks only have a measurable impact if accessed more frequently than every 64 words or so.
 >
-> <div style="background-color:white;">
->
-> ![TEXT](M-TYPES-SEND.png)
->
-> </div>
->
 > Working with a large `Vec<AtomicUsize>` in a hot loop is a bad idea, but doing the occasional uncontended atomic operation from otherwise thread-per-core
 > async code has no performance impact, but gives you widespread ecosystem compatibility.
 
@@ -2426,7 +2542,9 @@ async fn foo() {
 
 
 
-## Avoid statics (M-AVOID-STATICS) { #M-AVOID-STATICS }
+<a id="M-AVOID-STATICS"></a>
+
+## Avoid statics (M-AVOID-STATICS)
 
 <why>consistency and correctness across crate versions.</why>
 
@@ -2488,7 +2606,9 @@ thread-per-core designs.
 
 
 
-## Builders validate in final `.build()` (M-BUILD-RESULT) { #M-BUILD-RESULT }
+<a id="M-BUILD-RESULT"></a>
+
+## Builders validate in final `.build()` (M-BUILD-RESULT)
 
 <why>clean builder error handling.</why>
 
@@ -2515,7 +2635,9 @@ That said, individual settings should prefer strong types carrying their own val
 
 
 
-## Integration tests live under `tests/` (M-INTEGRATION-TESTS) { #M-INTEGRATION-TESTS }
+<a id="M-INTEGRATION-TESTS"></a>
+
+## Integration tests live under `tests/` (M-INTEGRATION-TESTS)
 
 <why>clean code files.</why>
 
@@ -2525,7 +2647,9 @@ In projects with coverage targets, it is not uncommon for `src/` files to contai
 
 
 
-## Integration test utilities live in a separate crate (M-INTEGRATION-TEST-UTILS) { #M-INTEGRATION-TEST-UTILS }
+<a id="M-INTEGRATION-TEST-UTILS"></a>
+
+## Integration test utilities live in a separate crate (M-INTEGRATION-TEST-UTILS)
 
 <why>reusable test scaffolding without polluting the production crate.</why>
 
@@ -2533,12 +2657,14 @@ For complex projects, shared helpers used by integration tests (fixtures, builde
 
 - TODO: Define what counts as a "complex project" (e.g., number of integration tests, crates, or helpers that triggers this rule).
 - TODO: Specify the recommended crate name / location convention (e.g., sibling `foo-test-utils` crate in the workspace).
-- TODO: Clarify the relationship with [M-TEST-UTIL](./#M-TEST-UTIL) (feature-gated helpers within a crate) — when to prefer which.
+- TODO: Clarify the relationship with [M-TEST-UTIL](#M-TEST-UTIL) (feature-gated helpers within a crate) — when to prefer which.
 - TODO: Add a short example showing the crate layout and how integration tests depend on it (likely via `[dev-dependencies]`).
 
 
 
-## Production code uses telemetry, not println (M-LOG-NOT-PRINT) { #M-LOG-NOT-PRINT }
+<a id="M-LOG-NOT-PRINT"></a>
+
+## Production code uses telemetry, not println (M-LOG-NOT-PRINT)
 
 <why>diagnostics available where they are needed.</why>
 
@@ -2546,7 +2672,9 @@ Production code paths should emit diagnostics through the project's telemetry fr
 
 
 
-## I/O and system calls are mockable (M-MOCKABLE-SYSCALLS) { #M-MOCKABLE-SYSCALLS }
+<a id="M-MOCKABLE-SYSCALLS"></a>
+
+## I/O and system calls are mockable (M-MOCKABLE-SYSCALLS)
 
 <why>testable edge cases that are otherwise hard to evoke.</why>
 
@@ -2596,7 +2724,7 @@ impl Library {
 }
 ```
 
-Behind the scenes, `LibraryCore` is a non-public enum, similar to [M-RUNTIME-ABSTRACTED], that either dispatches
+Behind the scenes, `LibraryCore` is a non-public enum that abstracts over the runtime and either dispatches
 calls to the respective sys call, or to an mocking controller.
 
 ```rust, ignore
@@ -2642,7 +2770,7 @@ mod mock {
 }
 ```
 
-Runtime-aware libraries already build on top of the [M-RUNTIME-ABSTRACTED] pattern should extend their runtime enum instead:
+Runtime-aware libraries that already abstract over runtimes using an enum should extend their runtime enum instead:
 
 ```rust, ignore
 enum Runtime {
@@ -2668,11 +2796,12 @@ impl Library {
 }
 ```
 
-[M-RUNTIME-ABSTRACTED]: ../ux/#M-RUNTIME-ABSTRACTED
 
 
 
-## Don't glob re-export items (M-NO-GLOB-REEXPORTS) { #M-NO-GLOB-REEXPORTS }
+<a id="M-NO-GLOB-REEXPORTS"></a>
+
+## Don't glob re-export items (M-NO-GLOB-REEXPORTS)
 
 <why>a deliberate public surface.</why>
 
@@ -2705,7 +2834,9 @@ pub use linux::*;
 
 
 
-## Use the proper type family (M-STRONG-TYPES) { #M-STRONG-TYPES }
+<a id="M-STRONG-TYPES"></a>
+
+## Use the proper type family (M-STRONG-TYPES)
 
 <why>the right data and safety invariants, at the right time.</why>
 
@@ -2726,7 +2857,9 @@ be regular numbers, not `Saturating<usize>`, `NonZero<usize>`, or similar.
 
 
 
-## Newtypes guard their invariants (M-STRONG-TYPES-GUARD) { #M-STRONG-TYPES-GUARD }
+<a id="M-STRONG-TYPES-GUARD"></a>
+
+## Newtypes guard their invariants (M-STRONG-TYPES-GUARD)
 
 <why>centralized correctness invariants.</why>
 
@@ -2768,7 +2901,9 @@ This means for any newtype that is non-total:
 
 
 
-## Test utilities are feature gated (M-TEST-UTIL) { #M-TEST-UTIL }
+<a id="M-TEST-UTIL"></a>
+
+## Test utilities are feature gated (M-TEST-UTIL)
 
 <why>production builds that cannot bypass safety checks.</why>
 
@@ -2790,23 +2925,27 @@ impl HttpClient {
 }
 ```
 
-[M-MOCKABLE-SYSCALLS]: ./#M-MOCKABLE-SYSCALLS
+[M-MOCKABLE-SYSCALLS]: #M-MOCKABLE-SYSCALLS
 
 
 ---
 
 
+<a id="libraries--ux-guidelines"></a>
+
 # Libraries / UX Guidelines
 
 
 
-## Functions are `async` over returning a Future (M-ASYNC-FN) { #M-ASYNC-FN }
+<a id="M-ASYNC-FN"></a>
+
+## Functions are `async` over returning a Future (M-ASYNC-FN)
 
 <why>simpler code and easier-to-understand APIs.</why>
 
 Functions should be declared `async fn foo()` over `fn foo() -> impl Future` when both are viable.
 
-Functions marked `async` are more idiomatic and easier to read. An explicit `Future`-returning signature should only be used when required, for example inside traits or for _hot 'n heavy_ async functions, compare [M-ASYNC-STACK-SIZE](../../performance/#M-ASYNC-STACK-SIZE).
+Functions marked `async` are more idiomatic and easier to read. An explicit `Future`-returning signature should only be used when required, for example inside traits or for _hot 'n heavy_ async functions, compare [M-ASYNC-STACK-SIZE](#M-ASYNC-STACK-SIZE).
 
 ```rust,ignore
 impl Foo {
@@ -2820,11 +2959,13 @@ impl Foo {
 
 
 
-## Avoid smart pointers and wrappers in APIs (M-AVOID-WRAPPERS) { #M-AVOID-WRAPPERS }
+<a id="M-AVOID-WRAPPERS"></a>
+
+## Avoid smart pointers and wrappers in APIs (M-AVOID-WRAPPERS)
 
 <why>low cognitive load and ergonomic APIs.</why>
 
-As a specialization of [M-ABSTRACTIONS-DONT-NEST], generic wrappers and smart pointers like
+As a specialization of [M-SIMPLE-ABSTRACTIONS], generic wrappers and smart pointers like
 `Rc<T>`, `Arc<T>`, `Box<T>`, or `RefCell<T>` should be avoided in public APIs.
 
 From a user perspective these are mostly implementation details, and introduce infectious complexity that users have to
@@ -2848,11 +2989,13 @@ Smart pointers in APIs are acceptable when:
 
 - The smart pointer, based on benchmarks, significantly improves performance and the complexity is justified.
 
-[M-ABSTRACTIONS-DONT-NEST]: ./#M-ABSTRACTIONS-DONT-NEST
+[M-SIMPLE-ABSTRACTIONS]: #M-SIMPLE-ABSTRACTIONS
 
 
 
-## Modules are balanced in size and scope (M-BALANCED-MODULES) { #M-BALANCED-MODULES }
+<a id="M-BALANCED-MODULES"></a>
+
+## Modules are balanced in size and scope (M-BALANCED-MODULES)
 
 <why>discoverable functionality and clear API usage.</why>
 
@@ -2868,7 +3011,9 @@ When designing your module layout, consider these factors:
 
 
 
-## Collections implement the appropriate iter traits (M-COLLECTION-TRAITS) { #M-COLLECTION-TRAITS }
+<a id="M-COLLECTION-TRAITS"></a>
+
+## Collections implement the appropriate iter traits (M-COLLECTION-TRAITS)
 
 <why>composable collections.</why>
 
@@ -2888,7 +3033,9 @@ In addition, make sure you implement `size_hint()` on all iterators and do so tr
 
 
 
-## Prefer types over generics, generics over dyn traits (M-DI-HIERARCHY) { #M-DI-HIERARCHY }
+<a id="M-DI-HIERARCHY"></a>
+
+## Prefer types over generics, generics over dyn traits (M-DI-HIERARCHY)
 
 <why>composable patterns and freedom from design lock-in.</why>
 
@@ -2923,7 +3070,7 @@ _on top_ of your inherent functions. Each trait should be relatively narrow, e.g
 trait is needed it should be made a subtrait, e.g., `trait DataAccess: StoreObject + LoadObject {}`.
 
 Code working with these traits should ideally accept them as generic type parameters as long as their use does not contribute to significant nesting
-(compare [M-ABSTRACTIONS-DONT-NEST]).
+(compare [M-SIMPLE-ABSTRACTIONS]).
 
 ```rust,ignore
 // Good, generic does not have infectious impact, uses only most specific trait
@@ -2970,13 +3117,13 @@ enum DataAccess {
 async fn read_database(x: &DataAccess) { ... }
 ```
 
-[M-AVOID-WRAPPERS]: ./#M-AVOID-WRAPPERS
-[M-MOCKABLE-SYSCALLS]: ../resilience/#M-MOCKABLE-SYSCALLS
-[M-ABSTRACTIONS-DONT-NEST]: ./#M-ABSTRACTIONS-DONT-NEST
+[M-AVOID-WRAPPERS]: #M-AVOID-WRAPPERS
 
 
 
-## Errors are canonical structs (M-ERRORS-CANONICAL-STRUCTS) { #M-ERRORS-CANONICAL-STRUCTS }
+<a id="M-ERRORS-CANONICAL-STRUCTS"></a>
+
+## Errors are canonical structs (M-ERRORS-CANONICAL-STRUCTS)
 
 <why>harmonized error types and consistent error handling.</why>
 
@@ -3098,7 +3245,9 @@ Lastly, if you happen to emit lots of errors from your crate, consider creating 
 
 
 
-## Essential functionality should be inherent (M-ESSENTIAL-FN-INHERENT) { #M-ESSENTIAL-FN-INHERENT }
+<a id="M-ESSENTIAL-FN-INHERENT"></a>
+
+## Essential functionality should be inherent (M-ESSENTIAL-FN-INHERENT)
 
 <why>easily discoverable essential functionality.</why>
 
@@ -3144,7 +3293,9 @@ impl Download for HttpClient {
 
 
 
-## Canonical error conversion uses `From`, not `map_err` (M-FROM-ERROR) { #M-FROM-ERROR }
+<a id="M-FROM-ERROR"></a>
+
+## Canonical error conversion uses `From`, not `map_err` (M-FROM-ERROR)
 
 <why>idiomatic error handling.</why>
 
@@ -3174,7 +3325,9 @@ fn load() -> Result<Config, MyError> {
 
 
 
-## Complex type construction has builders (M-INIT-BUILDER) { #M-INIT-BUILDER }
+<a id="M-INIT-BUILDER"></a>
+
+## Complex type construction has builders (M-INIT-BUILDER)
 
 <why>future-proof type construction in complex scenarios.</why>
 
@@ -3301,7 +3454,9 @@ builder methods follow the pattern `builder_{runtime}(deps)` where `{runtime}` i
 
 
 
-## Complex type initialization hierarchies are cascaded (M-INIT-CASCADED) { #M-INIT-CASCADED }
+<a id="M-INIT-CASCADED"></a>
+
+## Complex type initialization hierarchies are cascaded (M-INIT-CASCADED)
 
 <why>construction free of parameter mix-ups.</why>
 
@@ -3337,7 +3492,9 @@ impl Account {
 
 
 
-## Don't define preludes (M-NO-PRELUDE) { #M-NO-PRELUDE }
+<a id="M-NO-PRELUDE"></a>
+
+## Don't define preludes (M-NO-PRELUDE)
 
 <why>a clean namespace and reliable downstream builds.</why>
 
@@ -3361,11 +3518,13 @@ _ = Client::new();
 //    = note: ambiguous because of multiple glob imports of a name in the same module
 ```
 
-Preludes in particular do not resolve bad module design. If it looks like a prelude would make the crate easier to use or understand, this is almost always an indication that the existing module system needs restructuring, see [M-BALANCED-MODULES](./#M-BALANCED-MODULES).
+Preludes in particular do not resolve bad module design. If it looks like a prelude would make the crate easier to use or understand, this is almost always an indication that the existing module system needs restructuring, see [M-BALANCED-MODULES](#M-BALANCED-MODULES).
 
 
 
-## Parameter ordering is consistent (M-PARAMETER-CONSISTENCY) { #M-PARAMETER-CONSISTENCY }
+<a id="M-PARAMETER-CONSISTENCY"></a>
+
+## Parameter ordering is consistent (M-PARAMETER-CONSISTENCY)
 
 <why>low development friction.</why>
 
@@ -3391,7 +3550,9 @@ fn rename_user(tenant_id: TenantId, user_id: UserId, new_name: &str, logger: &Lo
 
 
 
-## Services are Clone (M-SERVICES-CLONE) { #M-SERVICES-CLONE }
+<a id="M-SERVICES-CLONE"></a>
+
+## Services are Clone (M-SERVICES-CLONE)
 
 <why>composable sharing of common services.</why>
 
@@ -3451,7 +3612,9 @@ impl ServiceCommon {
 
 
 
-## Abstractions don't visibly nest (M-SIMPLE-ABSTRACTIONS) { #M-SIMPLE-ABSTRACTIONS }
+<a id="M-SIMPLE-ABSTRACTIONS"></a>
+
+## Abstractions don't visibly nest (M-SIMPLE-ABSTRACTIONS)
 
 <why>low cognitive load and a good out-of-the-box UX.</why>
 
