@@ -123,3 +123,31 @@ The Content type protocol definitions and documentation excerpts are derived fro
 [wayland-protocols content-type-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/staging/content-type/content-type-v1.xml).
 The original MIT license and copyright notices are preserved in
 [src/protocol/ext/content_type/LICENSE.md](src/protocol/ext/content_type/LICENSE.md).
+
+## Third-party notice: Cursor shape
+
+The Cursor shape protocol definitions and documentation excerpts are derived from
+[wayland-protocols cursor-shape-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/staging/cursor-shape/cursor-shape-v1.xml).
+The original copyright notices and MIT license are preserved in
+[src/protocol/ext/cursor_shape/LICENSE.md](src/protocol/ext/cursor_shape/LICENSE.md).
+
+## Third-party notice: DRM lease
+
+The DRM lease protocol definitions and documentation excerpts are derived from
+[wayland-protocols drm-lease-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/staging/drm-lease/drm-lease-v1.xml).
+The original copyright notices and MIT license are preserved in
+[src/protocol/ext/drm_lease/LICENSE.md](src/protocol/ext/drm_lease/LICENSE.md).
+
+## Third-party notice: Background effect
+
+The Background effect protocol definitions and documentation excerpts are derived from
+[wayland-protocols ext-background-effect-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/staging/ext-background-effect/ext-background-effect-v1.xml).
+The original copyright notices and MIT license are preserved in
+[src/protocol/ext/background_effect/LICENSE.md](src/protocol/ext/background_effect/LICENSE.md).
+
+## Third-party notice: Data control
+
+The Data control protocol definitions and documentation excerpts are derived from
+[wayland-protocols ext-data-control-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/staging/ext-data-control/ext-data-control-v1.xml).
+The original copyright notices and permissive license, including its non-endorsement terms, are preserved in
+[src/protocol/ext/data_control/LICENSE.md](src/protocol/ext/data_control/LICENSE.md).

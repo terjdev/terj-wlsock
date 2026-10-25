@@ -1,6 +1,12 @@
 use crate::protocol::core;
+#[cfg(feature = "ext-background-effect")]
+use crate::protocol::ext::background_effect;
+#[cfg(feature = "ext-data-control")]
+use crate::protocol::ext::data_control as ext_data_control;
 #[cfg(feature = "ext-dmabuf")]
 use crate::protocol::ext::dmabuf;
+#[cfg(feature = "ext-drm-lease")]
+use crate::protocol::ext::drm_lease;
 #[cfg(feature = "ext-presentation-time")]
 use crate::protocol::ext::presentation_time;
 #[cfg(feature = "ext-tablet")]
@@ -25,6 +31,15 @@ use std::sync::{Arc, Mutex};
 pub enum CommandEvent {
     /// Core Wayland protocol commands.
     Core(core::CommandEvent),
+    /// Data control extension commands.
+    #[cfg(feature = "ext-data-control")]
+    DataControl(ext_data_control::CommandEvent),
+    /// Background effect extension commands.
+    #[cfg(feature = "ext-background-effect")]
+    BackgroundEffect(background_effect::CommandEvent),
+    /// DRM lease extension commands.
+    #[cfg(feature = "ext-drm-lease")]
+    DrmLease(drm_lease::CommandEvent),
     /// WLR screencopy extension commands.
     #[cfg(feature = "wlr-screencopy")]
     WlrScreencopy(screencopy::CommandEvent),
@@ -71,6 +86,8 @@ impl InterfaceReader for CommandEvent {
         state: &Arc<Mutex<ClientState>>,
     ) -> Result<Self, FdReaderError> {
         match interface {
+            #[cfg(feature = "ext-cursor-shape")]
+            ObjectInteface::CursorShape(_) => Err(FdReaderError::InvalidProtocol),
             #[cfg(feature = "ext-content-type")]
             ObjectInteface::ContentType(_) => Err(FdReaderError::InvalidProtocol),
             #[cfg(feature = "ext-commit-timing")]
@@ -121,6 +138,27 @@ impl InterfaceReader for CommandEvent {
                 )
                 .await?,
             )),
+            #[cfg(feature = "ext-drm-lease")]
+            ObjectInteface::DrmLease(_) => Ok(Self::DrmLease(
+                drm_lease::CommandEvent::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "ext-background-effect")]
+            ObjectInteface::BackgroundEffect(_) => Ok(Self::BackgroundEffect(
+                background_effect::CommandEvent::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "ext-data-control")]
+            ObjectInteface::DataControl(_) => Ok(Self::DataControl(
+                ext_data_control::CommandEvent::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
             ObjectInteface::Core(_) => Ok(Self::Core(
                 core::CommandEvent::read_with_interface(
                     object_id, opcode, interface, reader, state,
@@ -144,6 +182,12 @@ impl CommandWriter for CommandEvent {
     fn object_id(&self) -> u32 {
         match self {
             Self::Core(command) => command.object_id(),
+            #[cfg(feature = "ext-data-control")]
+            Self::DataControl(command) => command.object_id(),
+            #[cfg(feature = "ext-background-effect")]
+            Self::BackgroundEffect(command) => command.object_id(),
+            #[cfg(feature = "ext-drm-lease")]
+            Self::DrmLease(command) => command.object_id(),
             #[cfg(feature = "wlr-screencopy")]
             Self::WlrScreencopy(command) => command.object_id(),
             #[cfg(feature = "wlr-data-control")]
@@ -163,6 +207,12 @@ impl CommandWriter for CommandEvent {
     fn opcode(&self) -> u16 {
         match self {
             Self::Core(command) => command.opcode(),
+            #[cfg(feature = "ext-data-control")]
+            Self::DataControl(command) => command.opcode(),
+            #[cfg(feature = "ext-background-effect")]
+            Self::BackgroundEffect(command) => command.opcode(),
+            #[cfg(feature = "ext-drm-lease")]
+            Self::DrmLease(command) => command.opcode(),
             #[cfg(feature = "wlr-screencopy")]
             Self::WlrScreencopy(command) => command.opcode(),
             #[cfg(feature = "wlr-data-control")]
@@ -182,6 +232,12 @@ impl CommandWriter for CommandEvent {
     fn payload_size(&self) -> usize {
         match self {
             Self::Core(command) => command.payload_size(),
+            #[cfg(feature = "ext-data-control")]
+            Self::DataControl(command) => command.payload_size(),
+            #[cfg(feature = "ext-background-effect")]
+            Self::BackgroundEffect(command) => command.payload_size(),
+            #[cfg(feature = "ext-drm-lease")]
+            Self::DrmLease(command) => command.payload_size(),
             #[cfg(feature = "wlr-screencopy")]
             Self::WlrScreencopy(command) => command.payload_size(),
             #[cfg(feature = "wlr-data-control")]
@@ -205,6 +261,12 @@ impl CommandWriter for CommandEvent {
     ) -> Result<(), FdWriterError> {
         match self {
             Self::Core(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-data-control")]
+            Self::DataControl(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-background-effect")]
+            Self::BackgroundEffect(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-drm-lease")]
+            Self::DrmLease(command) => command.write(writer, state).await,
             #[cfg(feature = "wlr-screencopy")]
             Self::WlrScreencopy(command) => command.write(writer, state).await,
             #[cfg(feature = "wlr-data-control")]

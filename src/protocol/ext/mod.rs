@@ -23,3 +23,15 @@ pub mod commit_timing;
 
 #[cfg(feature = "ext-content-type")]
 pub mod content_type;
+
+#[cfg(feature = "ext-cursor-shape")]
+pub mod cursor_shape;
+
+#[cfg(feature = "ext-drm-lease")]
+pub mod drm_lease;
+
+#[cfg(feature = "ext-background-effect")]
+pub mod background_effect;
+
+#[cfg(feature = "ext-data-control")]
+pub mod data_control;

@@ -1,12 +1,20 @@
 use crate::protocol::core;
 #[cfg(feature = "ext-alpha-modifier")]
 use crate::protocol::ext::alpha_modifier;
+#[cfg(feature = "ext-background-effect")]
+use crate::protocol::ext::background_effect;
 #[cfg(feature = "ext-commit-timing")]
 use crate::protocol::ext::commit_timing;
 #[cfg(feature = "ext-content-type")]
 use crate::protocol::ext::content_type;
+#[cfg(feature = "ext-cursor-shape")]
+use crate::protocol::ext::cursor_shape;
+#[cfg(feature = "ext-data-control")]
+use crate::protocol::ext::data_control as ext_data_control;
 #[cfg(feature = "ext-dmabuf")]
 use crate::protocol::ext::dmabuf;
+#[cfg(feature = "ext-drm-lease")]
+use crate::protocol::ext::drm_lease;
 #[cfg(feature = "ext-presentation-time")]
 use crate::protocol::ext::presentation_time;
 #[cfg(feature = "ext-tablet")]
@@ -35,6 +43,18 @@ use std::sync::{Arc, Mutex};
 pub enum CommandRequest {
     /// Core Wayland protocol commands.
     Core(core::CommandRequest),
+    /// Data control extension commands.
+    #[cfg(feature = "ext-data-control")]
+    DataControl(ext_data_control::CommandRequest),
+    /// Background effect extension commands.
+    #[cfg(feature = "ext-background-effect")]
+    BackgroundEffect(background_effect::CommandRequest),
+    /// DRM lease extension commands.
+    #[cfg(feature = "ext-drm-lease")]
+    DrmLease(drm_lease::CommandRequest),
+    /// Cursor shape extension commands.
+    #[cfg(feature = "ext-cursor-shape")]
+    CursorShape(cursor_shape::CommandRequest),
     /// Content type extension commands.
     #[cfg(feature = "ext-content-type")]
     ContentType(content_type::CommandRequest),
@@ -166,6 +186,34 @@ impl InterfaceReader for CommandRequest {
                 )
                 .await?,
             )),
+            #[cfg(feature = "ext-cursor-shape")]
+            ObjectInteface::CursorShape(_) => Ok(Self::CursorShape(
+                cursor_shape::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "ext-drm-lease")]
+            ObjectInteface::DrmLease(_) => Ok(Self::DrmLease(
+                drm_lease::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "ext-background-effect")]
+            ObjectInteface::BackgroundEffect(_) => Ok(Self::BackgroundEffect(
+                background_effect::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "ext-data-control")]
+            ObjectInteface::DataControl(_) => Ok(Self::DataControl(
+                ext_data_control::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
             ObjectInteface::Core(_) => Ok(Self::Core(
                 core::CommandRequest::read_with_interface(
                     object_id, opcode, interface, reader, state,
@@ -194,6 +242,14 @@ impl CommandWriter for CommandRequest {
     fn object_id(&self) -> u32 {
         match self {
             Self::Core(command) => command.object_id(),
+            #[cfg(feature = "ext-data-control")]
+            Self::DataControl(command) => command.object_id(),
+            #[cfg(feature = "ext-background-effect")]
+            Self::BackgroundEffect(command) => command.object_id(),
+            #[cfg(feature = "ext-drm-lease")]
+            Self::DrmLease(command) => command.object_id(),
+            #[cfg(feature = "ext-cursor-shape")]
+            Self::CursorShape(command) => command.object_id(),
             #[cfg(feature = "ext-content-type")]
             Self::ContentType(command) => command.object_id(),
             #[cfg(feature = "ext-commit-timing")]
@@ -223,6 +279,14 @@ impl CommandWriter for CommandRequest {
     fn opcode(&self) -> u16 {
         match self {
             Self::Core(command) => command.opcode(),
+            #[cfg(feature = "ext-data-control")]
+            Self::DataControl(command) => command.opcode(),
+            #[cfg(feature = "ext-background-effect")]
+            Self::BackgroundEffect(command) => command.opcode(),
+            #[cfg(feature = "ext-drm-lease")]
+            Self::DrmLease(command) => command.opcode(),
+            #[cfg(feature = "ext-cursor-shape")]
+            Self::CursorShape(command) => command.opcode(),
             #[cfg(feature = "ext-content-type")]
             Self::ContentType(command) => command.opcode(),
             #[cfg(feature = "ext-commit-timing")]
@@ -252,6 +316,14 @@ impl CommandWriter for CommandRequest {
     fn payload_size(&self) -> usize {
         match self {
             Self::Core(command) => command.payload_size(),
+            #[cfg(feature = "ext-data-control")]
+            Self::DataControl(command) => command.payload_size(),
+            #[cfg(feature = "ext-background-effect")]
+            Self::BackgroundEffect(command) => command.payload_size(),
+            #[cfg(feature = "ext-drm-lease")]
+            Self::DrmLease(command) => command.payload_size(),
+            #[cfg(feature = "ext-cursor-shape")]
+            Self::CursorShape(command) => command.payload_size(),
             #[cfg(feature = "ext-content-type")]
             Self::ContentType(command) => command.payload_size(),
             #[cfg(feature = "ext-commit-timing")]
@@ -285,6 +357,14 @@ impl CommandWriter for CommandRequest {
     ) -> Result<(), FdWriterError> {
         match self {
             Self::Core(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-data-control")]
+            Self::DataControl(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-background-effect")]
+            Self::BackgroundEffect(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-drm-lease")]
+            Self::DrmLease(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-cursor-shape")]
+            Self::CursorShape(command) => command.write(writer, state).await,
             #[cfg(feature = "ext-content-type")]
             Self::ContentType(command) => command.write(writer, state).await,
             #[cfg(feature = "ext-commit-timing")]

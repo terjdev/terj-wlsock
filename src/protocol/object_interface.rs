@@ -3,12 +3,20 @@
 use crate::protocol::core;
 #[cfg(feature = "ext-alpha-modifier")]
 use crate::protocol::ext::alpha_modifier;
+#[cfg(feature = "ext-background-effect")]
+use crate::protocol::ext::background_effect;
 #[cfg(feature = "ext-commit-timing")]
 use crate::protocol::ext::commit_timing;
 #[cfg(feature = "ext-content-type")]
 use crate::protocol::ext::content_type;
+#[cfg(feature = "ext-cursor-shape")]
+use crate::protocol::ext::cursor_shape;
+#[cfg(feature = "ext-data-control")]
+use crate::protocol::ext::data_control as ext_data_control;
 #[cfg(feature = "ext-dmabuf")]
 use crate::protocol::ext::dmabuf;
+#[cfg(feature = "ext-drm-lease")]
+use crate::protocol::ext::drm_lease;
 #[cfg(feature = "ext-presentation-time")]
 use crate::protocol::ext::presentation_time;
 #[cfg(feature = "ext-tablet")]
@@ -31,6 +39,18 @@ use crate::protocol::wlr::virtual_pointer;
 pub(crate) enum ObjectInteface {
     /// A core Wayland interface.
     Core(core::ObjectInteface),
+    /// A Data control interface.
+    #[cfg(feature = "ext-data-control")]
+    DataControl(ext_data_control::ObjectInteface),
+    /// A Background effect interface.
+    #[cfg(feature = "ext-background-effect")]
+    BackgroundEffect(background_effect::ObjectInteface),
+    /// A DRM lease interface.
+    #[cfg(feature = "ext-drm-lease")]
+    DrmLease(drm_lease::ObjectInteface),
+    /// A Cursor shape interface.
+    #[cfg(feature = "ext-cursor-shape")]
+    CursorShape(cursor_shape::ObjectInteface),
     /// A Content type interface.
     #[cfg(feature = "ext-content-type")]
     ContentType(content_type::ObjectInteface),
@@ -74,6 +94,14 @@ impl ObjectInteface {
     pub(crate) fn name(self) -> &'static str {
         match self {
             Self::Core(interface) => interface.name(),
+            #[cfg(feature = "ext-data-control")]
+            Self::DataControl(interface) => interface.name(),
+            #[cfg(feature = "ext-background-effect")]
+            Self::BackgroundEffect(interface) => interface.name(),
+            #[cfg(feature = "ext-drm-lease")]
+            Self::DrmLease(interface) => interface.name(),
+            #[cfg(feature = "ext-cursor-shape")]
+            Self::CursorShape(interface) => interface.name(),
             #[cfg(feature = "ext-content-type")]
             Self::ContentType(interface) => interface.name(),
             #[cfg(feature = "ext-commit-timing")]
@@ -104,6 +132,14 @@ impl ObjectInteface {
     pub(crate) fn version(self) -> u32 {
         match self {
             Self::Core(interface) => interface.version(),
+            #[cfg(feature = "ext-data-control")]
+            Self::DataControl(interface) => interface.version(),
+            #[cfg(feature = "ext-background-effect")]
+            Self::BackgroundEffect(interface) => interface.version(),
+            #[cfg(feature = "ext-drm-lease")]
+            Self::DrmLease(interface) => interface.version(),
+            #[cfg(feature = "ext-cursor-shape")]
+            Self::CursorShape(interface) => interface.version(),
             #[cfg(feature = "ext-content-type")]
             Self::ContentType(interface) => interface.version(),
             #[cfg(feature = "ext-commit-timing")]
@@ -134,6 +170,14 @@ impl ObjectInteface {
     pub(crate) fn max_version(self) -> u32 {
         match self {
             Self::Core(interface) => interface.max_version(),
+            #[cfg(feature = "ext-data-control")]
+            Self::DataControl(interface) => interface.max_version(),
+            #[cfg(feature = "ext-background-effect")]
+            Self::BackgroundEffect(interface) => interface.max_version(),
+            #[cfg(feature = "ext-drm-lease")]
+            Self::DrmLease(interface) => interface.max_version(),
+            #[cfg(feature = "ext-cursor-shape")]
+            Self::CursorShape(interface) => interface.max_version(),
             #[cfg(feature = "ext-content-type")]
             Self::ContentType(interface) => interface.max_version(),
             #[cfg(feature = "ext-commit-timing")]
@@ -212,6 +256,22 @@ impl ObjectInteface {
         #[cfg(feature = "ext-content-type")]
         if let Some(interface) = content_type::ObjectInteface::from_name(name, version) {
             return Some(Self::ContentType(interface));
+        }
+        #[cfg(feature = "ext-cursor-shape")]
+        if let Some(interface) = cursor_shape::ObjectInteface::from_name(name, version) {
+            return Some(Self::CursorShape(interface));
+        }
+        #[cfg(feature = "ext-drm-lease")]
+        if let Some(interface) = drm_lease::ObjectInteface::from_name(name, version) {
+            return Some(Self::DrmLease(interface));
+        }
+        #[cfg(feature = "ext-background-effect")]
+        if let Some(interface) = background_effect::ObjectInteface::from_name(name, version) {
+            return Some(Self::BackgroundEffect(interface));
+        }
+        #[cfg(feature = "ext-data-control")]
+        if let Some(interface) = ext_data_control::ObjectInteface::from_name(name, version) {
+            return Some(Self::DataControl(interface));
         }
         None
     }
