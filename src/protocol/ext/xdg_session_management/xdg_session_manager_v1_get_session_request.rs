@@ -1,5 +1,5 @@
 use super::XdgSessionManagerV1Reason;
-use crate::protocol::ext::xdg_session_management::ObjectInteface as XdgSessionManagementObjectInteface;
+use crate::protocol::ext::xdg_session_management::ObjectInteface as XdgXxSessionManagementObjectInteface;
 use crate::protocol::{
     ClientState, CommandReader, CommandReaderExt, CommandWriter, CommandWriterExt, InterfaceReader,
     ObjectInteface,
@@ -87,7 +87,7 @@ impl InterfaceReader for XdgSessionManagerV1GetSessionRequest {
         if !matches!(
             interface,
             ObjectInteface::XdgSessionManagement(
-                XdgSessionManagementObjectInteface::XdgSessionManagerV1 { .. }
+                XdgXxSessionManagementObjectInteface::XdgSessionManagerV1 { .. }
             )
         ) || opcode != Self::OPCODE
             || interface.version() < Self::SINCE

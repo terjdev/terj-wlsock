@@ -2,7 +2,7 @@ use super::{
     XdgSessionV1CreatedEvent, XdgSessionV1ReplacedEvent, XdgSessionV1RestoredEvent,
     XdgToplevelSessionV1RestoredEvent,
 };
-use crate::protocol::ext::xdg_session_management::ObjectInteface as XdgSessionManagementObjectInteface;
+use crate::protocol::ext::xdg_session_management::ObjectInteface as XdgXxSessionManagementObjectInteface;
 use crate::protocol::{
     ClientState, CommandReader, CommandReaderExt, CommandWriter, InterfaceReader, ObjectInteface,
 };
@@ -44,7 +44,7 @@ impl InterfaceReader for CommandEvent {
     ) -> Result<Self, FdReaderError> {
         match interface {
             ObjectInteface::XdgSessionManagement(
-                XdgSessionManagementObjectInteface::XdgSessionV1 { .. },
+                XdgXxSessionManagementObjectInteface::XdgSessionV1 { .. },
             ) => match opcode {
                 XdgSessionV1CreatedEvent::OPCODE => Ok(Self::XdgSessionV1Created(
                     XdgSessionV1CreatedEvent::read_with_interface(
@@ -67,7 +67,7 @@ impl InterfaceReader for CommandEvent {
                 _ => Err(FdReaderError::InvalidProtocol),
             },
             ObjectInteface::XdgSessionManagement(
-                XdgSessionManagementObjectInteface::XdgToplevelSessionV1 { .. },
+                XdgXxSessionManagementObjectInteface::XdgToplevelSessionV1 { .. },
             ) => match opcode {
                 XdgToplevelSessionV1RestoredEvent::OPCODE => {
                     Ok(Self::XdgToplevelSessionV1Restored(

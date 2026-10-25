@@ -103,6 +103,24 @@ use crate::protocol::ext::xdg_toplevel_tag;
 use crate::protocol::ext::xwayland_keyboard_grab;
 #[cfg(feature = "ext-xwayland-shell")]
 use crate::protocol::ext::xwayland_shell;
+#[cfg(feature = "ext-xx-cutouts")]
+use crate::protocol::ext::xx_cutouts;
+#[cfg(feature = "ext-xx-fractional-scale")]
+use crate::protocol::ext::xx_fractional_scale;
+#[cfg(feature = "ext-xx-hotkey")]
+use crate::protocol::ext::xx_hotkey;
+#[cfg(feature = "ext-xx-image-capture-color-management")]
+use crate::protocol::ext::xx_image_capture_color_management;
+#[cfg(feature = "ext-xx-input-method")]
+use crate::protocol::ext::xx_input_method;
+#[cfg(feature = "ext-xx-keyboard-filter")]
+use crate::protocol::ext::xx_keyboard_filter;
+#[cfg(feature = "ext-xx-session-management")]
+use crate::protocol::ext::xx_session_management;
+#[cfg(feature = "ext-xx-text-input")]
+use crate::protocol::ext::xx_text_input;
+#[cfg(feature = "ext-xx-zones")]
+use crate::protocol::ext::xx_zones;
 #[cfg(feature = "wlr-data-control")]
 use crate::protocol::wlr::data_control;
 #[cfg(feature = "wlr-export-dmabuf")]
@@ -129,6 +147,33 @@ use crate::protocol::wlr::virtual_pointer;
 pub(crate) enum ObjectInteface {
     /// A core Wayland interface.
     Core(core::ObjectInteface),
+    /// A xx text input interface.
+    #[cfg(feature = "ext-xx-text-input")]
+    XxTextInput(xx_text_input::ObjectInteface),
+    /// A xx input method interface.
+    #[cfg(feature = "ext-xx-input-method")]
+    XxInputMethod(xx_input_method::ObjectInteface),
+    /// A xx fractional scale interface.
+    #[cfg(feature = "ext-xx-fractional-scale")]
+    XxFractionalScale(xx_fractional_scale::ObjectInteface),
+    /// A zones interface.
+    #[cfg(feature = "ext-xx-zones")]
+    XxZones(xx_zones::ObjectInteface),
+    /// A session management interface.
+    #[cfg(feature = "ext-xx-session-management")]
+    XxSessionManagement(xx_session_management::ObjectInteface),
+    /// A keyboard filter interface.
+    #[cfg(feature = "ext-xx-keyboard-filter")]
+    XxKeyboardFilter(xx_keyboard_filter::ObjectInteface),
+    /// A image capture color management interface.
+    #[cfg(feature = "ext-xx-image-capture-color-management")]
+    XxImageCaptureColorManagement(xx_image_capture_color_management::ObjectInteface),
+    /// A hotkey interface.
+    #[cfg(feature = "ext-xx-hotkey")]
+    XxHotkey(xx_hotkey::ObjectInteface),
+    /// A cutouts interface.
+    #[cfg(feature = "ext-xx-cutouts")]
+    XxCutouts(xx_cutouts::ObjectInteface),
     /// A output power management interface.
     #[cfg(feature = "wlr-output-power-management")]
     WlrOutputPowerManagement(output_power_management::ObjectInteface),
@@ -319,6 +364,24 @@ impl ObjectInteface {
     pub(crate) fn name(self) -> &'static str {
         match self {
             Self::Core(interface) => interface.name(),
+            #[cfg(feature = "ext-xx-text-input")]
+            Self::XxTextInput(interface) => interface.name(),
+            #[cfg(feature = "ext-xx-input-method")]
+            Self::XxInputMethod(interface) => interface.name(),
+            #[cfg(feature = "ext-xx-fractional-scale")]
+            Self::XxFractionalScale(interface) => interface.name(),
+            #[cfg(feature = "ext-xx-zones")]
+            Self::XxZones(interface) => interface.name(),
+            #[cfg(feature = "ext-xx-session-management")]
+            Self::XxSessionManagement(interface) => interface.name(),
+            #[cfg(feature = "ext-xx-keyboard-filter")]
+            Self::XxKeyboardFilter(interface) => interface.name(),
+            #[cfg(feature = "ext-xx-image-capture-color-management")]
+            Self::XxImageCaptureColorManagement(interface) => interface.name(),
+            #[cfg(feature = "ext-xx-hotkey")]
+            Self::XxHotkey(interface) => interface.name(),
+            #[cfg(feature = "ext-xx-cutouts")]
+            Self::XxCutouts(interface) => interface.name(),
             #[cfg(feature = "wlr-output-power-management")]
             Self::WlrOutputPowerManagement(interface) => interface.name(),
             #[cfg(feature = "wlr-output-management")]
@@ -447,6 +510,24 @@ impl ObjectInteface {
     pub(crate) fn version(self) -> u32 {
         match self {
             Self::Core(interface) => interface.version(),
+            #[cfg(feature = "ext-xx-text-input")]
+            Self::XxTextInput(interface) => interface.version(),
+            #[cfg(feature = "ext-xx-input-method")]
+            Self::XxInputMethod(interface) => interface.version(),
+            #[cfg(feature = "ext-xx-fractional-scale")]
+            Self::XxFractionalScale(interface) => interface.version(),
+            #[cfg(feature = "ext-xx-zones")]
+            Self::XxZones(interface) => interface.version(),
+            #[cfg(feature = "ext-xx-session-management")]
+            Self::XxSessionManagement(interface) => interface.version(),
+            #[cfg(feature = "ext-xx-keyboard-filter")]
+            Self::XxKeyboardFilter(interface) => interface.version(),
+            #[cfg(feature = "ext-xx-image-capture-color-management")]
+            Self::XxImageCaptureColorManagement(interface) => interface.version(),
+            #[cfg(feature = "ext-xx-hotkey")]
+            Self::XxHotkey(interface) => interface.version(),
+            #[cfg(feature = "ext-xx-cutouts")]
+            Self::XxCutouts(interface) => interface.version(),
             #[cfg(feature = "wlr-output-power-management")]
             Self::WlrOutputPowerManagement(interface) => interface.version(),
             #[cfg(feature = "wlr-output-management")]
@@ -575,6 +656,24 @@ impl ObjectInteface {
     pub(crate) fn max_version(self) -> u32 {
         match self {
             Self::Core(interface) => interface.max_version(),
+            #[cfg(feature = "ext-xx-text-input")]
+            Self::XxTextInput(interface) => interface.max_version(),
+            #[cfg(feature = "ext-xx-input-method")]
+            Self::XxInputMethod(interface) => interface.max_version(),
+            #[cfg(feature = "ext-xx-fractional-scale")]
+            Self::XxFractionalScale(interface) => interface.max_version(),
+            #[cfg(feature = "ext-xx-zones")]
+            Self::XxZones(interface) => interface.max_version(),
+            #[cfg(feature = "ext-xx-session-management")]
+            Self::XxSessionManagement(interface) => interface.max_version(),
+            #[cfg(feature = "ext-xx-keyboard-filter")]
+            Self::XxKeyboardFilter(interface) => interface.max_version(),
+            #[cfg(feature = "ext-xx-image-capture-color-management")]
+            Self::XxImageCaptureColorManagement(interface) => interface.max_version(),
+            #[cfg(feature = "ext-xx-hotkey")]
+            Self::XxHotkey(interface) => interface.max_version(),
+            #[cfg(feature = "ext-xx-cutouts")]
+            Self::XxCutouts(interface) => interface.max_version(),
             #[cfg(feature = "wlr-output-power-management")]
             Self::WlrOutputPowerManagement(interface) => interface.max_version(),
             #[cfg(feature = "wlr-output-management")]
@@ -953,6 +1052,44 @@ impl ObjectInteface {
         #[cfg(feature = "wlr-output-power-management")]
         if let Some(interface) = output_power_management::ObjectInteface::from_name(name, version) {
             return Some(Self::WlrOutputPowerManagement(interface));
+        }
+        #[cfg(feature = "ext-xx-cutouts")]
+        if let Some(interface) = xx_cutouts::ObjectInteface::from_name(name, version) {
+            return Some(Self::XxCutouts(interface));
+        }
+        #[cfg(feature = "ext-xx-hotkey")]
+        if let Some(interface) = xx_hotkey::ObjectInteface::from_name(name, version) {
+            return Some(Self::XxHotkey(interface));
+        }
+        #[cfg(feature = "ext-xx-image-capture-color-management")]
+        if let Some(interface) =
+            xx_image_capture_color_management::ObjectInteface::from_name(name, version)
+        {
+            return Some(Self::XxImageCaptureColorManagement(interface));
+        }
+        #[cfg(feature = "ext-xx-keyboard-filter")]
+        if let Some(interface) = xx_keyboard_filter::ObjectInteface::from_name(name, version) {
+            return Some(Self::XxKeyboardFilter(interface));
+        }
+        #[cfg(feature = "ext-xx-session-management")]
+        if let Some(interface) = xx_session_management::ObjectInteface::from_name(name, version) {
+            return Some(Self::XxSessionManagement(interface));
+        }
+        #[cfg(feature = "ext-xx-zones")]
+        if let Some(interface) = xx_zones::ObjectInteface::from_name(name, version) {
+            return Some(Self::XxZones(interface));
+        }
+        #[cfg(feature = "ext-xx-fractional-scale")]
+        if let Some(interface) = xx_fractional_scale::ObjectInteface::from_name(name, version) {
+            return Some(Self::XxFractionalScale(interface));
+        }
+        #[cfg(feature = "ext-xx-input-method")]
+        if let Some(interface) = xx_input_method::ObjectInteface::from_name(name, version) {
+            return Some(Self::XxInputMethod(interface));
+        }
+        #[cfg(feature = "ext-xx-text-input")]
+        if let Some(interface) = xx_text_input::ObjectInteface::from_name(name, version) {
+            return Some(Self::XxTextInput(interface));
         }
         None
     }

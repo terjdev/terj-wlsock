@@ -1,4 +1,4 @@
-use crate::protocol::ext::xdg_session_management::ObjectInteface as XdgSessionManagementObjectInteface;
+use crate::protocol::ext::xdg_session_management::ObjectInteface as XdgXxSessionManagementObjectInteface;
 use crate::protocol::{
     ClientState, CommandReader, CommandReaderExt, CommandWriter, CommandWriterExt, InterfaceReader,
     ObjectInteface,
@@ -60,7 +60,7 @@ impl InterfaceReader for XdgSessionV1CreatedEvent {
         if !matches!(
             interface,
             ObjectInteface::XdgSessionManagement(
-                XdgSessionManagementObjectInteface::XdgSessionV1 { .. }
+                XdgXxSessionManagementObjectInteface::XdgSessionV1 { .. }
             )
         ) || opcode != Self::OPCODE
             || interface.version() < Self::SINCE

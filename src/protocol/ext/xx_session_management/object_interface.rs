@@ -1,0 +1,39 @@
+//! Defines interfaces and negotiated versions for this protocol.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum ObjectInteface {
+    XxSessionManagerV1 { version: u32 },
+    XxSessionV1 { version: u32 },
+    XxToplevelSessionV1 { version: u32 },
+}
+impl ObjectInteface {
+    pub(crate) fn name(self) -> &'static str {
+        match self {
+            Self::XxSessionManagerV1 { .. } => "xx_session_manager_v1",
+            Self::XxSessionV1 { .. } => "xx_session_v1",
+            Self::XxToplevelSessionV1 { .. } => "xx_toplevel_session_v1",
+        }
+    }
+    pub(crate) fn version(self) -> u32 {
+        match self {
+            Self::XxSessionManagerV1 { version } => version,
+            Self::XxSessionV1 { version } => version,
+            Self::XxToplevelSessionV1 { version } => version,
+        }
+    }
+    pub(crate) fn max_version(self) -> u32 {
+        match self {
+            Self::XxSessionManagerV1 { .. } => 1,
+            Self::XxSessionV1 { .. } => 1,
+            Self::XxToplevelSessionV1 { .. } => 1,
+        }
+    }
+    pub(crate) fn from_name(name: &str, version: u32) -> Option<Self> {
+        let interface = match name {
+            "xx_session_manager_v1" => Self::XxSessionManagerV1 { version },
+            "xx_session_v1" => Self::XxSessionV1 { version },
+            "xx_toplevel_session_v1" => Self::XxToplevelSessionV1 { version },
+            _ => return None,
+        };
+        (version > 0 && version <= interface.max_version()).then_some(interface)
+    }
+}

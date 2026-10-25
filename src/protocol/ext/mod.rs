@@ -152,3 +152,30 @@ pub mod xdg_output;
 
 #[cfg(feature = "ext-xwayland-keyboard-grab")]
 pub mod xwayland_keyboard_grab;
+
+#[cfg(feature = "ext-xx-cutouts")]
+pub mod xx_cutouts;
+
+#[cfg(feature = "ext-xx-hotkey")]
+pub mod xx_hotkey;
+
+#[cfg(feature = "ext-xx-image-capture-color-management")]
+pub mod xx_image_capture_color_management;
+
+#[cfg(feature = "ext-xx-keyboard-filter")]
+pub mod xx_keyboard_filter;
+
+#[cfg(feature = "ext-xx-session-management")]
+pub mod xx_session_management;
+
+#[cfg(feature = "ext-xx-zones")]
+pub mod xx_zones;
+
+#[cfg(feature = "ext-xx-fractional-scale")]
+pub mod xx_fractional_scale;
+
+#[cfg(feature = "ext-xx-input-method")]
+pub mod xx_input_method;
+
+#[cfg(feature = "ext-xx-text-input")]
+pub mod xx_text_input;

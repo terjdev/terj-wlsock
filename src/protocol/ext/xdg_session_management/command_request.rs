@@ -4,7 +4,7 @@ use super::{
     XdgSessionV1RemoveToplevelRequest, XdgSessionV1RestoreToplevelRequest,
     XdgToplevelSessionV1DestroyRequest, XdgToplevelSessionV1RenameRequest,
 };
-use crate::protocol::ext::xdg_session_management::ObjectInteface as XdgSessionManagementObjectInteface;
+use crate::protocol::ext::xdg_session_management::ObjectInteface as XdgXxSessionManagementObjectInteface;
 use crate::protocol::{
     ClientState, CommandReader, CommandReaderExt, CommandWriter, InterfaceReader, ObjectInteface,
 };
@@ -56,7 +56,7 @@ impl InterfaceReader for CommandRequest {
     ) -> Result<Self, FdReaderError> {
         match interface {
             ObjectInteface::XdgSessionManagement(
-                XdgSessionManagementObjectInteface::XdgSessionManagerV1 { .. },
+                XdgXxSessionManagementObjectInteface::XdgSessionManagerV1 { .. },
             ) => match opcode {
                 XdgSessionManagerV1DestroyRequest::OPCODE => Ok(Self::XdgSessionManagerV1Destroy(
                     XdgSessionManagerV1DestroyRequest::read_with_interface(
@@ -75,7 +75,7 @@ impl InterfaceReader for CommandRequest {
                 _ => Err(FdReaderError::InvalidProtocol),
             },
             ObjectInteface::XdgSessionManagement(
-                XdgSessionManagementObjectInteface::XdgSessionV1 { .. },
+                XdgXxSessionManagementObjectInteface::XdgSessionV1 { .. },
             ) => match opcode {
                 XdgSessionV1DestroyRequest::OPCODE => Ok(Self::XdgSessionV1Destroy(
                     XdgSessionV1DestroyRequest::read_with_interface(
@@ -112,7 +112,7 @@ impl InterfaceReader for CommandRequest {
                 _ => Err(FdReaderError::InvalidProtocol),
             },
             ObjectInteface::XdgSessionManagement(
-                XdgSessionManagementObjectInteface::XdgToplevelSessionV1 { .. },
+                XdgXxSessionManagementObjectInteface::XdgToplevelSessionV1 { .. },
             ) => match opcode {
                 XdgToplevelSessionV1DestroyRequest::OPCODE => {
                     Ok(Self::XdgToplevelSessionV1Destroy(

@@ -8,6 +8,52 @@ license = "MIT"
 default = []
 all = ["ext", "wlr"]
 ext = [
+    "ext-stable",
+    "ext-staging",
+    "ext-unstable",
+    "ext-experimental",
+]
+ext-stable = [
+    "ext-dmabuf",
+    "ext-presentation-time",
+    "ext-tablet",
+    "ext-viewporter",
+    "ext-xdg-shell",
+]
+ext-staging = [
+    "ext-alpha-modifier",
+    "ext-background-effect",
+    "ext-color-management",
+    "ext-color-representation",
+    "ext-commit-timing",
+    "ext-content-type",
+    "ext-cursor-shape",
+    "ext-data-control",
+    "ext-drm-lease",
+    "ext-fifo",
+    "ext-foreign-toplevel-list",
+    "ext-fractional-scale",
+    "ext-idle-notify",
+    "ext-image-capture-source",
+    "ext-image-copy-capture",
+    "ext-linux-drm-syncobj",
+    "ext-pointer-warp",
+    "ext-security-context",
+    "ext-session-lock",
+    "ext-single-pixel-buffer",
+    "ext-tearing-control",
+    "ext-transient-seat",
+    "ext-workspace",
+    "ext-xdg-activation",
+    "ext-xdg-dialog",
+    "ext-xdg-session-management",
+    "ext-xdg-system-bell",
+    "ext-xdg-toplevel-drag",
+    "ext-xdg-toplevel-icon",
+    "ext-xdg-toplevel-tag",
+    "ext-xwayland-shell",
+]
+ext-unstable = [
     "ext-fullscreen-shell",
     "ext-idle-inhibit",
     "ext-input-method",
@@ -23,116 +69,100 @@ ext = [
     "ext-xdg-foreign",
     "ext-xdg-output",
     "ext-xwayland-keyboard-grab",
-    "ext-xwayland-shell",
-    "ext-xdg-toplevel-tag",
-    "ext-xdg-toplevel-icon",
-    "ext-xdg-toplevel-drag",
-    "ext-xdg-system-bell",
-    "ext-xdg-session-management",
-    "ext-xdg-dialog",
-    "ext-xdg-activation",
-    "ext-tearing-control",
-    "ext-single-pixel-buffer",
-    "ext-security-context",
-    "ext-pointer-warp",
-    "ext-linux-drm-syncobj",
-    "ext-fractional-scale",
-    "ext-fifo",
-    "ext-workspace",
-    "ext-transient-seat",
-    "ext-session-lock",
-    "ext-image-copy-capture",
-    "ext-image-capture-source",
-    "ext-idle-notify",
-    "ext-foreign-toplevel-list",
-    "ext-color-representation",
-    "ext-color-management",
-    "ext-data-control",
-    "ext-background-effect",
-    "ext-drm-lease",
-    "ext-cursor-shape",
-    "ext-content-type",
-    "ext-commit-timing",
-    "ext-alpha-modifier",
-    "ext-tablet",
-    "ext-xdg-shell",
-    "ext-dmabuf",
-    "ext-presentation-time",
-    "ext-viewporter",
+]
+ext-experimental = [
+    "ext-xx-cutouts",
+    "ext-xx-fractional-scale",
+    "ext-xx-hotkey",
+    "ext-xx-image-capture-color-management",
+    "ext-xx-input-method",
+    "ext-xx-keyboard-filter",
+    "ext-xx-session-management",
+    "ext-xx-text-input",
+    "ext-xx-zones",
 ]
 wlr = [
+    "wlr-data-control",
     "wlr-export-dmabuf",
     "wlr-foreign-toplevel-management",
     "wlr-gamma-control",
     "wlr-input-inhibitor",
+    "wlr-layer-shell",
     "wlr-output-management",
     "wlr-output-power-management",
     "wlr-screencopy",
     "wlr-virtual-pointer",
-    "wlr-data-control",
-    "wlr-layer-shell",
 ]
-ext-presentation-time = []
-ext-viewporter = []
-ext-xwayland-shell = []
-ext-xdg-toplevel-tag = []
-ext-xdg-toplevel-icon = []
-ext-xdg-toplevel-drag = []
-ext-xdg-system-bell = []
-ext-xdg-session-management = []
-ext-xdg-dialog = []
-ext-xdg-activation = []
-ext-tearing-control = []
-ext-single-pixel-buffer = []
-ext-security-context = []
-ext-pointer-warp = []
-ext-linux-drm-syncobj = []
-ext-fractional-scale = []
-ext-fifo = []
-ext-workspace = []
-ext-transient-seat = []
-ext-session-lock = []
-ext-image-copy-capture = []
-ext-image-capture-source = []
-ext-idle-notify = []
-ext-foreign-toplevel-list = []
-ext-color-representation = []
-ext-color-management = []
-ext-data-control = []
-ext-background-effect = []
-ext-drm-lease = []
-ext-cursor-shape = []
-ext-content-type = []
-ext-commit-timing = []
 ext-alpha-modifier = []
-wlr-data-control = []
-wlr-layer-shell = []
-wlr-screencopy = []
-wlr-virtual-pointer = []
-ext-tablet = []
-ext-xdg-shell = []
+ext-background-effect = []
+ext-color-management = []
+ext-color-representation = []
+ext-commit-timing = []
+ext-content-type = []
+ext-cursor-shape = []
+ext-data-control = []
 ext-dmabuf = []
+ext-drm-lease = []
+ext-fifo = []
+ext-foreign-toplevel-list = []
+ext-fractional-scale = []
 ext-fullscreen-shell = []
 ext-idle-inhibit = []
+ext-idle-notify = []
+ext-image-capture-source = []
+ext-image-copy-capture = []
 ext-input-method = []
 ext-input-timestamps = []
 ext-keyboard-shortcuts-inhibit = []
+ext-linux-drm-syncobj = []
 ext-linux-explicit-synchronization = []
 ext-pointer-constraints = []
 ext-pointer-gestures = []
+ext-pointer-warp = []
+ext-presentation-time = []
 ext-primary-selection = []
 ext-relative-pointer = []
+ext-security-context = []
+ext-session-lock = []
+ext-single-pixel-buffer = []
+ext-tablet = []
+ext-tearing-control = []
 ext-text-input = []
+ext-transient-seat = []
+ext-viewporter = []
+ext-workspace = []
+ext-xdg-activation = []
 ext-xdg-decoration = []
+ext-xdg-dialog = []
 ext-xdg-foreign = []
 ext-xdg-output = []
+ext-xdg-session-management = []
+ext-xdg-shell = []
+ext-xdg-system-bell = []
+ext-xdg-toplevel-drag = []
+ext-xdg-toplevel-icon = []
+ext-xdg-toplevel-tag = []
 ext-xwayland-keyboard-grab = []
+ext-xwayland-shell = []
+ext-xx-cutouts = []
+ext-xx-fractional-scale = []
+ext-xx-hotkey = []
+ext-xx-image-capture-color-management = ["ext-color-management"]
+ext-xx-input-method = ["ext-xx-text-input"]
+ext-xx-keyboard-filter = []
+ext-xx-session-management = []
+ext-xx-text-input = []
+ext-xx-zones = []
+wlr-data-control = []
 wlr-export-dmabuf = []
 wlr-foreign-toplevel-management = []
 wlr-gamma-control = []
 wlr-input-inhibitor = []
+wlr-layer-shell = []
 wlr-output-management = []
 wlr-output-power-management = []
+wlr-screencopy = []
+wlr-virtual-pointer = []
 
 [dependencies]
 tokio = { version = "1", features = ["rt", "net", "sync", "macros", "io-util"] }

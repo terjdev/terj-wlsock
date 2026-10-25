@@ -453,3 +453,57 @@ Original copyright notices and permission terms are preserved in
 Protocol definitions and documentation excerpts are derived from [wlr-output-power-management-unstable-v1.xml](https://gitlab.freedesktop.org/wlroots/wlr-protocols/-/blob/master/unstable/wlr-output-power-management-unstable-v1.xml).
 Original copyright notices and permission terms are preserved in
 [wlr/output_power_management/LICENSE.md](wlr/output_power_management/LICENSE.md).
+
+## Third-party notice: xx-cutouts
+
+Protocol definitions and documentation excerpts are derived from [xx-cutouts-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/experimental/xx-cutouts/xx-cutouts-v1.xml).
+Original copyright notices and permission terms are preserved in
+[ext/xx_cutouts/LICENSE.md](ext/xx_cutouts/LICENSE.md).
+
+## Third-party notice: xx-hotkey
+
+Protocol definitions and documentation excerpts are derived from [xx-hotkey-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/experimental/xx-hotkey/xx-hotkey-v1.xml).
+Original copyright notices and permission terms are preserved in
+[ext/xx_hotkey/LICENSE.md](ext/xx_hotkey/LICENSE.md).
+
+## Third-party notice: xx-image-capture-color-management
+
+Protocol definitions and documentation excerpts are derived from [xx-image-capture-color-management-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/experimental/xx-image-capture-color-management/xx-image-capture-color-management-v1.xml).
+Original copyright notices and permission terms are preserved in
+[ext/xx_image_capture_color_management/LICENSE.md](ext/xx_image_capture_color_management/LICENSE.md).
+
+## Third-party notice: xx-keyboard-filter
+
+Protocol definitions and documentation excerpts are derived from [xx-keyboard-filter-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/experimental/xx-keyboard-filter/xx-keyboard-filter-v1.xml).
+Original copyright notices and permission terms are preserved in
+[ext/xx_keyboard_filter/LICENSE.md](ext/xx_keyboard_filter/LICENSE.md).
+
+## Third-party notice: xx-session-management
+
+Protocol definitions and documentation excerpts are derived from [xx-session-management-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/experimental/xx-session-management/xx-session-management-v1.xml).
+Original copyright notices and permission terms are preserved in
+[ext/xx_session_management/LICENSE.md](ext/xx_session_management/LICENSE.md).
+
+## Third-party notice: xx-zones
+
+Protocol definitions and documentation excerpts are derived from [xx-zones-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/experimental/xx-zones/xx-zones-v1.xml).
+Original copyright notices and permission terms are preserved in
+[ext/xx_zones/LICENSE.md](ext/xx_zones/LICENSE.md).
+
+## Third-party notice: xx-fractional-scale
+
+Protocol definitions and documentation excerpts are derived from [xx-fractional-scale-v2.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/experimental/xx-fractional-scale/xx-fractional-scale-v2.xml).
+Original copyright notices and permission terms are preserved in
+[ext/xx_fractional_scale/LICENSE.md](ext/xx_fractional_scale/LICENSE.md).
+
+## Third-party notice: xx-input-method
+
+Protocol definitions and documentation excerpts are derived from [xx-input-method-v2.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/experimental/xx-input-method/xx-input-method-v2.xml).
+Original copyright notices and permission terms are preserved in
+[ext/xx_input_method/LICENSE.md](ext/xx_input_method/LICENSE.md).
+
+## Third-party notice: xx-text-input
+
+Protocol definitions and documentation excerpts are derived from [xx-text-input-v3.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/experimental/xx-text-input/xx-text-input-v3.xml).
+Original copyright notices and permission terms are preserved in
+[ext/xx_text_input/LICENSE.md](ext/xx_text_input/LICENSE.md).

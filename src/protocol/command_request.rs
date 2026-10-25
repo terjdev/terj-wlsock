@@ -101,6 +101,24 @@ use crate::protocol::ext::xdg_toplevel_tag;
 use crate::protocol::ext::xwayland_keyboard_grab;
 #[cfg(feature = "ext-xwayland-shell")]
 use crate::protocol::ext::xwayland_shell;
+#[cfg(feature = "ext-xx-cutouts")]
+use crate::protocol::ext::xx_cutouts;
+#[cfg(feature = "ext-xx-fractional-scale")]
+use crate::protocol::ext::xx_fractional_scale;
+#[cfg(feature = "ext-xx-hotkey")]
+use crate::protocol::ext::xx_hotkey;
+#[cfg(feature = "ext-xx-image-capture-color-management")]
+use crate::protocol::ext::xx_image_capture_color_management;
+#[cfg(feature = "ext-xx-input-method")]
+use crate::protocol::ext::xx_input_method;
+#[cfg(feature = "ext-xx-keyboard-filter")]
+use crate::protocol::ext::xx_keyboard_filter;
+#[cfg(feature = "ext-xx-session-management")]
+use crate::protocol::ext::xx_session_management;
+#[cfg(feature = "ext-xx-text-input")]
+use crate::protocol::ext::xx_text_input;
+#[cfg(feature = "ext-xx-zones")]
+use crate::protocol::ext::xx_zones;
 #[cfg(feature = "wlr-data-control")]
 use crate::protocol::wlr::data_control;
 #[cfg(feature = "wlr-export-dmabuf")]
@@ -133,6 +151,33 @@ use std::sync::{Arc, Mutex};
 pub enum CommandRequest {
     /// Core Wayland protocol commands.
     Core(core::CommandRequest),
+    /// xx text input messages.
+    #[cfg(feature = "ext-xx-text-input")]
+    XxTextInput(xx_text_input::CommandRequest),
+    /// xx input method messages.
+    #[cfg(feature = "ext-xx-input-method")]
+    XxInputMethod(xx_input_method::CommandRequest),
+    /// xx fractional scale messages.
+    #[cfg(feature = "ext-xx-fractional-scale")]
+    XxFractionalScale(xx_fractional_scale::CommandRequest),
+    /// zones messages.
+    #[cfg(feature = "ext-xx-zones")]
+    XxZones(xx_zones::CommandRequest),
+    /// session management messages.
+    #[cfg(feature = "ext-xx-session-management")]
+    XxSessionManagement(xx_session_management::CommandRequest),
+    /// keyboard filter messages.
+    #[cfg(feature = "ext-xx-keyboard-filter")]
+    XxKeyboardFilter(xx_keyboard_filter::CommandRequest),
+    /// image capture color management messages.
+    #[cfg(feature = "ext-xx-image-capture-color-management")]
+    XxImageCaptureColorManagement(xx_image_capture_color_management::CommandRequest),
+    /// hotkey messages.
+    #[cfg(feature = "ext-xx-hotkey")]
+    XxHotkey(xx_hotkey::CommandRequest),
+    /// cutouts messages.
+    #[cfg(feature = "ext-xx-cutouts")]
+    XxCutouts(xx_cutouts::CommandRequest),
     /// output power management messages.
     #[cfg(feature = "wlr-output-power-management")]
     WlrOutputPowerManagement(output_power_management::CommandRequest),
@@ -758,6 +803,71 @@ impl InterfaceReader for CommandRequest {
                 )
                 .await?,
             )),
+            #[cfg(feature = "ext-xx-cutouts")]
+            ObjectInteface::XxCutouts(_) => Ok(Self::XxCutouts(
+                xx_cutouts::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "ext-xx-hotkey")]
+            ObjectInteface::XxHotkey(_) => Ok(Self::XxHotkey(
+                xx_hotkey::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "ext-xx-image-capture-color-management")]
+            ObjectInteface::XxImageCaptureColorManagement(_) => {
+                Ok(Self::XxImageCaptureColorManagement(
+                    xx_image_capture_color_management::CommandRequest::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
+                ))
+            }
+            #[cfg(feature = "ext-xx-keyboard-filter")]
+            ObjectInteface::XxKeyboardFilter(_) => Ok(Self::XxKeyboardFilter(
+                xx_keyboard_filter::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "ext-xx-session-management")]
+            ObjectInteface::XxSessionManagement(_) => Ok(Self::XxSessionManagement(
+                xx_session_management::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "ext-xx-zones")]
+            ObjectInteface::XxZones(_) => Ok(Self::XxZones(
+                xx_zones::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "ext-xx-fractional-scale")]
+            ObjectInteface::XxFractionalScale(_) => Ok(Self::XxFractionalScale(
+                xx_fractional_scale::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "ext-xx-input-method")]
+            ObjectInteface::XxInputMethod(_) => Ok(Self::XxInputMethod(
+                xx_input_method::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "ext-xx-text-input")]
+            ObjectInteface::XxTextInput(_) => Ok(Self::XxTextInput(
+                xx_text_input::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
             ObjectInteface::Core(_) => Ok(Self::Core(
                 core::CommandRequest::read_with_interface(
                     object_id, opcode, interface, reader, state,
@@ -786,6 +896,24 @@ impl CommandWriter for CommandRequest {
     fn object_id(&self) -> u32 {
         match self {
             Self::Core(command) => command.object_id(),
+            #[cfg(feature = "ext-xx-text-input")]
+            Self::XxTextInput(command) => command.object_id(),
+            #[cfg(feature = "ext-xx-input-method")]
+            Self::XxInputMethod(command) => command.object_id(),
+            #[cfg(feature = "ext-xx-fractional-scale")]
+            Self::XxFractionalScale(command) => command.object_id(),
+            #[cfg(feature = "ext-xx-zones")]
+            Self::XxZones(command) => command.object_id(),
+            #[cfg(feature = "ext-xx-session-management")]
+            Self::XxSessionManagement(command) => command.object_id(),
+            #[cfg(feature = "ext-xx-keyboard-filter")]
+            Self::XxKeyboardFilter(command) => command.object_id(),
+            #[cfg(feature = "ext-xx-image-capture-color-management")]
+            Self::XxImageCaptureColorManagement(command) => command.object_id(),
+            #[cfg(feature = "ext-xx-hotkey")]
+            Self::XxHotkey(command) => command.object_id(),
+            #[cfg(feature = "ext-xx-cutouts")]
+            Self::XxCutouts(command) => command.object_id(),
             #[cfg(feature = "wlr-output-power-management")]
             Self::WlrOutputPowerManagement(command) => command.object_id(),
             #[cfg(feature = "wlr-output-management")]
@@ -913,6 +1041,24 @@ impl CommandWriter for CommandRequest {
     fn opcode(&self) -> u16 {
         match self {
             Self::Core(command) => command.opcode(),
+            #[cfg(feature = "ext-xx-text-input")]
+            Self::XxTextInput(command) => command.opcode(),
+            #[cfg(feature = "ext-xx-input-method")]
+            Self::XxInputMethod(command) => command.opcode(),
+            #[cfg(feature = "ext-xx-fractional-scale")]
+            Self::XxFractionalScale(command) => command.opcode(),
+            #[cfg(feature = "ext-xx-zones")]
+            Self::XxZones(command) => command.opcode(),
+            #[cfg(feature = "ext-xx-session-management")]
+            Self::XxSessionManagement(command) => command.opcode(),
+            #[cfg(feature = "ext-xx-keyboard-filter")]
+            Self::XxKeyboardFilter(command) => command.opcode(),
+            #[cfg(feature = "ext-xx-image-capture-color-management")]
+            Self::XxImageCaptureColorManagement(command) => command.opcode(),
+            #[cfg(feature = "ext-xx-hotkey")]
+            Self::XxHotkey(command) => command.opcode(),
+            #[cfg(feature = "ext-xx-cutouts")]
+            Self::XxCutouts(command) => command.opcode(),
             #[cfg(feature = "wlr-output-power-management")]
             Self::WlrOutputPowerManagement(command) => command.opcode(),
             #[cfg(feature = "wlr-output-management")]
@@ -1040,6 +1186,24 @@ impl CommandWriter for CommandRequest {
     fn payload_size(&self) -> usize {
         match self {
             Self::Core(command) => command.payload_size(),
+            #[cfg(feature = "ext-xx-text-input")]
+            Self::XxTextInput(command) => command.payload_size(),
+            #[cfg(feature = "ext-xx-input-method")]
+            Self::XxInputMethod(command) => command.payload_size(),
+            #[cfg(feature = "ext-xx-fractional-scale")]
+            Self::XxFractionalScale(command) => command.payload_size(),
+            #[cfg(feature = "ext-xx-zones")]
+            Self::XxZones(command) => command.payload_size(),
+            #[cfg(feature = "ext-xx-session-management")]
+            Self::XxSessionManagement(command) => command.payload_size(),
+            #[cfg(feature = "ext-xx-keyboard-filter")]
+            Self::XxKeyboardFilter(command) => command.payload_size(),
+            #[cfg(feature = "ext-xx-image-capture-color-management")]
+            Self::XxImageCaptureColorManagement(command) => command.payload_size(),
+            #[cfg(feature = "ext-xx-hotkey")]
+            Self::XxHotkey(command) => command.payload_size(),
+            #[cfg(feature = "ext-xx-cutouts")]
+            Self::XxCutouts(command) => command.payload_size(),
             #[cfg(feature = "wlr-output-power-management")]
             Self::WlrOutputPowerManagement(command) => command.payload_size(),
             #[cfg(feature = "wlr-output-management")]
@@ -1171,6 +1335,24 @@ impl CommandWriter for CommandRequest {
     ) -> Result<(), FdWriterError> {
         match self {
             Self::Core(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-xx-text-input")]
+            Self::XxTextInput(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-xx-input-method")]
+            Self::XxInputMethod(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-xx-fractional-scale")]
+            Self::XxFractionalScale(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-xx-zones")]
+            Self::XxZones(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-xx-session-management")]
+            Self::XxSessionManagement(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-xx-keyboard-filter")]
+            Self::XxKeyboardFilter(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-xx-image-capture-color-management")]
+            Self::XxImageCaptureColorManagement(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-xx-hotkey")]
+            Self::XxHotkey(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-xx-cutouts")]
+            Self::XxCutouts(command) => command.write(writer, state).await,
             #[cfg(feature = "wlr-output-power-management")]
             Self::WlrOutputPowerManagement(command) => command.write(writer, state).await,
             #[cfg(feature = "wlr-output-management")]
