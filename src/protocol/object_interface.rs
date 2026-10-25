@@ -15,6 +15,8 @@ use crate::protocol::ext::xdg_shell;
 use crate::protocol::wlr::data_control;
 #[cfg(feature = "wlr-layer-shell")]
 use crate::protocol::wlr::layer_shell;
+#[cfg(feature = "wlr-screencopy")]
+use crate::protocol::wlr::screencopy;
 #[cfg(feature = "wlr-virtual-pointer")]
 use crate::protocol::wlr::virtual_pointer;
 
@@ -23,6 +25,9 @@ use crate::protocol::wlr::virtual_pointer;
 pub(crate) enum ObjectInteface {
     /// A core Wayland interface.
     Core(core::ObjectInteface),
+    /// A WLR screencopy interface.
+    #[cfg(feature = "wlr-screencopy")]
+    WlrScreencopy(screencopy::ObjectInteface),
     /// A WLR virtual pointer interface.
     #[cfg(feature = "wlr-virtual-pointer")]
     WlrVirtualPointer(virtual_pointer::ObjectInteface),
@@ -54,6 +59,8 @@ impl ObjectInteface {
     pub(crate) fn name(self) -> &'static str {
         match self {
             Self::Core(interface) => interface.name(),
+            #[cfg(feature = "wlr-screencopy")]
+            Self::WlrScreencopy(interface) => interface.name(),
             #[cfg(feature = "wlr-virtual-pointer")]
             Self::WlrVirtualPointer(interface) => interface.name(),
             #[cfg(feature = "wlr-data-control")]
@@ -76,6 +83,8 @@ impl ObjectInteface {
     pub(crate) fn version(self) -> u32 {
         match self {
             Self::Core(interface) => interface.version(),
+            #[cfg(feature = "wlr-screencopy")]
+            Self::WlrScreencopy(interface) => interface.version(),
             #[cfg(feature = "wlr-virtual-pointer")]
             Self::WlrVirtualPointer(interface) => interface.version(),
             #[cfg(feature = "wlr-data-control")]
@@ -98,6 +107,8 @@ impl ObjectInteface {
     pub(crate) fn max_version(self) -> u32 {
         match self {
             Self::Core(interface) => interface.max_version(),
+            #[cfg(feature = "wlr-screencopy")]
+            Self::WlrScreencopy(interface) => interface.max_version(),
             #[cfg(feature = "wlr-virtual-pointer")]
             Self::WlrVirtualPointer(interface) => interface.max_version(),
             #[cfg(feature = "wlr-data-control")]
@@ -152,6 +163,10 @@ impl ObjectInteface {
         #[cfg(feature = "wlr-virtual-pointer")]
         if let Some(interface) = virtual_pointer::ObjectInteface::from_name(name, version) {
             return Some(Self::WlrVirtualPointer(interface));
+        }
+        #[cfg(feature = "wlr-screencopy")]
+        if let Some(interface) = screencopy::ObjectInteface::from_name(name, version) {
+            return Some(Self::WlrScreencopy(interface));
         }
         None
     }

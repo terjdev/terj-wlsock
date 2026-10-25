@@ -8,3 +8,6 @@ pub mod data_control;
 
 #[cfg(feature = "wlr-virtual-pointer")]
 pub mod virtual_pointer;
+
+#[cfg(feature = "wlr-screencopy")]
+pub mod screencopy;

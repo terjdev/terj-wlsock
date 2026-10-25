@@ -11,6 +11,8 @@ use crate::protocol::ext::xdg_shell;
 use crate::protocol::wlr::data_control;
 #[cfg(feature = "wlr-layer-shell")]
 use crate::protocol::wlr::layer_shell;
+#[cfg(feature = "wlr-screencopy")]
+use crate::protocol::wlr::screencopy;
 use crate::protocol::{
     ClientState, CommandReader, CommandReaderExt, CommandWriter, InterfaceReader, ObjectInteface,
 };
@@ -23,6 +25,9 @@ use std::sync::{Arc, Mutex};
 pub enum CommandEvent {
     /// Core Wayland protocol commands.
     Core(core::CommandEvent),
+    /// WLR screencopy extension commands.
+    #[cfg(feature = "wlr-screencopy")]
+    WlrScreencopy(screencopy::CommandEvent),
     /// WLR data control extension commands.
     #[cfg(feature = "wlr-data-control")]
     WlrDataControl(data_control::CommandEvent),
@@ -103,6 +108,13 @@ impl InterfaceReader for CommandEvent {
                 )
                 .await?,
             )),
+            #[cfg(feature = "wlr-screencopy")]
+            ObjectInteface::WlrScreencopy(_) => Ok(Self::WlrScreencopy(
+                screencopy::CommandEvent::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
             ObjectInteface::Core(_) => Ok(Self::Core(
                 core::CommandEvent::read_with_interface(
                     object_id, opcode, interface, reader, state,
@@ -126,6 +138,8 @@ impl CommandWriter for CommandEvent {
     fn object_id(&self) -> u32 {
         match self {
             Self::Core(command) => command.object_id(),
+            #[cfg(feature = "wlr-screencopy")]
+            Self::WlrScreencopy(command) => command.object_id(),
             #[cfg(feature = "wlr-data-control")]
             Self::WlrDataControl(command) => command.object_id(),
             #[cfg(feature = "wlr-layer-shell")]
@@ -143,6 +157,8 @@ impl CommandWriter for CommandEvent {
     fn opcode(&self) -> u16 {
         match self {
             Self::Core(command) => command.opcode(),
+            #[cfg(feature = "wlr-screencopy")]
+            Self::WlrScreencopy(command) => command.opcode(),
             #[cfg(feature = "wlr-data-control")]
             Self::WlrDataControl(command) => command.opcode(),
             #[cfg(feature = "wlr-layer-shell")]
@@ -160,6 +176,8 @@ impl CommandWriter for CommandEvent {
     fn payload_size(&self) -> usize {
         match self {
             Self::Core(command) => command.payload_size(),
+            #[cfg(feature = "wlr-screencopy")]
+            Self::WlrScreencopy(command) => command.payload_size(),
             #[cfg(feature = "wlr-data-control")]
             Self::WlrDataControl(command) => command.payload_size(),
             #[cfg(feature = "wlr-layer-shell")]
@@ -181,6 +199,8 @@ impl CommandWriter for CommandEvent {
     ) -> Result<(), FdWriterError> {
         match self {
             Self::Core(command) => command.write(writer, state).await,
+            #[cfg(feature = "wlr-screencopy")]
+            Self::WlrScreencopy(command) => command.write(writer, state).await,
             #[cfg(feature = "wlr-data-control")]
             Self::WlrDataControl(command) => command.write(writer, state).await,
             #[cfg(feature = "wlr-layer-shell")]

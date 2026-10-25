@@ -94,3 +94,11 @@ The WLR virtual pointer protocol definitions and documentation excerpts are deri
 Copyright © 2019 Josef Gajdusek. The original MIT license and copyright notice
 are preserved in
 [src/protocol/wlr/virtual_pointer/LICENSE.md](src/protocol/wlr/virtual_pointer/LICENSE.md).
+
+## Third-party notice: WLR screencopy
+
+The WLR screencopy protocol definitions and documentation excerpts are derived from
+[wlr-protocols wlr-screencopy-unstable-v1.xml](https://gitlab.freedesktop.org/wlroots/wlr-protocols/-/blob/master/unstable/wlr-screencopy-unstable-v1.xml).
+Copyright © 2018 Simon Ser; Copyright © 2019 Andri Yngvason. The original MIT
+license and copyright notices are preserved in
+[src/protocol/wlr/screencopy/LICENSE.md](src/protocol/wlr/screencopy/LICENSE.md).
