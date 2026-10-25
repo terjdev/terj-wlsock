@@ -2,7 +2,7 @@
 
 The terj-wlsock package is licensed under the MIT License. The third-party
 Wayland materials identified below retain their original copyright notices
-and permission terms under the MIT License.
+and permission terms as specified in their respective notices.
 
 ## MIT License
 
@@ -70,3 +70,11 @@ The Tablet protocol definitions and documentation excerpts are derived from
 Copyright 2014 © Stephen "Lyude" Chandler Paul; Copyright 2015-2024 © Red Hat, Inc.
 The original MIT license and copyright notices are preserved in
 [src/protocol/ext/tablet/LICENSE.md](src/protocol/ext/tablet/LICENSE.md).
+
+## Third-party notice: WLR layer shell
+
+The WLR layer shell protocol definitions and documentation excerpts are derived from
+[wlr-protocols wlr-layer-shell-unstable-v1.xml](https://gitlab.freedesktop.org/wlroots/wlr-protocols/-/blob/master/unstable/wlr-layer-shell-unstable-v1.xml).
+Copyright © 2017 Drew DeVault. These materials retain their original permissive
+license, including its attribution and non-endorsement terms, preserved in
+[src/protocol/wlr/layer_shell/LICENSE.md](src/protocol/wlr/layer_shell/LICENSE.md).

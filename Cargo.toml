@@ -5,9 +5,10 @@ edition = "2024"
 license = "MIT"
 
 [features]
-default = ["ext-tablet", "ext-xdg-shell", "ext-dmabuf", "ext-presentation-time", "ext-viewporter"]
+default = ["wlr-layer-shell", "ext-tablet", "ext-xdg-shell", "ext-dmabuf", "ext-presentation-time", "ext-viewporter"]
 ext-presentation-time = []
 ext-viewporter = []
+wlr-layer-shell = []
 ext-tablet = []
 ext-xdg-shell = []
 ext-dmabuf = []

@@ -11,12 +11,17 @@ use crate::protocol::ext::tablet;
 use crate::protocol::ext::viewporter;
 #[cfg(feature = "ext-xdg-shell")]
 use crate::protocol::ext::xdg_shell;
+#[cfg(feature = "wlr-layer-shell")]
+use crate::protocol::wlr::layer_shell;
 
 /// Identifies an object's protocol group, interface, and negotiated version.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum ObjectInteface {
     /// A core Wayland interface.
     Core(core::ObjectInteface),
+    /// A WLR layer shell interface.
+    #[cfg(feature = "wlr-layer-shell")]
+    WlrLayerShell(layer_shell::ObjectInteface),
     /// A Tablet interface.
     #[cfg(feature = "ext-tablet")]
     Tablet(tablet::ObjectInteface),
@@ -39,6 +44,8 @@ impl ObjectInteface {
     pub(crate) fn name(self) -> &'static str {
         match self {
             Self::Core(interface) => interface.name(),
+            #[cfg(feature = "wlr-layer-shell")]
+            Self::WlrLayerShell(interface) => interface.name(),
             #[cfg(feature = "ext-tablet")]
             Self::Tablet(interface) => interface.name(),
             #[cfg(feature = "ext-xdg-shell")]
@@ -55,6 +62,8 @@ impl ObjectInteface {
     pub(crate) fn version(self) -> u32 {
         match self {
             Self::Core(interface) => interface.version(),
+            #[cfg(feature = "wlr-layer-shell")]
+            Self::WlrLayerShell(interface) => interface.version(),
             #[cfg(feature = "ext-tablet")]
             Self::Tablet(interface) => interface.version(),
             #[cfg(feature = "ext-xdg-shell")]
@@ -71,6 +80,8 @@ impl ObjectInteface {
     pub(crate) fn max_version(self) -> u32 {
         match self {
             Self::Core(interface) => interface.max_version(),
+            #[cfg(feature = "wlr-layer-shell")]
+            Self::WlrLayerShell(interface) => interface.max_version(),
             #[cfg(feature = "ext-tablet")]
             Self::Tablet(interface) => interface.max_version(),
             #[cfg(feature = "ext-xdg-shell")]
@@ -107,6 +118,10 @@ impl ObjectInteface {
         #[cfg(feature = "ext-tablet")]
         if let Some(interface) = tablet::ObjectInteface::from_name(name, version) {
             return Some(Self::Tablet(interface));
+        }
+        #[cfg(feature = "wlr-layer-shell")]
+        if let Some(interface) = layer_shell::ObjectInteface::from_name(name, version) {
+            return Some(Self::WlrLayerShell(interface));
         }
         None
     }

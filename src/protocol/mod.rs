@@ -2,6 +2,7 @@
 
 pub mod core;
 pub mod ext;
+pub mod wlr;
 
 mod object_interface;
 pub(crate) use object_interface::ObjectInteface;

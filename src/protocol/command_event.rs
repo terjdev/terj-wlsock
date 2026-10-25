@@ -7,6 +7,8 @@ use crate::protocol::ext::presentation_time;
 use crate::protocol::ext::tablet;
 #[cfg(feature = "ext-xdg-shell")]
 use crate::protocol::ext::xdg_shell;
+#[cfg(feature = "wlr-layer-shell")]
+use crate::protocol::wlr::layer_shell;
 use crate::protocol::{
     ClientState, CommandReader, CommandReaderExt, CommandWriter, InterfaceReader, ObjectInteface,
 };
@@ -19,6 +21,9 @@ use std::sync::{Arc, Mutex};
 pub enum CommandEvent {
     /// Core Wayland protocol commands.
     Core(core::CommandEvent),
+    /// WLR layer shell extension commands.
+    #[cfg(feature = "wlr-layer-shell")]
+    WlrLayerShell(layer_shell::CommandEvent),
     /// Tablet extension commands.
     #[cfg(feature = "ext-tablet")]
     Tablet(tablet::CommandEvent),
@@ -77,6 +82,13 @@ impl InterfaceReader for CommandEvent {
                 )
                 .await?,
             )),
+            #[cfg(feature = "wlr-layer-shell")]
+            ObjectInteface::WlrLayerShell(_) => Ok(Self::WlrLayerShell(
+                layer_shell::CommandEvent::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
             ObjectInteface::Core(_) => Ok(Self::Core(
                 core::CommandEvent::read_with_interface(
                     object_id, opcode, interface, reader, state,
@@ -100,6 +112,8 @@ impl CommandWriter for CommandEvent {
     fn object_id(&self) -> u32 {
         match self {
             Self::Core(command) => command.object_id(),
+            #[cfg(feature = "wlr-layer-shell")]
+            Self::WlrLayerShell(command) => command.object_id(),
             #[cfg(feature = "ext-tablet")]
             Self::Tablet(command) => command.object_id(),
             #[cfg(feature = "ext-xdg-shell")]
@@ -113,6 +127,8 @@ impl CommandWriter for CommandEvent {
     fn opcode(&self) -> u16 {
         match self {
             Self::Core(command) => command.opcode(),
+            #[cfg(feature = "wlr-layer-shell")]
+            Self::WlrLayerShell(command) => command.opcode(),
             #[cfg(feature = "ext-tablet")]
             Self::Tablet(command) => command.opcode(),
             #[cfg(feature = "ext-xdg-shell")]
@@ -126,6 +142,8 @@ impl CommandWriter for CommandEvent {
     fn payload_size(&self) -> usize {
         match self {
             Self::Core(command) => command.payload_size(),
+            #[cfg(feature = "wlr-layer-shell")]
+            Self::WlrLayerShell(command) => command.payload_size(),
             #[cfg(feature = "ext-tablet")]
             Self::Tablet(command) => command.payload_size(),
             #[cfg(feature = "ext-xdg-shell")]
@@ -143,6 +161,8 @@ impl CommandWriter for CommandEvent {
     ) -> Result<(), FdWriterError> {
         match self {
             Self::Core(command) => command.write(writer, state).await,
+            #[cfg(feature = "wlr-layer-shell")]
+            Self::WlrLayerShell(command) => command.write(writer, state).await,
             #[cfg(feature = "ext-tablet")]
             Self::Tablet(command) => command.write(writer, state).await,
             #[cfg(feature = "ext-xdg-shell")]
