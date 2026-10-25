@@ -102,3 +102,24 @@ The WLR screencopy protocol definitions and documentation excerpts are derived f
 Copyright © 2018 Simon Ser; Copyright © 2019 Andri Yngvason. The original MIT
 license and copyright notices are preserved in
 [src/protocol/wlr/screencopy/LICENSE.md](src/protocol/wlr/screencopy/LICENSE.md).
+
+## Third-party notice: Alpha modifier
+
+The Alpha modifier protocol definitions and documentation excerpts are derived from
+[wayland-protocols alpha-modifier-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/staging/alpha-modifier/alpha-modifier-v1.xml).
+The original MIT license and copyright notices are preserved in
+[src/protocol/ext/alpha_modifier/LICENSE.md](src/protocol/ext/alpha_modifier/LICENSE.md).
+
+## Third-party notice: Commit timing
+
+The Commit timing protocol definitions and documentation excerpts are derived from
+[wayland-protocols commit-timing-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/staging/commit-timing/commit-timing-v1.xml).
+The original MIT license and copyright notices are preserved in
+[src/protocol/ext/commit_timing/LICENSE.md](src/protocol/ext/commit_timing/LICENSE.md).
+
+## Third-party notice: Content type
+
+The Content type protocol definitions and documentation excerpts are derived from
+[wayland-protocols content-type-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/staging/content-type/content-type-v1.xml).
+The original MIT license and copyright notices are preserved in
+[src/protocol/ext/content_type/LICENSE.md](src/protocol/ext/content_type/LICENSE.md).

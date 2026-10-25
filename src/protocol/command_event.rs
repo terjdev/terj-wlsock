@@ -71,6 +71,12 @@ impl InterfaceReader for CommandEvent {
         state: &Arc<Mutex<ClientState>>,
     ) -> Result<Self, FdReaderError> {
         match interface {
+            #[cfg(feature = "ext-content-type")]
+            ObjectInteface::ContentType(_) => Err(FdReaderError::InvalidProtocol),
+            #[cfg(feature = "ext-commit-timing")]
+            ObjectInteface::CommitTiming(_) => Err(FdReaderError::InvalidProtocol),
+            #[cfg(feature = "ext-alpha-modifier")]
+            ObjectInteface::AlphaModifier(_) => Err(FdReaderError::InvalidProtocol),
             #[cfg(feature = "wlr-virtual-pointer")]
             ObjectInteface::WlrVirtualPointer(_) => Err(FdReaderError::InvalidProtocol),
             #[cfg(feature = "ext-dmabuf")]

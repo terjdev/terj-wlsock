@@ -1,4 +1,10 @@
 use crate::protocol::core;
+#[cfg(feature = "ext-alpha-modifier")]
+use crate::protocol::ext::alpha_modifier;
+#[cfg(feature = "ext-commit-timing")]
+use crate::protocol::ext::commit_timing;
+#[cfg(feature = "ext-content-type")]
+use crate::protocol::ext::content_type;
 #[cfg(feature = "ext-dmabuf")]
 use crate::protocol::ext::dmabuf;
 #[cfg(feature = "ext-presentation-time")]
@@ -29,6 +35,15 @@ use std::sync::{Arc, Mutex};
 pub enum CommandRequest {
     /// Core Wayland protocol commands.
     Core(core::CommandRequest),
+    /// Content type extension commands.
+    #[cfg(feature = "ext-content-type")]
+    ContentType(content_type::CommandRequest),
+    /// Commit timing extension commands.
+    #[cfg(feature = "ext-commit-timing")]
+    CommitTiming(commit_timing::CommandRequest),
+    /// Alpha modifier extension commands.
+    #[cfg(feature = "ext-alpha-modifier")]
+    AlphaModifier(alpha_modifier::CommandRequest),
     /// WLR screencopy extension commands.
     #[cfg(feature = "wlr-screencopy")]
     WlrScreencopy(screencopy::CommandRequest),
@@ -130,6 +145,27 @@ impl InterfaceReader for CommandRequest {
                 )
                 .await?,
             )),
+            #[cfg(feature = "ext-alpha-modifier")]
+            ObjectInteface::AlphaModifier(_) => Ok(Self::AlphaModifier(
+                alpha_modifier::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "ext-commit-timing")]
+            ObjectInteface::CommitTiming(_) => Ok(Self::CommitTiming(
+                commit_timing::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "ext-content-type")]
+            ObjectInteface::ContentType(_) => Ok(Self::ContentType(
+                content_type::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
             ObjectInteface::Core(_) => Ok(Self::Core(
                 core::CommandRequest::read_with_interface(
                     object_id, opcode, interface, reader, state,
@@ -158,6 +194,12 @@ impl CommandWriter for CommandRequest {
     fn object_id(&self) -> u32 {
         match self {
             Self::Core(command) => command.object_id(),
+            #[cfg(feature = "ext-content-type")]
+            Self::ContentType(command) => command.object_id(),
+            #[cfg(feature = "ext-commit-timing")]
+            Self::CommitTiming(command) => command.object_id(),
+            #[cfg(feature = "ext-alpha-modifier")]
+            Self::AlphaModifier(command) => command.object_id(),
             #[cfg(feature = "wlr-screencopy")]
             Self::WlrScreencopy(command) => command.object_id(),
             #[cfg(feature = "wlr-virtual-pointer")]
@@ -181,6 +223,12 @@ impl CommandWriter for CommandRequest {
     fn opcode(&self) -> u16 {
         match self {
             Self::Core(command) => command.opcode(),
+            #[cfg(feature = "ext-content-type")]
+            Self::ContentType(command) => command.opcode(),
+            #[cfg(feature = "ext-commit-timing")]
+            Self::CommitTiming(command) => command.opcode(),
+            #[cfg(feature = "ext-alpha-modifier")]
+            Self::AlphaModifier(command) => command.opcode(),
             #[cfg(feature = "wlr-screencopy")]
             Self::WlrScreencopy(command) => command.opcode(),
             #[cfg(feature = "wlr-virtual-pointer")]
@@ -204,6 +252,12 @@ impl CommandWriter for CommandRequest {
     fn payload_size(&self) -> usize {
         match self {
             Self::Core(command) => command.payload_size(),
+            #[cfg(feature = "ext-content-type")]
+            Self::ContentType(command) => command.payload_size(),
+            #[cfg(feature = "ext-commit-timing")]
+            Self::CommitTiming(command) => command.payload_size(),
+            #[cfg(feature = "ext-alpha-modifier")]
+            Self::AlphaModifier(command) => command.payload_size(),
             #[cfg(feature = "wlr-screencopy")]
             Self::WlrScreencopy(command) => command.payload_size(),
             #[cfg(feature = "wlr-virtual-pointer")]
@@ -231,6 +285,12 @@ impl CommandWriter for CommandRequest {
     ) -> Result<(), FdWriterError> {
         match self {
             Self::Core(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-content-type")]
+            Self::ContentType(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-commit-timing")]
+            Self::CommitTiming(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-alpha-modifier")]
+            Self::AlphaModifier(command) => command.write(writer, state).await,
             #[cfg(feature = "wlr-screencopy")]
             Self::WlrScreencopy(command) => command.write(writer, state).await,
             #[cfg(feature = "wlr-virtual-pointer")]

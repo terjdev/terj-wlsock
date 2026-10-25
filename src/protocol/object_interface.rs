@@ -1,6 +1,12 @@
 //! Groups object interface metadata by protocol.
 
 use crate::protocol::core;
+#[cfg(feature = "ext-alpha-modifier")]
+use crate::protocol::ext::alpha_modifier;
+#[cfg(feature = "ext-commit-timing")]
+use crate::protocol::ext::commit_timing;
+#[cfg(feature = "ext-content-type")]
+use crate::protocol::ext::content_type;
 #[cfg(feature = "ext-dmabuf")]
 use crate::protocol::ext::dmabuf;
 #[cfg(feature = "ext-presentation-time")]
@@ -25,6 +31,15 @@ use crate::protocol::wlr::virtual_pointer;
 pub(crate) enum ObjectInteface {
     /// A core Wayland interface.
     Core(core::ObjectInteface),
+    /// A Content type interface.
+    #[cfg(feature = "ext-content-type")]
+    ContentType(content_type::ObjectInteface),
+    /// A Commit timing interface.
+    #[cfg(feature = "ext-commit-timing")]
+    CommitTiming(commit_timing::ObjectInteface),
+    /// A Alpha modifier interface.
+    #[cfg(feature = "ext-alpha-modifier")]
+    AlphaModifier(alpha_modifier::ObjectInteface),
     /// A WLR screencopy interface.
     #[cfg(feature = "wlr-screencopy")]
     WlrScreencopy(screencopy::ObjectInteface),
@@ -59,6 +74,12 @@ impl ObjectInteface {
     pub(crate) fn name(self) -> &'static str {
         match self {
             Self::Core(interface) => interface.name(),
+            #[cfg(feature = "ext-content-type")]
+            Self::ContentType(interface) => interface.name(),
+            #[cfg(feature = "ext-commit-timing")]
+            Self::CommitTiming(interface) => interface.name(),
+            #[cfg(feature = "ext-alpha-modifier")]
+            Self::AlphaModifier(interface) => interface.name(),
             #[cfg(feature = "wlr-screencopy")]
             Self::WlrScreencopy(interface) => interface.name(),
             #[cfg(feature = "wlr-virtual-pointer")]
@@ -83,6 +104,12 @@ impl ObjectInteface {
     pub(crate) fn version(self) -> u32 {
         match self {
             Self::Core(interface) => interface.version(),
+            #[cfg(feature = "ext-content-type")]
+            Self::ContentType(interface) => interface.version(),
+            #[cfg(feature = "ext-commit-timing")]
+            Self::CommitTiming(interface) => interface.version(),
+            #[cfg(feature = "ext-alpha-modifier")]
+            Self::AlphaModifier(interface) => interface.version(),
             #[cfg(feature = "wlr-screencopy")]
             Self::WlrScreencopy(interface) => interface.version(),
             #[cfg(feature = "wlr-virtual-pointer")]
@@ -107,6 +134,12 @@ impl ObjectInteface {
     pub(crate) fn max_version(self) -> u32 {
         match self {
             Self::Core(interface) => interface.max_version(),
+            #[cfg(feature = "ext-content-type")]
+            Self::ContentType(interface) => interface.max_version(),
+            #[cfg(feature = "ext-commit-timing")]
+            Self::CommitTiming(interface) => interface.max_version(),
+            #[cfg(feature = "ext-alpha-modifier")]
+            Self::AlphaModifier(interface) => interface.max_version(),
             #[cfg(feature = "wlr-screencopy")]
             Self::WlrScreencopy(interface) => interface.max_version(),
             #[cfg(feature = "wlr-virtual-pointer")]
@@ -167,6 +200,18 @@ impl ObjectInteface {
         #[cfg(feature = "wlr-screencopy")]
         if let Some(interface) = screencopy::ObjectInteface::from_name(name, version) {
             return Some(Self::WlrScreencopy(interface));
+        }
+        #[cfg(feature = "ext-alpha-modifier")]
+        if let Some(interface) = alpha_modifier::ObjectInteface::from_name(name, version) {
+            return Some(Self::AlphaModifier(interface));
+        }
+        #[cfg(feature = "ext-commit-timing")]
+        if let Some(interface) = commit_timing::ObjectInteface::from_name(name, version) {
+            return Some(Self::CommitTiming(interface));
+        }
+        #[cfg(feature = "ext-content-type")]
+        if let Some(interface) = content_type::ObjectInteface::from_name(name, version) {
+            return Some(Self::ContentType(interface));
         }
         None
     }

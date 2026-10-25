@@ -14,3 +14,12 @@ pub mod xdg_shell;
 
 #[cfg(feature = "ext-tablet")]
 pub mod tablet;
+
+#[cfg(feature = "ext-alpha-modifier")]
+pub mod alpha_modifier;
+
+#[cfg(feature = "ext-commit-timing")]
+pub mod commit_timing;
+
+#[cfg(feature = "ext-content-type")]
+pub mod content_type;
