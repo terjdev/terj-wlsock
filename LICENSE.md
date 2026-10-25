@@ -78,3 +78,11 @@ The WLR layer shell protocol definitions and documentation excerpts are derived 
 Copyright © 2017 Drew DeVault. These materials retain their original permissive
 license, including its attribution and non-endorsement terms, preserved in
 [src/protocol/wlr/layer_shell/LICENSE.md](src/protocol/wlr/layer_shell/LICENSE.md).
+
+## Third-party notice: WLR data control
+
+The WLR data control protocol definitions and documentation excerpts are derived from
+[wlr-protocols wlr-data-control-unstable-v1.xml](https://gitlab.freedesktop.org/wlroots/wlr-protocols/-/blob/master/unstable/wlr-data-control-unstable-v1.xml).
+Copyright © 2018 Simon Ser; Copyright © 2019 Ivan Molodetskikh. These materials retain their original permissive
+license, including its attribution and non-endorsement terms, preserved in
+[src/protocol/wlr/data_control/LICENSE.md](src/protocol/wlr/data_control/LICENSE.md).

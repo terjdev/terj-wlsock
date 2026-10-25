@@ -9,6 +9,8 @@ use crate::protocol::ext::tablet;
 use crate::protocol::ext::viewporter;
 #[cfg(feature = "ext-xdg-shell")]
 use crate::protocol::ext::xdg_shell;
+#[cfg(feature = "wlr-data-control")]
+use crate::protocol::wlr::data_control;
 #[cfg(feature = "wlr-layer-shell")]
 use crate::protocol::wlr::layer_shell;
 use crate::protocol::{
@@ -23,6 +25,9 @@ use std::sync::{Arc, Mutex};
 pub enum CommandRequest {
     /// Core Wayland protocol commands.
     Core(core::CommandRequest),
+    /// WLR data control extension commands.
+    #[cfg(feature = "wlr-data-control")]
+    WlrDataControl(data_control::CommandRequest),
     /// WLR layer shell extension commands.
     #[cfg(feature = "wlr-layer-shell")]
     WlrLayerShell(layer_shell::CommandRequest),
@@ -94,6 +99,13 @@ impl InterfaceReader for CommandRequest {
                 )
                 .await?,
             )),
+            #[cfg(feature = "wlr-data-control")]
+            ObjectInteface::WlrDataControl(_) => Ok(Self::WlrDataControl(
+                data_control::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
             ObjectInteface::Core(_) => Ok(Self::Core(
                 core::CommandRequest::read_with_interface(
                     object_id, opcode, interface, reader, state,
@@ -122,6 +134,8 @@ impl CommandWriter for CommandRequest {
     fn object_id(&self) -> u32 {
         match self {
             Self::Core(command) => command.object_id(),
+            #[cfg(feature = "wlr-data-control")]
+            Self::WlrDataControl(command) => command.object_id(),
             #[cfg(feature = "wlr-layer-shell")]
             Self::WlrLayerShell(command) => command.object_id(),
             #[cfg(feature = "ext-tablet")]
@@ -139,6 +153,8 @@ impl CommandWriter for CommandRequest {
     fn opcode(&self) -> u16 {
         match self {
             Self::Core(command) => command.opcode(),
+            #[cfg(feature = "wlr-data-control")]
+            Self::WlrDataControl(command) => command.opcode(),
             #[cfg(feature = "wlr-layer-shell")]
             Self::WlrLayerShell(command) => command.opcode(),
             #[cfg(feature = "ext-tablet")]
@@ -156,6 +172,8 @@ impl CommandWriter for CommandRequest {
     fn payload_size(&self) -> usize {
         match self {
             Self::Core(command) => command.payload_size(),
+            #[cfg(feature = "wlr-data-control")]
+            Self::WlrDataControl(command) => command.payload_size(),
             #[cfg(feature = "wlr-layer-shell")]
             Self::WlrLayerShell(command) => command.payload_size(),
             #[cfg(feature = "ext-tablet")]
@@ -177,6 +195,8 @@ impl CommandWriter for CommandRequest {
     ) -> Result<(), FdWriterError> {
         match self {
             Self::Core(command) => command.write(writer, state).await,
+            #[cfg(feature = "wlr-data-control")]
+            Self::WlrDataControl(command) => command.write(writer, state).await,
             #[cfg(feature = "wlr-layer-shell")]
             Self::WlrLayerShell(command) => command.write(writer, state).await,
             #[cfg(feature = "ext-tablet")]
