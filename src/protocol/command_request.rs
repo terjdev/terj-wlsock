@@ -3,6 +3,8 @@ use crate::protocol::core;
 use crate::protocol::ext::dmabuf;
 #[cfg(feature = "ext-presentation-time")]
 use crate::protocol::ext::presentation_time;
+#[cfg(feature = "ext-tablet")]
+use crate::protocol::ext::tablet;
 #[cfg(feature = "ext-viewporter")]
 use crate::protocol::ext::viewporter;
 #[cfg(feature = "ext-xdg-shell")]
@@ -19,6 +21,9 @@ use std::sync::{Arc, Mutex};
 pub enum CommandRequest {
     /// Core Wayland protocol commands.
     Core(core::CommandRequest),
+    /// Tablet extension commands.
+    #[cfg(feature = "ext-tablet")]
+    Tablet(tablet::CommandRequest),
     /// XDG shell extension commands.
     #[cfg(feature = "ext-xdg-shell")]
     XdgShell(xdg_shell::CommandRequest),
@@ -70,6 +75,13 @@ impl InterfaceReader for CommandRequest {
                 )
                 .await?,
             )),
+            #[cfg(feature = "ext-tablet")]
+            ObjectInteface::Tablet(_) => Ok(Self::Tablet(
+                tablet::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
             ObjectInteface::Core(_) => Ok(Self::Core(
                 core::CommandRequest::read_with_interface(
                     object_id, opcode, interface, reader, state,
@@ -98,6 +110,8 @@ impl CommandWriter for CommandRequest {
     fn object_id(&self) -> u32 {
         match self {
             Self::Core(command) => command.object_id(),
+            #[cfg(feature = "ext-tablet")]
+            Self::Tablet(command) => command.object_id(),
             #[cfg(feature = "ext-xdg-shell")]
             Self::XdgShell(command) => command.object_id(),
             #[cfg(feature = "ext-dmabuf")]
@@ -111,6 +125,8 @@ impl CommandWriter for CommandRequest {
     fn opcode(&self) -> u16 {
         match self {
             Self::Core(command) => command.opcode(),
+            #[cfg(feature = "ext-tablet")]
+            Self::Tablet(command) => command.opcode(),
             #[cfg(feature = "ext-xdg-shell")]
             Self::XdgShell(command) => command.opcode(),
             #[cfg(feature = "ext-dmabuf")]
@@ -124,6 +140,8 @@ impl CommandWriter for CommandRequest {
     fn payload_size(&self) -> usize {
         match self {
             Self::Core(command) => command.payload_size(),
+            #[cfg(feature = "ext-tablet")]
+            Self::Tablet(command) => command.payload_size(),
             #[cfg(feature = "ext-xdg-shell")]
             Self::XdgShell(command) => command.payload_size(),
             #[cfg(feature = "ext-dmabuf")]
@@ -141,6 +159,8 @@ impl CommandWriter for CommandRequest {
     ) -> Result<(), FdWriterError> {
         match self {
             Self::Core(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-tablet")]
+            Self::Tablet(command) => command.write(writer, state).await,
             #[cfg(feature = "ext-xdg-shell")]
             Self::XdgShell(command) => command.write(writer, state).await,
             #[cfg(feature = "ext-dmabuf")]

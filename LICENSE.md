@@ -62,3 +62,11 @@ The XDG shell protocol definitions and documentation excerpts are derived from
 [wayland-protocols xdg-shell.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/stable/xdg-shell/xdg-shell.xml).
 The original MIT license and copyright notices are preserved in
 [src/protocol/ext/xdg_shell/LICENSE.md](src/protocol/ext/xdg_shell/LICENSE.md).
+
+## Third-party notice: Tablet
+
+The Tablet protocol definitions and documentation excerpts are derived from
+[wayland-protocols tablet-v2.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/stable/tablet/tablet-v2.xml).
+Copyright 2014 © Stephen "Lyude" Chandler Paul; Copyright 2015-2024 © Red Hat, Inc.
+The original MIT license and copyright notices are preserved in
+[src/protocol/ext/tablet/LICENSE.md](src/protocol/ext/tablet/LICENSE.md).

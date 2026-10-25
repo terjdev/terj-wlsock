@@ -5,6 +5,8 @@ use crate::protocol::core;
 use crate::protocol::ext::dmabuf;
 #[cfg(feature = "ext-presentation-time")]
 use crate::protocol::ext::presentation_time;
+#[cfg(feature = "ext-tablet")]
+use crate::protocol::ext::tablet;
 #[cfg(feature = "ext-viewporter")]
 use crate::protocol::ext::viewporter;
 #[cfg(feature = "ext-xdg-shell")]
@@ -15,6 +17,9 @@ use crate::protocol::ext::xdg_shell;
 pub(crate) enum ObjectInteface {
     /// A core Wayland interface.
     Core(core::ObjectInteface),
+    /// A Tablet interface.
+    #[cfg(feature = "ext-tablet")]
+    Tablet(tablet::ObjectInteface),
     /// A XDG shell interface.
     #[cfg(feature = "ext-xdg-shell")]
     XdgShell(xdg_shell::ObjectInteface),
@@ -34,6 +39,8 @@ impl ObjectInteface {
     pub(crate) fn name(self) -> &'static str {
         match self {
             Self::Core(interface) => interface.name(),
+            #[cfg(feature = "ext-tablet")]
+            Self::Tablet(interface) => interface.name(),
             #[cfg(feature = "ext-xdg-shell")]
             Self::XdgShell(interface) => interface.name(),
             #[cfg(feature = "ext-dmabuf")]
@@ -48,6 +55,8 @@ impl ObjectInteface {
     pub(crate) fn version(self) -> u32 {
         match self {
             Self::Core(interface) => interface.version(),
+            #[cfg(feature = "ext-tablet")]
+            Self::Tablet(interface) => interface.version(),
             #[cfg(feature = "ext-xdg-shell")]
             Self::XdgShell(interface) => interface.version(),
             #[cfg(feature = "ext-dmabuf")]
@@ -62,6 +71,8 @@ impl ObjectInteface {
     pub(crate) fn max_version(self) -> u32 {
         match self {
             Self::Core(interface) => interface.max_version(),
+            #[cfg(feature = "ext-tablet")]
+            Self::Tablet(interface) => interface.max_version(),
             #[cfg(feature = "ext-xdg-shell")]
             Self::XdgShell(interface) => interface.max_version(),
             #[cfg(feature = "ext-dmabuf")]
@@ -92,6 +103,10 @@ impl ObjectInteface {
         #[cfg(feature = "ext-xdg-shell")]
         if let Some(interface) = xdg_shell::ObjectInteface::from_name(name, version) {
             return Some(Self::XdgShell(interface));
+        }
+        #[cfg(feature = "ext-tablet")]
+        if let Some(interface) = tablet::ObjectInteface::from_name(name, version) {
+            return Some(Self::Tablet(interface));
         }
         None
     }

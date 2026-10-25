@@ -11,3 +11,6 @@ pub mod dmabuf;
 
 #[cfg(feature = "ext-xdg-shell")]
 pub mod xdg_shell;
+
+#[cfg(feature = "ext-tablet")]
+pub mod tablet;
