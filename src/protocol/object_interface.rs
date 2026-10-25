@@ -1,6 +1,8 @@
 //! Groups object interface metadata by protocol.
 
 use crate::protocol::core;
+#[cfg(feature = "ext-dmabuf")]
+use crate::protocol::ext::dmabuf;
 #[cfg(feature = "ext-presentation-time")]
 use crate::protocol::ext::presentation_time;
 #[cfg(feature = "ext-viewporter")]
@@ -11,6 +13,9 @@ use crate::protocol::ext::viewporter;
 pub(crate) enum ObjectInteface {
     /// A core Wayland interface.
     Core(core::ObjectInteface),
+    /// A Linux DMA-BUF interface.
+    #[cfg(feature = "ext-dmabuf")]
+    Dmabuf(dmabuf::ObjectInteface),
     /// A Presentation time interface.
     #[cfg(feature = "ext-presentation-time")]
     PresentationTime(presentation_time::ObjectInteface),
@@ -24,6 +29,8 @@ impl ObjectInteface {
     pub(crate) fn name(self) -> &'static str {
         match self {
             Self::Core(interface) => interface.name(),
+            #[cfg(feature = "ext-dmabuf")]
+            Self::Dmabuf(interface) => interface.name(),
             #[cfg(feature = "ext-presentation-time")]
             Self::PresentationTime(interface) => interface.name(),
             #[cfg(feature = "ext-viewporter")]
@@ -34,6 +41,8 @@ impl ObjectInteface {
     pub(crate) fn version(self) -> u32 {
         match self {
             Self::Core(interface) => interface.version(),
+            #[cfg(feature = "ext-dmabuf")]
+            Self::Dmabuf(interface) => interface.version(),
             #[cfg(feature = "ext-presentation-time")]
             Self::PresentationTime(interface) => interface.version(),
             #[cfg(feature = "ext-viewporter")]
@@ -44,6 +53,8 @@ impl ObjectInteface {
     pub(crate) fn max_version(self) -> u32 {
         match self {
             Self::Core(interface) => interface.max_version(),
+            #[cfg(feature = "ext-dmabuf")]
+            Self::Dmabuf(interface) => interface.max_version(),
             #[cfg(feature = "ext-presentation-time")]
             Self::PresentationTime(interface) => interface.max_version(),
             #[cfg(feature = "ext-viewporter")]
@@ -62,6 +73,10 @@ impl ObjectInteface {
         #[cfg(feature = "ext-viewporter")]
         if let Some(interface) = viewporter::ObjectInteface::from_name(name, version) {
             return Some(Self::Viewporter(interface));
+        }
+        #[cfg(feature = "ext-dmabuf")]
+        if let Some(interface) = dmabuf::ObjectInteface::from_name(name, version) {
+            return Some(Self::Dmabuf(interface));
         }
         None
     }

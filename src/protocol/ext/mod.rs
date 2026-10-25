@@ -5,3 +5,6 @@ pub mod presentation_time;
 
 #[cfg(feature = "ext-viewporter")]
 pub mod viewporter;
+
+#[cfg(feature = "ext-dmabuf")]
+pub mod dmabuf;

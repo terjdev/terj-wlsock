@@ -47,3 +47,11 @@ The Viewporter protocol definitions and documentation excerpts are derived from
 Copyright © 2013-2016 Collabora, Ltd. The original MIT license and copyright
 notice are preserved in
 [src/protocol/ext/viewporter/LICENSE.md](src/protocol/ext/viewporter/LICENSE.md).
+
+## Third-party notice: Linux DMA-BUF
+
+The Linux DMA-BUF protocol definitions and documentation excerpts are derived from
+[wayland-protocols linux-dmabuf-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/stable/linux-dmabuf/linux-dmabuf-v1.xml).
+Copyright © 2014, 2015 Collabora, Ltd. The original MIT license and copyright
+notice are preserved in
+[src/protocol/ext/dmabuf/LICENSE.md](src/protocol/ext/dmabuf/LICENSE.md).

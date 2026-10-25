@@ -1,4 +1,6 @@
 use crate::protocol::core;
+#[cfg(feature = "ext-dmabuf")]
+use crate::protocol::ext::dmabuf;
 #[cfg(feature = "ext-presentation-time")]
 use crate::protocol::ext::presentation_time;
 #[cfg(feature = "ext-viewporter")]
@@ -15,6 +17,9 @@ use std::sync::{Arc, Mutex};
 pub enum CommandRequest {
     /// Core Wayland protocol commands.
     Core(core::CommandRequest),
+    /// Linux DMA-BUF extension commands.
+    #[cfg(feature = "ext-dmabuf")]
+    Dmabuf(dmabuf::CommandRequest),
     /// Presentation time extension commands.
     #[cfg(feature = "ext-presentation-time")]
     PresentationTime(presentation_time::CommandRequest),
@@ -46,6 +51,13 @@ impl InterfaceReader for CommandRequest {
         state: &Arc<Mutex<ClientState>>,
     ) -> Result<Self, FdReaderError> {
         match interface {
+            #[cfg(feature = "ext-dmabuf")]
+            ObjectInteface::Dmabuf(_) => Ok(Self::Dmabuf(
+                dmabuf::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
             ObjectInteface::Core(_) => Ok(Self::Core(
                 core::CommandRequest::read_with_interface(
                     object_id, opcode, interface, reader, state,
@@ -74,6 +86,8 @@ impl CommandWriter for CommandRequest {
     fn object_id(&self) -> u32 {
         match self {
             Self::Core(command) => command.object_id(),
+            #[cfg(feature = "ext-dmabuf")]
+            Self::Dmabuf(command) => command.object_id(),
             #[cfg(feature = "ext-presentation-time")]
             Self::PresentationTime(command) => command.object_id(),
             #[cfg(feature = "ext-viewporter")]
@@ -83,6 +97,8 @@ impl CommandWriter for CommandRequest {
     fn opcode(&self) -> u16 {
         match self {
             Self::Core(command) => command.opcode(),
+            #[cfg(feature = "ext-dmabuf")]
+            Self::Dmabuf(command) => command.opcode(),
             #[cfg(feature = "ext-presentation-time")]
             Self::PresentationTime(command) => command.opcode(),
             #[cfg(feature = "ext-viewporter")]
@@ -92,6 +108,8 @@ impl CommandWriter for CommandRequest {
     fn payload_size(&self) -> usize {
         match self {
             Self::Core(command) => command.payload_size(),
+            #[cfg(feature = "ext-dmabuf")]
+            Self::Dmabuf(command) => command.payload_size(),
             #[cfg(feature = "ext-presentation-time")]
             Self::PresentationTime(command) => command.payload_size(),
             #[cfg(feature = "ext-viewporter")]
@@ -105,6 +123,8 @@ impl CommandWriter for CommandRequest {
     ) -> Result<(), FdWriterError> {
         match self {
             Self::Core(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-dmabuf")]
+            Self::Dmabuf(command) => command.write(writer, state).await,
             #[cfg(feature = "ext-presentation-time")]
             Self::PresentationTime(command) => command.write(writer, state).await,
             #[cfg(feature = "ext-viewporter")]

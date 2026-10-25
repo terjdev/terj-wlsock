@@ -5,9 +5,10 @@ edition = "2024"
 license = "MIT"
 
 [features]
-default = ["ext-presentation-time", "ext-viewporter"]
+default = ["ext-dmabuf", "ext-presentation-time", "ext-viewporter"]
 ext-presentation-time = []
 ext-viewporter = []
+ext-dmabuf = []
 
 [dependencies]
 tokio = { version = "1", features = ["rt", "net", "sync", "macros", "io-util"] }
