@@ -498,3 +498,14 @@ pub use wl_fixes_destroy_registry_request::WlFixesDestroyRegistryRequest;
 mod wl_fixes_ack_global_remove_request;
 #[doc(inline)]
 pub use wl_fixes_ack_global_remove_request::WlFixesAckGlobalRemoveRequest;
+
+mod command_event;
+#[doc(inline)]
+pub use command_event::CommandEvent;
+
+mod command_request;
+#[doc(inline)]
+pub use command_request::CommandRequest;
+
+mod object_interface;
+pub(crate) use object_interface::ObjectInteface;

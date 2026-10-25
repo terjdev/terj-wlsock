@@ -1,4 +1,5 @@
 use crate::protocol::ClientState;
+use crate::protocol::core::ObjectInteface as CoreObjectInteface;
 use crate::protocol::{CommandReader, CommandReaderExt};
 use crate::protocol::{CommandWriter, CommandWriterExt};
 use crate::protocol::{InterfaceReader, ObjectInteface};
@@ -94,8 +95,10 @@ impl InterfaceReader for WlDisplayDeleteIdEvent {
         reader: &mut FdPayloadReader<'_>,
         state: &Arc<Mutex<ClientState>>,
     ) -> Result<Self, FdReaderError> {
-        if !matches!(interface, ObjectInteface::WlDisplay { .. })
-            || opcode != Self::OPCODE
+        if !matches!(
+            interface,
+            ObjectInteface::Core(CoreObjectInteface::WlDisplay { .. })
+        ) || opcode != Self::OPCODE
             || interface.version() < Self::SINCE
         {
             return Err(FdReaderError::InvalidProtocol);

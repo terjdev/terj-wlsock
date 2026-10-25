@@ -37,3 +37,14 @@ pub use wp_presentation_feedback_presented_event::WpPresentationFeedbackPresente
 mod wp_presentation_feedback_discarded_event;
 #[doc(inline)]
 pub use wp_presentation_feedback_discarded_event::WpPresentationFeedbackDiscardedEvent;
+
+mod command_event;
+#[doc(inline)]
+pub use command_event::CommandEvent;
+
+mod command_request;
+#[doc(inline)]
+pub use command_request::CommandRequest;
+
+mod object_interface;
+pub(crate) use object_interface::ObjectInteface;

@@ -1,4 +1,5 @@
 use crate::protocol::ClientState;
+use crate::protocol::core::ObjectInteface as CoreObjectInteface;
 use crate::protocol::{CommandReader, CommandReaderExt};
 use crate::protocol::{CommandWriter, CommandWriterExt};
 use crate::protocol::{InterfaceReader, ObjectInteface};
@@ -67,8 +68,10 @@ impl InterfaceReader for WlDataOfferFinishRequest {
         reader: &mut FdPayloadReader<'_>,
         _state: &Arc<Mutex<ClientState>>,
     ) -> Result<Self, FdReaderError> {
-        if !matches!(interface, ObjectInteface::WlDataOffer { .. })
-            || opcode != Self::OPCODE
+        if !matches!(
+            interface,
+            ObjectInteface::Core(CoreObjectInteface::WlDataOffer { .. })
+        ) || opcode != Self::OPCODE
             || interface.version() < Self::SINCE
         {
             return Err(FdReaderError::InvalidProtocol);

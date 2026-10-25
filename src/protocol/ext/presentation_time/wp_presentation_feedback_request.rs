@@ -1,4 +1,5 @@
 use crate::protocol::ClientState;
+use crate::protocol::ext::presentation_time::ObjectInteface as PresentationTimeObjectInteface;
 use crate::protocol::{CommandReader, CommandReaderExt};
 use crate::protocol::{CommandWriter, CommandWriterExt};
 use crate::protocol::{InterfaceReader, ObjectInteface};
@@ -68,8 +69,10 @@ impl InterfaceReader for WpPresentationFeedbackRequest {
         reader: &mut FdPayloadReader<'_>,
         state: &Arc<Mutex<ClientState>>,
     ) -> Result<Self, FdReaderError> {
-        if !matches!(interface, ObjectInteface::WpPresentation { .. })
-            || opcode != Self::OPCODE
+        if !matches!(
+            interface,
+            ObjectInteface::PresentationTime(PresentationTimeObjectInteface::WpPresentation { .. })
+        ) || opcode != Self::OPCODE
             || interface.version() < Self::SINCE
         {
             return Err(FdReaderError::InvalidProtocol);

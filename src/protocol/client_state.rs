@@ -1,6 +1,7 @@
 //! Stores the interface metadata needed to encode and decode one connection's messages.
 
 use crate::protocol::ObjectInteface;
+use crate::protocol::core::ObjectInteface as CoreObjectInteface;
 use std::collections::{HashMap, hash_map::Entry};
 use thiserror::Error;
 
@@ -59,7 +60,10 @@ pub struct ClientState {
 impl Default for ClientState {
     fn default() -> Self {
         let mut data = HashMap::with_capacity(1);
-        data.insert(1, ObjectInteface::WlDisplay { version: 1 });
+        data.insert(
+            1,
+            ObjectInteface::Core(CoreObjectInteface::WlDisplay { version: 1 }),
+        );
         Self { data }
     }
 }
