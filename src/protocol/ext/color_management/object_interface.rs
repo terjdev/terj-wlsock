@@ -1,7 +1,8 @@
 //! Identifies Color management interfaces and negotiated versions.
 
+/// Identifies an interface and its stored protocol version.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum ObjectInteface {
+pub enum ObjectInteface {
     WpColorManagerV1 { version: u32 },
     WpColorManagementOutputV1 { version: u32 },
     WpColorManagementSurfaceV1 { version: u32 },
@@ -13,7 +14,8 @@ pub(crate) enum ObjectInteface {
     WpImageDescriptionReferenceV1 { version: u32 },
 }
 impl ObjectInteface {
-    pub(crate) fn name(self) -> &'static str {
+    /// Returns the wire interface name.
+    pub fn name(self) -> &'static str {
         match self {
             Self::WpColorManagerV1 { .. } => "wp_color_manager_v1",
             Self::WpColorManagementOutputV1 { .. } => "wp_color_management_output_v1",
@@ -30,7 +32,8 @@ impl ObjectInteface {
             Self::WpImageDescriptionReferenceV1 { .. } => "wp_image_description_reference_v1",
         }
     }
-    pub(crate) fn version(self) -> u32 {
+    /// Returns the stored object version.
+    pub fn version(self) -> u32 {
         match self {
             Self::WpColorManagerV1 { version } => version,
             Self::WpColorManagementOutputV1 { version } => version,
@@ -43,7 +46,8 @@ impl ObjectInteface {
             Self::WpImageDescriptionReferenceV1 { version } => version,
         }
     }
-    pub(crate) fn max_version(self) -> u32 {
+    /// Returns the highest interface version supported by this library.
+    pub fn max_version(self) -> u32 {
         match self {
             Self::WpColorManagerV1 { .. } => 3,
             Self::WpColorManagementOutputV1 { .. } => 3,
@@ -56,7 +60,8 @@ impl ObjectInteface {
             Self::WpImageDescriptionReferenceV1 { .. } => 1,
         }
     }
-    pub(crate) fn from_name(name: &str, version: u32) -> Option<Self> {
+    /// Creates a known interface, returning `None` for unknown names or unsupported versions.
+    pub fn from_name(name: &str, version: u32) -> Option<Self> {
         let interface = match name {
             "wp_color_manager_v1" => Self::WpColorManagerV1 { version },
             "wp_color_management_output_v1" => Self::WpColorManagementOutputV1 { version },

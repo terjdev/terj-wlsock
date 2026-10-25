@@ -5,7 +5,7 @@
 /// Variants correspond to the interfaces defined in [Wayland XML](https://gitlab.freedesktop.org/wayland/wayland/-/blob/main/protocol/wayland.xml).
 /// Object registration validates the negotiated version.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum ObjectInteface {
+pub enum ObjectInteface {
     /// Object of interface wl_display; maximum supported version: 1.
     /// ```xml
     /// <interface name="wl_display" version="1" />
@@ -124,7 +124,7 @@ pub(crate) enum ObjectInteface {
 }
 impl ObjectInteface {
     /// Returns the interface name defined in XML.
-    pub(crate) fn name(self) -> &'static str {
+    pub fn name(self) -> &'static str {
         match self {
             Self::WlDisplay { .. } => "wl_display",
             Self::WlRegistry { .. } => "wl_registry",
@@ -152,7 +152,7 @@ impl ObjectInteface {
         }
     }
     /// Returns the negotiated object version.
-    pub(crate) fn version(self) -> u32 {
+    pub fn version(self) -> u32 {
         match self {
             Self::WlDisplay { version } => version,
             Self::WlRegistry { version } => version,
@@ -180,7 +180,7 @@ impl ObjectInteface {
         }
     }
     /// Returns the highest supported version of this interface.
-    pub(crate) fn max_version(self) -> u32 {
+    pub fn max_version(self) -> u32 {
         match self {
             Self::WlDisplay { .. } => 1,
             Self::WlRegistry { .. } => 1,
@@ -208,7 +208,7 @@ impl ObjectInteface {
         }
     }
     /// Creates a known interface, rejecting zero or unsupported versions.
-    pub(crate) fn from_name(name: &str, version: u32) -> Option<Self> {
+    pub fn from_name(name: &str, version: u32) -> Option<Self> {
         let interface = match name {
             "wl_display" => Self::WlDisplay { version },
             "wl_registry" => Self::WlRegistry { version },

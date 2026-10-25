@@ -1,7 +1,8 @@
 //! Identifies XDG shell interfaces and negotiated versions.
 
+/// Identifies an interface and its stored protocol version.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum ObjectInteface {
+pub enum ObjectInteface {
     XdgWmBase { version: u32 },
     XdgPositioner { version: u32 },
     XdgSurface { version: u32 },
@@ -9,7 +10,8 @@ pub(crate) enum ObjectInteface {
     XdgPopup { version: u32 },
 }
 impl ObjectInteface {
-    pub(crate) fn name(self) -> &'static str {
+    /// Returns the wire interface name.
+    pub fn name(self) -> &'static str {
         match self {
             Self::XdgWmBase { .. } => "xdg_wm_base",
             Self::XdgPositioner { .. } => "xdg_positioner",
@@ -18,7 +20,8 @@ impl ObjectInteface {
             Self::XdgPopup { .. } => "xdg_popup",
         }
     }
-    pub(crate) fn version(self) -> u32 {
+    /// Returns the stored object version.
+    pub fn version(self) -> u32 {
         match self {
             Self::XdgWmBase { version } => version,
             Self::XdgPositioner { version } => version,
@@ -27,7 +30,8 @@ impl ObjectInteface {
             Self::XdgPopup { version } => version,
         }
     }
-    pub(crate) fn max_version(self) -> u32 {
+    /// Returns the highest interface version supported by this library.
+    pub fn max_version(self) -> u32 {
         match self {
             Self::XdgWmBase { .. } => 7,
             Self::XdgPositioner { .. } => 7,
@@ -36,7 +40,8 @@ impl ObjectInteface {
             Self::XdgPopup { .. } => 7,
         }
     }
-    pub(crate) fn from_name(name: &str, version: u32) -> Option<Self> {
+    /// Creates a known interface, returning `None` for unknown names or unsupported versions.
+    pub fn from_name(name: &str, version: u32) -> Option<Self> {
         let interface = match name {
             "xdg_wm_base" => Self::XdgWmBase { version },
             "xdg_positioner" => Self::XdgPositioner { version },

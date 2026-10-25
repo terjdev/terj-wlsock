@@ -1,7 +1,8 @@
 //! Identifies Tablet interfaces and negotiated versions.
 
+/// Identifies an interface and its stored protocol version.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum ObjectInteface {
+pub enum ObjectInteface {
     ZwpTabletManagerV2 { version: u32 },
     ZwpTabletSeatV2 { version: u32 },
     ZwpTabletToolV2 { version: u32 },
@@ -13,7 +14,8 @@ pub(crate) enum ObjectInteface {
     ZwpTabletPadDialV2 { version: u32 },
 }
 impl ObjectInteface {
-    pub(crate) fn name(self) -> &'static str {
+    /// Returns the wire interface name.
+    pub fn name(self) -> &'static str {
         match self {
             Self::ZwpTabletManagerV2 { .. } => "zwp_tablet_manager_v2",
             Self::ZwpTabletSeatV2 { .. } => "zwp_tablet_seat_v2",
@@ -26,7 +28,8 @@ impl ObjectInteface {
             Self::ZwpTabletPadDialV2 { .. } => "zwp_tablet_pad_dial_v2",
         }
     }
-    pub(crate) fn version(self) -> u32 {
+    /// Returns the stored object version.
+    pub fn version(self) -> u32 {
         match self {
             Self::ZwpTabletManagerV2 { version } => version,
             Self::ZwpTabletSeatV2 { version } => version,
@@ -39,7 +42,8 @@ impl ObjectInteface {
             Self::ZwpTabletPadDialV2 { version } => version,
         }
     }
-    pub(crate) fn max_version(self) -> u32 {
+    /// Returns the highest interface version supported by this library.
+    pub fn max_version(self) -> u32 {
         match self {
             Self::ZwpTabletManagerV2 { .. } => 2,
             Self::ZwpTabletSeatV2 { .. } => 2,
@@ -52,7 +56,8 @@ impl ObjectInteface {
             Self::ZwpTabletPadDialV2 { .. } => 2,
         }
     }
-    pub(crate) fn from_name(name: &str, version: u32) -> Option<Self> {
+    /// Creates a known interface, returning `None` for unknown names or unsupported versions.
+    pub fn from_name(name: &str, version: u32) -> Option<Self> {
         let interface = match name {
             "zwp_tablet_manager_v2" => Self::ZwpTabletManagerV2 { version },
             "zwp_tablet_seat_v2" => Self::ZwpTabletSeatV2 { version },

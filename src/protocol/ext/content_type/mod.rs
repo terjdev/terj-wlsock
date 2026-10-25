@@ -46,4 +46,5 @@ mod command_request;
 pub use command_request::CommandRequest;
 
 mod object_interface;
-pub(crate) use object_interface::ObjectInteface;
+#[doc(inline)]
+pub use object_interface::ObjectInteface;

@@ -143,8 +143,14 @@ use crate::protocol::wlr::screencopy;
 use crate::protocol::wlr::virtual_pointer;
 
 /// Identifies an object's protocol group, interface, and negotiated version.
+///
+/// Extension variants and name mappings are available only with their Cargo features.
+/// [`Self::from_name`] accepts versions from 1 through [`Self::max_version`]; it
+/// does not clamp higher versions advertised by a compositor. Unknown interfaces,
+/// disabled extensions, zero versions and unsupported versions return `None`.
+/// Directly constructing a variant does not validate its stored version.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum ObjectInteface {
+pub enum ObjectInteface {
     /// A core Wayland interface.
     Core(core::ObjectInteface),
     /// A xx text input interface.
@@ -361,7 +367,7 @@ pub(crate) enum ObjectInteface {
 
 impl ObjectInteface {
     /// Returns the interface name defined in XML.
-    pub(crate) fn name(self) -> &'static str {
+    pub fn name(self) -> &'static str {
         match self {
             Self::Core(interface) => interface.name(),
             #[cfg(feature = "ext-xx-text-input")]
@@ -507,7 +513,7 @@ impl ObjectInteface {
         }
     }
     /// Returns the negotiated object version.
-    pub(crate) fn version(self) -> u32 {
+    pub fn version(self) -> u32 {
         match self {
             Self::Core(interface) => interface.version(),
             #[cfg(feature = "ext-xx-text-input")]
@@ -653,7 +659,7 @@ impl ObjectInteface {
         }
     }
     /// Returns the highest supported version of this interface.
-    pub(crate) fn max_version(self) -> u32 {
+    pub fn max_version(self) -> u32 {
         match self {
             Self::Core(interface) => interface.max_version(),
             #[cfg(feature = "ext-xx-text-input")]
@@ -799,7 +805,7 @@ impl ObjectInteface {
         }
     }
     /// Creates a known interface, rejecting zero or unsupported versions.
-    pub(crate) fn from_name(name: &str, version: u32) -> Option<Self> {
+    pub fn from_name(name: &str, version: u32) -> Option<Self> {
         if let Some(interface) = core::ObjectInteface::from_name(name, version) {
             return Some(Self::Core(interface));
         }

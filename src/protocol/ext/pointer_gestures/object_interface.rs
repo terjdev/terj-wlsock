@@ -1,13 +1,15 @@
 //! Defines interfaces and negotiated versions for this protocol.
+/// Identifies an interface and its stored protocol version.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum ObjectInteface {
+pub enum ObjectInteface {
     ZwpPointerGesturesV1 { version: u32 },
     ZwpPointerGestureSwipeV1 { version: u32 },
     ZwpPointerGesturePinchV1 { version: u32 },
     ZwpPointerGestureHoldV1 { version: u32 },
 }
 impl ObjectInteface {
-    pub(crate) fn name(self) -> &'static str {
+    /// Returns the wire interface name.
+    pub fn name(self) -> &'static str {
         match self {
             Self::ZwpPointerGesturesV1 { .. } => "zwp_pointer_gestures_v1",
             Self::ZwpPointerGestureSwipeV1 { .. } => "zwp_pointer_gesture_swipe_v1",
@@ -15,7 +17,8 @@ impl ObjectInteface {
             Self::ZwpPointerGestureHoldV1 { .. } => "zwp_pointer_gesture_hold_v1",
         }
     }
-    pub(crate) fn version(self) -> u32 {
+    /// Returns the stored object version.
+    pub fn version(self) -> u32 {
         match self {
             Self::ZwpPointerGesturesV1 { version } => version,
             Self::ZwpPointerGestureSwipeV1 { version } => version,
@@ -23,7 +26,8 @@ impl ObjectInteface {
             Self::ZwpPointerGestureHoldV1 { version } => version,
         }
     }
-    pub(crate) fn max_version(self) -> u32 {
+    /// Returns the highest interface version supported by this library.
+    pub fn max_version(self) -> u32 {
         match self {
             Self::ZwpPointerGesturesV1 { .. } => 3,
             Self::ZwpPointerGestureSwipeV1 { .. } => 3,
@@ -31,7 +35,8 @@ impl ObjectInteface {
             Self::ZwpPointerGestureHoldV1 { .. } => 3,
         }
     }
-    pub(crate) fn from_name(name: &str, version: u32) -> Option<Self> {
+    /// Creates a known interface, returning `None` for unknown names or unsupported versions.
+    pub fn from_name(name: &str, version: u32) -> Option<Self> {
         let interface = match name {
             "zwp_pointer_gestures_v1" => Self::ZwpPointerGesturesV1 { version },
             "zwp_pointer_gesture_swipe_v1" => Self::ZwpPointerGestureSwipeV1 { version },

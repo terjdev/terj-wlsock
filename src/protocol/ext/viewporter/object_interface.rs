@@ -4,7 +4,7 @@
 ///
 /// Object registration validates the negotiated version.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum ObjectInteface {
+pub enum ObjectInteface {
     /// Object of interface `wp_viewporter`; maximum supported version: 1.
     WpViewporter { version: u32 },
     /// Object of interface `wp_viewport`; maximum supported version: 1.
@@ -12,28 +12,28 @@ pub(crate) enum ObjectInteface {
 }
 impl ObjectInteface {
     /// Returns the interface name defined in XML.
-    pub(crate) fn name(self) -> &'static str {
+    pub fn name(self) -> &'static str {
         match self {
             Self::WpViewport { .. } => "wp_viewport",
             Self::WpViewporter { .. } => "wp_viewporter",
         }
     }
     /// Returns the negotiated object version.
-    pub(crate) fn version(self) -> u32 {
+    pub fn version(self) -> u32 {
         match self {
             Self::WpViewport { version } => version,
             Self::WpViewporter { version } => version,
         }
     }
     /// Returns the highest supported version of this interface.
-    pub(crate) fn max_version(self) -> u32 {
+    pub fn max_version(self) -> u32 {
         match self {
             Self::WpViewport { .. } => 1,
             Self::WpViewporter { .. } => 1,
         }
     }
     /// Creates a known interface, rejecting zero or unsupported versions.
-    pub(crate) fn from_name(name: &str, version: u32) -> Option<Self> {
+    pub fn from_name(name: &str, version: u32) -> Option<Self> {
         let interface = match name {
             "wp_viewport" => Self::WpViewport { version },
             "wp_viewporter" => Self::WpViewporter { version },

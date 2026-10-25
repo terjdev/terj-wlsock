@@ -1,14 +1,16 @@
 //! Identifies DRM lease interfaces and negotiated versions.
 
+/// Identifies an interface and its stored protocol version.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum ObjectInteface {
+pub enum ObjectInteface {
     WpDrmLeaseDeviceV1 { version: u32 },
     WpDrmLeaseConnectorV1 { version: u32 },
     WpDrmLeaseRequestV1 { version: u32 },
     WpDrmLeaseV1 { version: u32 },
 }
 impl ObjectInteface {
-    pub(crate) fn name(self) -> &'static str {
+    /// Returns the wire interface name.
+    pub fn name(self) -> &'static str {
         match self {
             Self::WpDrmLeaseDeviceV1 { .. } => "wp_drm_lease_device_v1",
             Self::WpDrmLeaseConnectorV1 { .. } => "wp_drm_lease_connector_v1",
@@ -16,7 +18,8 @@ impl ObjectInteface {
             Self::WpDrmLeaseV1 { .. } => "wp_drm_lease_v1",
         }
     }
-    pub(crate) fn version(self) -> u32 {
+    /// Returns the stored object version.
+    pub fn version(self) -> u32 {
         match self {
             Self::WpDrmLeaseDeviceV1 { version } => version,
             Self::WpDrmLeaseConnectorV1 { version } => version,
@@ -24,7 +27,8 @@ impl ObjectInteface {
             Self::WpDrmLeaseV1 { version } => version,
         }
     }
-    pub(crate) fn max_version(self) -> u32 {
+    /// Returns the highest interface version supported by this library.
+    pub fn max_version(self) -> u32 {
         match self {
             Self::WpDrmLeaseDeviceV1 { .. } => 1,
             Self::WpDrmLeaseConnectorV1 { .. } => 1,
@@ -32,7 +36,8 @@ impl ObjectInteface {
             Self::WpDrmLeaseV1 { .. } => 1,
         }
     }
-    pub(crate) fn from_name(name: &str, version: u32) -> Option<Self> {
+    /// Creates a known interface, returning `None` for unknown names or unsupported versions.
+    pub fn from_name(name: &str, version: u32) -> Option<Self> {
         let interface = match name {
             "wp_drm_lease_device_v1" => Self::WpDrmLeaseDeviceV1 { version },
             "wp_drm_lease_connector_v1" => Self::WpDrmLeaseConnectorV1 { version },

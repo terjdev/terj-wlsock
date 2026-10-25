@@ -1,13 +1,15 @@
 //! Defines interfaces and negotiated versions for this protocol.
+/// Identifies an interface and its stored protocol version.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum ObjectInteface {
+pub enum ObjectInteface {
     XxInputMethodV1 { version: u32 },
     XxInputPopupSurfaceV2 { version: u32 },
     XxInputPopupPositionerV1 { version: u32 },
     XxInputMethodManagerV2 { version: u32 },
 }
 impl ObjectInteface {
-    pub(crate) fn name(self) -> &'static str {
+    /// Returns the wire interface name.
+    pub fn name(self) -> &'static str {
         match self {
             Self::XxInputMethodV1 { .. } => "xx_input_method_v1",
             Self::XxInputPopupSurfaceV2 { .. } => "xx_input_popup_surface_v2",
@@ -15,7 +17,8 @@ impl ObjectInteface {
             Self::XxInputMethodManagerV2 { .. } => "xx_input_method_manager_v2",
         }
     }
-    pub(crate) fn version(self) -> u32 {
+    /// Returns the stored object version.
+    pub fn version(self) -> u32 {
         match self {
             Self::XxInputMethodV1 { version } => version,
             Self::XxInputPopupSurfaceV2 { version } => version,
@@ -23,7 +26,8 @@ impl ObjectInteface {
             Self::XxInputMethodManagerV2 { version } => version,
         }
     }
-    pub(crate) fn max_version(self) -> u32 {
+    /// Returns the highest interface version supported by this library.
+    pub fn max_version(self) -> u32 {
         match self {
             Self::XxInputMethodV1 { .. } => 4,
             Self::XxInputPopupSurfaceV2 { .. } => 1,
@@ -31,7 +35,8 @@ impl ObjectInteface {
             Self::XxInputMethodManagerV2 { .. } => 4,
         }
     }
-    pub(crate) fn from_name(name: &str, version: u32) -> Option<Self> {
+    /// Creates a known interface, returning `None` for unknown names or unsupported versions.
+    pub fn from_name(name: &str, version: u32) -> Option<Self> {
         let interface = match name {
             "xx_input_method_v1" => Self::XxInputMethodV1 { version },
             "xx_input_popup_surface_v2" => Self::XxInputPopupSurfaceV2 { version },

@@ -101,4 +101,5 @@ mod command_event;
 pub use command_event::CommandEvent;
 
 mod object_interface;
-pub(crate) use object_interface::ObjectInteface;
+#[doc(inline)]
+pub use object_interface::ObjectInteface;
