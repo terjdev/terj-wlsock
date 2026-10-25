@@ -6,10 +6,71 @@ license = "MIT"
 
 [features]
 default = ["ext", "wlr"]
-ext = ["ext-data-control", "ext-background-effect", "ext-drm-lease", "ext-cursor-shape", "ext-content-type", "ext-commit-timing", "ext-alpha-modifier", "ext-tablet", "ext-xdg-shell", "ext-dmabuf", "ext-presentation-time", "ext-viewporter"]
+ext = [
+    "ext-xwayland-shell",
+    "ext-xdg-toplevel-tag",
+    "ext-xdg-toplevel-icon",
+    "ext-xdg-toplevel-drag",
+    "ext-xdg-system-bell",
+    "ext-xdg-session-management",
+    "ext-xdg-dialog",
+    "ext-xdg-activation",
+    "ext-tearing-control",
+    "ext-single-pixel-buffer",
+    "ext-security-context",
+    "ext-pointer-warp",
+    "ext-linux-drm-syncobj",
+    "ext-fractional-scale",
+    "ext-fifo",
+    "ext-workspace",
+    "ext-transient-seat",
+    "ext-session-lock",
+    "ext-image-copy-capture",
+    "ext-image-capture-source",
+    "ext-idle-notify",
+    "ext-foreign-toplevel-list",
+    "ext-color-representation",
+    "ext-color-management",
+    "ext-data-control",
+    "ext-background-effect",
+    "ext-drm-lease",
+    "ext-cursor-shape",
+    "ext-content-type",
+    "ext-commit-timing",
+    "ext-alpha-modifier",
+    "ext-tablet",
+    "ext-xdg-shell",
+    "ext-dmabuf",
+    "ext-presentation-time",
+    "ext-viewporter",
+]
 wlr = ["wlr-screencopy", "wlr-virtual-pointer", "wlr-data-control", "wlr-layer-shell"]
 ext-presentation-time = []
 ext-viewporter = []
+ext-xwayland-shell = []
+ext-xdg-toplevel-tag = []
+ext-xdg-toplevel-icon = []
+ext-xdg-toplevel-drag = []
+ext-xdg-system-bell = []
+ext-xdg-session-management = []
+ext-xdg-dialog = []
+ext-xdg-activation = []
+ext-tearing-control = []
+ext-single-pixel-buffer = []
+ext-security-context = []
+ext-pointer-warp = []
+ext-linux-drm-syncobj = []
+ext-fractional-scale = []
+ext-fifo = []
+ext-workspace = []
+ext-transient-seat = []
+ext-session-lock = []
+ext-image-copy-capture = []
+ext-image-capture-source = []
+ext-idle-notify = []
+ext-foreign-toplevel-list = []
+ext-color-representation = []
+ext-color-management = []
 ext-data-control = []
 ext-background-effect = []
 ext-drm-lease = []

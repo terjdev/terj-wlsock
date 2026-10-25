@@ -5,6 +5,10 @@ use crate::protocol::core;
 use crate::protocol::ext::alpha_modifier;
 #[cfg(feature = "ext-background-effect")]
 use crate::protocol::ext::background_effect;
+#[cfg(feature = "ext-color-management")]
+use crate::protocol::ext::color_management;
+#[cfg(feature = "ext-color-representation")]
+use crate::protocol::ext::color_representation;
 #[cfg(feature = "ext-commit-timing")]
 use crate::protocol::ext::commit_timing;
 #[cfg(feature = "ext-content-type")]
@@ -17,14 +21,58 @@ use crate::protocol::ext::data_control as ext_data_control;
 use crate::protocol::ext::dmabuf;
 #[cfg(feature = "ext-drm-lease")]
 use crate::protocol::ext::drm_lease;
+#[cfg(feature = "ext-fifo")]
+use crate::protocol::ext::fifo;
+#[cfg(feature = "ext-foreign-toplevel-list")]
+use crate::protocol::ext::foreign_toplevel_list;
+#[cfg(feature = "ext-fractional-scale")]
+use crate::protocol::ext::fractional_scale;
+#[cfg(feature = "ext-idle-notify")]
+use crate::protocol::ext::idle_notify;
+#[cfg(feature = "ext-image-capture-source")]
+use crate::protocol::ext::image_capture_source;
+#[cfg(feature = "ext-image-copy-capture")]
+use crate::protocol::ext::image_copy_capture;
+#[cfg(feature = "ext-linux-drm-syncobj")]
+use crate::protocol::ext::linux_drm_syncobj;
+#[cfg(feature = "ext-pointer-warp")]
+use crate::protocol::ext::pointer_warp;
 #[cfg(feature = "ext-presentation-time")]
 use crate::protocol::ext::presentation_time;
+#[cfg(feature = "ext-security-context")]
+use crate::protocol::ext::security_context;
+#[cfg(feature = "ext-session-lock")]
+use crate::protocol::ext::session_lock;
+#[cfg(feature = "ext-single-pixel-buffer")]
+use crate::protocol::ext::single_pixel_buffer;
 #[cfg(feature = "ext-tablet")]
 use crate::protocol::ext::tablet;
+#[cfg(feature = "ext-tearing-control")]
+use crate::protocol::ext::tearing_control;
+#[cfg(feature = "ext-transient-seat")]
+use crate::protocol::ext::transient_seat;
 #[cfg(feature = "ext-viewporter")]
 use crate::protocol::ext::viewporter;
+#[cfg(feature = "ext-workspace")]
+use crate::protocol::ext::workspace;
+#[cfg(feature = "ext-xdg-activation")]
+use crate::protocol::ext::xdg_activation;
+#[cfg(feature = "ext-xdg-dialog")]
+use crate::protocol::ext::xdg_dialog;
+#[cfg(feature = "ext-xdg-session-management")]
+use crate::protocol::ext::xdg_session_management;
 #[cfg(feature = "ext-xdg-shell")]
 use crate::protocol::ext::xdg_shell;
+#[cfg(feature = "ext-xdg-system-bell")]
+use crate::protocol::ext::xdg_system_bell;
+#[cfg(feature = "ext-xdg-toplevel-drag")]
+use crate::protocol::ext::xdg_toplevel_drag;
+#[cfg(feature = "ext-xdg-toplevel-icon")]
+use crate::protocol::ext::xdg_toplevel_icon;
+#[cfg(feature = "ext-xdg-toplevel-tag")]
+use crate::protocol::ext::xdg_toplevel_tag;
+#[cfg(feature = "ext-xwayland-shell")]
+use crate::protocol::ext::xwayland_shell;
 #[cfg(feature = "wlr-data-control")]
 use crate::protocol::wlr::data_control;
 #[cfg(feature = "wlr-layer-shell")]
@@ -39,6 +87,78 @@ use crate::protocol::wlr::virtual_pointer;
 pub(crate) enum ObjectInteface {
     /// A core Wayland interface.
     Core(core::ObjectInteface),
+    /// A Xwayland shell interface.
+    #[cfg(feature = "ext-xwayland-shell")]
+    XwaylandShell(xwayland_shell::ObjectInteface),
+    /// A Xdg toplevel tag interface.
+    #[cfg(feature = "ext-xdg-toplevel-tag")]
+    XdgToplevelTag(xdg_toplevel_tag::ObjectInteface),
+    /// A Xdg toplevel icon interface.
+    #[cfg(feature = "ext-xdg-toplevel-icon")]
+    XdgToplevelIcon(xdg_toplevel_icon::ObjectInteface),
+    /// A Xdg toplevel drag interface.
+    #[cfg(feature = "ext-xdg-toplevel-drag")]
+    XdgToplevelDrag(xdg_toplevel_drag::ObjectInteface),
+    /// A Xdg system bell interface.
+    #[cfg(feature = "ext-xdg-system-bell")]
+    XdgSystemBell(xdg_system_bell::ObjectInteface),
+    /// A Xdg session management interface.
+    #[cfg(feature = "ext-xdg-session-management")]
+    XdgSessionManagement(xdg_session_management::ObjectInteface),
+    /// A Xdg dialog interface.
+    #[cfg(feature = "ext-xdg-dialog")]
+    XdgDialog(xdg_dialog::ObjectInteface),
+    /// A Xdg activation interface.
+    #[cfg(feature = "ext-xdg-activation")]
+    XdgActivation(xdg_activation::ObjectInteface),
+    /// A Tearing control interface.
+    #[cfg(feature = "ext-tearing-control")]
+    TearingControl(tearing_control::ObjectInteface),
+    /// A Single pixel buffer interface.
+    #[cfg(feature = "ext-single-pixel-buffer")]
+    SinglePixelBuffer(single_pixel_buffer::ObjectInteface),
+    /// A Security context interface.
+    #[cfg(feature = "ext-security-context")]
+    SecurityContext(security_context::ObjectInteface),
+    /// A Pointer warp interface.
+    #[cfg(feature = "ext-pointer-warp")]
+    PointerWarp(pointer_warp::ObjectInteface),
+    /// A Linux drm syncobj interface.
+    #[cfg(feature = "ext-linux-drm-syncobj")]
+    LinuxDrmSyncobj(linux_drm_syncobj::ObjectInteface),
+    /// A Fractional scale interface.
+    #[cfg(feature = "ext-fractional-scale")]
+    FractionalScale(fractional_scale::ObjectInteface),
+    /// A Fifo interface.
+    #[cfg(feature = "ext-fifo")]
+    Fifo(fifo::ObjectInteface),
+    /// A Workspace interface.
+    #[cfg(feature = "ext-workspace")]
+    Workspace(workspace::ObjectInteface),
+    /// A Transient seat interface.
+    #[cfg(feature = "ext-transient-seat")]
+    TransientSeat(transient_seat::ObjectInteface),
+    /// A Session lock interface.
+    #[cfg(feature = "ext-session-lock")]
+    SessionLock(session_lock::ObjectInteface),
+    /// A Image copy capture interface.
+    #[cfg(feature = "ext-image-copy-capture")]
+    ImageCopyCapture(image_copy_capture::ObjectInteface),
+    /// A Image capture source interface.
+    #[cfg(feature = "ext-image-capture-source")]
+    ImageCaptureSource(image_capture_source::ObjectInteface),
+    /// A Idle notify interface.
+    #[cfg(feature = "ext-idle-notify")]
+    IdleNotify(idle_notify::ObjectInteface),
+    /// A Foreign toplevel list interface.
+    #[cfg(feature = "ext-foreign-toplevel-list")]
+    ForeignToplevelList(foreign_toplevel_list::ObjectInteface),
+    /// A Color representation interface.
+    #[cfg(feature = "ext-color-representation")]
+    ColorRepresentation(color_representation::ObjectInteface),
+    /// A Color management interface.
+    #[cfg(feature = "ext-color-management")]
+    ColorManagement(color_management::ObjectInteface),
     /// A Data control interface.
     #[cfg(feature = "ext-data-control")]
     DataControl(ext_data_control::ObjectInteface),
@@ -94,6 +214,54 @@ impl ObjectInteface {
     pub(crate) fn name(self) -> &'static str {
         match self {
             Self::Core(interface) => interface.name(),
+            #[cfg(feature = "ext-xwayland-shell")]
+            Self::XwaylandShell(interface) => interface.name(),
+            #[cfg(feature = "ext-xdg-toplevel-tag")]
+            Self::XdgToplevelTag(interface) => interface.name(),
+            #[cfg(feature = "ext-xdg-toplevel-icon")]
+            Self::XdgToplevelIcon(interface) => interface.name(),
+            #[cfg(feature = "ext-xdg-toplevel-drag")]
+            Self::XdgToplevelDrag(interface) => interface.name(),
+            #[cfg(feature = "ext-xdg-system-bell")]
+            Self::XdgSystemBell(interface) => interface.name(),
+            #[cfg(feature = "ext-xdg-session-management")]
+            Self::XdgSessionManagement(interface) => interface.name(),
+            #[cfg(feature = "ext-xdg-dialog")]
+            Self::XdgDialog(interface) => interface.name(),
+            #[cfg(feature = "ext-xdg-activation")]
+            Self::XdgActivation(interface) => interface.name(),
+            #[cfg(feature = "ext-tearing-control")]
+            Self::TearingControl(interface) => interface.name(),
+            #[cfg(feature = "ext-single-pixel-buffer")]
+            Self::SinglePixelBuffer(interface) => interface.name(),
+            #[cfg(feature = "ext-security-context")]
+            Self::SecurityContext(interface) => interface.name(),
+            #[cfg(feature = "ext-pointer-warp")]
+            Self::PointerWarp(interface) => interface.name(),
+            #[cfg(feature = "ext-linux-drm-syncobj")]
+            Self::LinuxDrmSyncobj(interface) => interface.name(),
+            #[cfg(feature = "ext-fractional-scale")]
+            Self::FractionalScale(interface) => interface.name(),
+            #[cfg(feature = "ext-fifo")]
+            Self::Fifo(interface) => interface.name(),
+            #[cfg(feature = "ext-workspace")]
+            Self::Workspace(interface) => interface.name(),
+            #[cfg(feature = "ext-transient-seat")]
+            Self::TransientSeat(interface) => interface.name(),
+            #[cfg(feature = "ext-session-lock")]
+            Self::SessionLock(interface) => interface.name(),
+            #[cfg(feature = "ext-image-copy-capture")]
+            Self::ImageCopyCapture(interface) => interface.name(),
+            #[cfg(feature = "ext-image-capture-source")]
+            Self::ImageCaptureSource(interface) => interface.name(),
+            #[cfg(feature = "ext-idle-notify")]
+            Self::IdleNotify(interface) => interface.name(),
+            #[cfg(feature = "ext-foreign-toplevel-list")]
+            Self::ForeignToplevelList(interface) => interface.name(),
+            #[cfg(feature = "ext-color-representation")]
+            Self::ColorRepresentation(interface) => interface.name(),
+            #[cfg(feature = "ext-color-management")]
+            Self::ColorManagement(interface) => interface.name(),
             #[cfg(feature = "ext-data-control")]
             Self::DataControl(interface) => interface.name(),
             #[cfg(feature = "ext-background-effect")]
@@ -132,6 +300,54 @@ impl ObjectInteface {
     pub(crate) fn version(self) -> u32 {
         match self {
             Self::Core(interface) => interface.version(),
+            #[cfg(feature = "ext-xwayland-shell")]
+            Self::XwaylandShell(interface) => interface.version(),
+            #[cfg(feature = "ext-xdg-toplevel-tag")]
+            Self::XdgToplevelTag(interface) => interface.version(),
+            #[cfg(feature = "ext-xdg-toplevel-icon")]
+            Self::XdgToplevelIcon(interface) => interface.version(),
+            #[cfg(feature = "ext-xdg-toplevel-drag")]
+            Self::XdgToplevelDrag(interface) => interface.version(),
+            #[cfg(feature = "ext-xdg-system-bell")]
+            Self::XdgSystemBell(interface) => interface.version(),
+            #[cfg(feature = "ext-xdg-session-management")]
+            Self::XdgSessionManagement(interface) => interface.version(),
+            #[cfg(feature = "ext-xdg-dialog")]
+            Self::XdgDialog(interface) => interface.version(),
+            #[cfg(feature = "ext-xdg-activation")]
+            Self::XdgActivation(interface) => interface.version(),
+            #[cfg(feature = "ext-tearing-control")]
+            Self::TearingControl(interface) => interface.version(),
+            #[cfg(feature = "ext-single-pixel-buffer")]
+            Self::SinglePixelBuffer(interface) => interface.version(),
+            #[cfg(feature = "ext-security-context")]
+            Self::SecurityContext(interface) => interface.version(),
+            #[cfg(feature = "ext-pointer-warp")]
+            Self::PointerWarp(interface) => interface.version(),
+            #[cfg(feature = "ext-linux-drm-syncobj")]
+            Self::LinuxDrmSyncobj(interface) => interface.version(),
+            #[cfg(feature = "ext-fractional-scale")]
+            Self::FractionalScale(interface) => interface.version(),
+            #[cfg(feature = "ext-fifo")]
+            Self::Fifo(interface) => interface.version(),
+            #[cfg(feature = "ext-workspace")]
+            Self::Workspace(interface) => interface.version(),
+            #[cfg(feature = "ext-transient-seat")]
+            Self::TransientSeat(interface) => interface.version(),
+            #[cfg(feature = "ext-session-lock")]
+            Self::SessionLock(interface) => interface.version(),
+            #[cfg(feature = "ext-image-copy-capture")]
+            Self::ImageCopyCapture(interface) => interface.version(),
+            #[cfg(feature = "ext-image-capture-source")]
+            Self::ImageCaptureSource(interface) => interface.version(),
+            #[cfg(feature = "ext-idle-notify")]
+            Self::IdleNotify(interface) => interface.version(),
+            #[cfg(feature = "ext-foreign-toplevel-list")]
+            Self::ForeignToplevelList(interface) => interface.version(),
+            #[cfg(feature = "ext-color-representation")]
+            Self::ColorRepresentation(interface) => interface.version(),
+            #[cfg(feature = "ext-color-management")]
+            Self::ColorManagement(interface) => interface.version(),
             #[cfg(feature = "ext-data-control")]
             Self::DataControl(interface) => interface.version(),
             #[cfg(feature = "ext-background-effect")]
@@ -170,6 +386,54 @@ impl ObjectInteface {
     pub(crate) fn max_version(self) -> u32 {
         match self {
             Self::Core(interface) => interface.max_version(),
+            #[cfg(feature = "ext-xwayland-shell")]
+            Self::XwaylandShell(interface) => interface.max_version(),
+            #[cfg(feature = "ext-xdg-toplevel-tag")]
+            Self::XdgToplevelTag(interface) => interface.max_version(),
+            #[cfg(feature = "ext-xdg-toplevel-icon")]
+            Self::XdgToplevelIcon(interface) => interface.max_version(),
+            #[cfg(feature = "ext-xdg-toplevel-drag")]
+            Self::XdgToplevelDrag(interface) => interface.max_version(),
+            #[cfg(feature = "ext-xdg-system-bell")]
+            Self::XdgSystemBell(interface) => interface.max_version(),
+            #[cfg(feature = "ext-xdg-session-management")]
+            Self::XdgSessionManagement(interface) => interface.max_version(),
+            #[cfg(feature = "ext-xdg-dialog")]
+            Self::XdgDialog(interface) => interface.max_version(),
+            #[cfg(feature = "ext-xdg-activation")]
+            Self::XdgActivation(interface) => interface.max_version(),
+            #[cfg(feature = "ext-tearing-control")]
+            Self::TearingControl(interface) => interface.max_version(),
+            #[cfg(feature = "ext-single-pixel-buffer")]
+            Self::SinglePixelBuffer(interface) => interface.max_version(),
+            #[cfg(feature = "ext-security-context")]
+            Self::SecurityContext(interface) => interface.max_version(),
+            #[cfg(feature = "ext-pointer-warp")]
+            Self::PointerWarp(interface) => interface.max_version(),
+            #[cfg(feature = "ext-linux-drm-syncobj")]
+            Self::LinuxDrmSyncobj(interface) => interface.max_version(),
+            #[cfg(feature = "ext-fractional-scale")]
+            Self::FractionalScale(interface) => interface.max_version(),
+            #[cfg(feature = "ext-fifo")]
+            Self::Fifo(interface) => interface.max_version(),
+            #[cfg(feature = "ext-workspace")]
+            Self::Workspace(interface) => interface.max_version(),
+            #[cfg(feature = "ext-transient-seat")]
+            Self::TransientSeat(interface) => interface.max_version(),
+            #[cfg(feature = "ext-session-lock")]
+            Self::SessionLock(interface) => interface.max_version(),
+            #[cfg(feature = "ext-image-copy-capture")]
+            Self::ImageCopyCapture(interface) => interface.max_version(),
+            #[cfg(feature = "ext-image-capture-source")]
+            Self::ImageCaptureSource(interface) => interface.max_version(),
+            #[cfg(feature = "ext-idle-notify")]
+            Self::IdleNotify(interface) => interface.max_version(),
+            #[cfg(feature = "ext-foreign-toplevel-list")]
+            Self::ForeignToplevelList(interface) => interface.max_version(),
+            #[cfg(feature = "ext-color-representation")]
+            Self::ColorRepresentation(interface) => interface.max_version(),
+            #[cfg(feature = "ext-color-management")]
+            Self::ColorManagement(interface) => interface.max_version(),
             #[cfg(feature = "ext-data-control")]
             Self::DataControl(interface) => interface.max_version(),
             #[cfg(feature = "ext-background-effect")]
@@ -272,6 +536,102 @@ impl ObjectInteface {
         #[cfg(feature = "ext-data-control")]
         if let Some(interface) = ext_data_control::ObjectInteface::from_name(name, version) {
             return Some(Self::DataControl(interface));
+        }
+        #[cfg(feature = "ext-color-management")]
+        if let Some(interface) = color_management::ObjectInteface::from_name(name, version) {
+            return Some(Self::ColorManagement(interface));
+        }
+        #[cfg(feature = "ext-color-representation")]
+        if let Some(interface) = color_representation::ObjectInteface::from_name(name, version) {
+            return Some(Self::ColorRepresentation(interface));
+        }
+        #[cfg(feature = "ext-foreign-toplevel-list")]
+        if let Some(interface) = foreign_toplevel_list::ObjectInteface::from_name(name, version) {
+            return Some(Self::ForeignToplevelList(interface));
+        }
+        #[cfg(feature = "ext-idle-notify")]
+        if let Some(interface) = idle_notify::ObjectInteface::from_name(name, version) {
+            return Some(Self::IdleNotify(interface));
+        }
+        #[cfg(feature = "ext-image-capture-source")]
+        if let Some(interface) = image_capture_source::ObjectInteface::from_name(name, version) {
+            return Some(Self::ImageCaptureSource(interface));
+        }
+        #[cfg(feature = "ext-image-copy-capture")]
+        if let Some(interface) = image_copy_capture::ObjectInteface::from_name(name, version) {
+            return Some(Self::ImageCopyCapture(interface));
+        }
+        #[cfg(feature = "ext-session-lock")]
+        if let Some(interface) = session_lock::ObjectInteface::from_name(name, version) {
+            return Some(Self::SessionLock(interface));
+        }
+        #[cfg(feature = "ext-transient-seat")]
+        if let Some(interface) = transient_seat::ObjectInteface::from_name(name, version) {
+            return Some(Self::TransientSeat(interface));
+        }
+        #[cfg(feature = "ext-workspace")]
+        if let Some(interface) = workspace::ObjectInteface::from_name(name, version) {
+            return Some(Self::Workspace(interface));
+        }
+        #[cfg(feature = "ext-fifo")]
+        if let Some(interface) = fifo::ObjectInteface::from_name(name, version) {
+            return Some(Self::Fifo(interface));
+        }
+        #[cfg(feature = "ext-fractional-scale")]
+        if let Some(interface) = fractional_scale::ObjectInteface::from_name(name, version) {
+            return Some(Self::FractionalScale(interface));
+        }
+        #[cfg(feature = "ext-linux-drm-syncobj")]
+        if let Some(interface) = linux_drm_syncobj::ObjectInteface::from_name(name, version) {
+            return Some(Self::LinuxDrmSyncobj(interface));
+        }
+        #[cfg(feature = "ext-pointer-warp")]
+        if let Some(interface) = pointer_warp::ObjectInteface::from_name(name, version) {
+            return Some(Self::PointerWarp(interface));
+        }
+        #[cfg(feature = "ext-security-context")]
+        if let Some(interface) = security_context::ObjectInteface::from_name(name, version) {
+            return Some(Self::SecurityContext(interface));
+        }
+        #[cfg(feature = "ext-single-pixel-buffer")]
+        if let Some(interface) = single_pixel_buffer::ObjectInteface::from_name(name, version) {
+            return Some(Self::SinglePixelBuffer(interface));
+        }
+        #[cfg(feature = "ext-tearing-control")]
+        if let Some(interface) = tearing_control::ObjectInteface::from_name(name, version) {
+            return Some(Self::TearingControl(interface));
+        }
+        #[cfg(feature = "ext-xdg-activation")]
+        if let Some(interface) = xdg_activation::ObjectInteface::from_name(name, version) {
+            return Some(Self::XdgActivation(interface));
+        }
+        #[cfg(feature = "ext-xdg-dialog")]
+        if let Some(interface) = xdg_dialog::ObjectInteface::from_name(name, version) {
+            return Some(Self::XdgDialog(interface));
+        }
+        #[cfg(feature = "ext-xdg-session-management")]
+        if let Some(interface) = xdg_session_management::ObjectInteface::from_name(name, version) {
+            return Some(Self::XdgSessionManagement(interface));
+        }
+        #[cfg(feature = "ext-xdg-system-bell")]
+        if let Some(interface) = xdg_system_bell::ObjectInteface::from_name(name, version) {
+            return Some(Self::XdgSystemBell(interface));
+        }
+        #[cfg(feature = "ext-xdg-toplevel-drag")]
+        if let Some(interface) = xdg_toplevel_drag::ObjectInteface::from_name(name, version) {
+            return Some(Self::XdgToplevelDrag(interface));
+        }
+        #[cfg(feature = "ext-xdg-toplevel-icon")]
+        if let Some(interface) = xdg_toplevel_icon::ObjectInteface::from_name(name, version) {
+            return Some(Self::XdgToplevelIcon(interface));
+        }
+        #[cfg(feature = "ext-xdg-toplevel-tag")]
+        if let Some(interface) = xdg_toplevel_tag::ObjectInteface::from_name(name, version) {
+            return Some(Self::XdgToplevelTag(interface));
+        }
+        #[cfg(feature = "ext-xwayland-shell")]
+        if let Some(interface) = xwayland_shell::ObjectInteface::from_name(name, version) {
+            return Some(Self::XwaylandShell(interface));
         }
         None
     }

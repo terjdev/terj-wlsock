@@ -151,3 +151,171 @@ The Data control protocol definitions and documentation excerpts are derived fro
 [wayland-protocols ext-data-control-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/staging/ext-data-control/ext-data-control-v1.xml).
 The original copyright notices and permissive license, including its non-endorsement terms, are preserved in
 [src/protocol/ext/data_control/LICENSE.md](src/protocol/ext/data_control/LICENSE.md).
+
+## Third-party notice: Color management
+
+The Color management protocol definitions and documentation excerpts are derived from
+[wayland-protocols color-management-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/staging/color-management/color-management-v1.xml).
+The original copyright notices and permission terms are preserved in
+[src/protocol/ext/color_management/LICENSE.md](src/protocol/ext/color_management/LICENSE.md).
+
+## Third-party notice: Color representation
+
+The Color representation protocol definitions and documentation excerpts are derived from
+[wayland-protocols color-representation-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/staging/color-representation/color-representation-v1.xml).
+The original copyright notices and permission terms are preserved in
+[src/protocol/ext/color_representation/LICENSE.md](src/protocol/ext/color_representation/LICENSE.md).
+
+## Third-party notice: Foreign toplevel list
+
+The Foreign toplevel list protocol definitions and documentation excerpts are derived from
+[wayland-protocols ext-foreign-toplevel-list-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/staging/ext-foreign-toplevel-list/ext-foreign-toplevel-list-v1.xml).
+The original copyright notices and permission terms are preserved in
+[src/protocol/ext/foreign_toplevel_list/LICENSE.md](src/protocol/ext/foreign_toplevel_list/LICENSE.md).
+
+## Third-party notice: Idle notify
+
+The Idle notify protocol definitions and documentation excerpts are derived from
+[wayland-protocols ext-idle-notify-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/staging/ext-idle-notify/ext-idle-notify-v1.xml).
+The original copyright notices and permission terms are preserved in
+[src/protocol/ext/idle_notify/LICENSE.md](src/protocol/ext/idle_notify/LICENSE.md).
+
+## Third-party notice: Image capture source
+
+The Image capture source protocol definitions and documentation excerpts are derived from
+[wayland-protocols ext-image-capture-source-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/staging/ext-image-capture-source/ext-image-capture-source-v1.xml).
+The original copyright notices and permission terms are preserved in
+[src/protocol/ext/image_capture_source/LICENSE.md](src/protocol/ext/image_capture_source/LICENSE.md).
+
+## Third-party notice: Image copy capture
+
+The Image copy capture protocol definitions and documentation excerpts are derived from
+[wayland-protocols ext-image-copy-capture-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/staging/ext-image-copy-capture/ext-image-copy-capture-v1.xml).
+The original copyright notices and permission terms are preserved in
+[src/protocol/ext/image_copy_capture/LICENSE.md](src/protocol/ext/image_copy_capture/LICENSE.md).
+
+## Third-party notice: Session lock
+
+The Session lock protocol definitions and documentation excerpts are derived from
+[wayland-protocols ext-session-lock-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/staging/ext-session-lock/ext-session-lock-v1.xml).
+The original copyright notices and permission terms are preserved in
+[src/protocol/ext/session_lock/LICENSE.md](src/protocol/ext/session_lock/LICENSE.md).
+
+## Third-party notice: Transient seat
+
+The Transient seat protocol definitions and documentation excerpts are derived from
+[wayland-protocols ext-transient-seat-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/staging/ext-transient-seat/ext-transient-seat-v1.xml).
+The original copyright notices and permission terms are preserved in
+[src/protocol/ext/transient_seat/LICENSE.md](src/protocol/ext/transient_seat/LICENSE.md).
+
+## Third-party notice: Workspace
+
+The Workspace protocol definitions and documentation excerpts are derived from
+[wayland-protocols ext-workspace-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/staging/ext-workspace/ext-workspace-v1.xml).
+The original copyright notices and permission terms are preserved in
+[src/protocol/ext/workspace/LICENSE.md](src/protocol/ext/workspace/LICENSE.md).
+
+## Third-party notice: Fifo
+
+The Fifo protocol definitions and documentation excerpts are derived from
+[wayland-protocols fifo-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/staging/fifo/fifo-v1.xml).
+The original copyright notices and permission terms are preserved in
+[src/protocol/ext/fifo/LICENSE.md](src/protocol/ext/fifo/LICENSE.md).
+
+## Third-party notice: Fractional scale
+
+The Fractional scale protocol definitions and documentation excerpts are derived from
+[wayland-protocols fractional-scale-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/staging/fractional-scale/fractional-scale-v1.xml).
+The original copyright notices and permission terms are preserved in
+[src/protocol/ext/fractional_scale/LICENSE.md](src/protocol/ext/fractional_scale/LICENSE.md).
+
+## Third-party notice: Linux drm syncobj
+
+The Linux drm syncobj protocol definitions and documentation excerpts are derived from
+[wayland-protocols linux-drm-syncobj-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/staging/linux-drm-syncobj/linux-drm-syncobj-v1.xml).
+The original copyright notices and permission terms are preserved in
+[src/protocol/ext/linux_drm_syncobj/LICENSE.md](src/protocol/ext/linux_drm_syncobj/LICENSE.md).
+
+## Third-party notice: Pointer warp
+
+The Pointer warp protocol definitions and documentation excerpts are derived from
+[wayland-protocols pointer-warp-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/staging/pointer-warp/pointer-warp-v1.xml).
+The original copyright notices and permission terms are preserved in
+[src/protocol/ext/pointer_warp/LICENSE.md](src/protocol/ext/pointer_warp/LICENSE.md).
+
+## Third-party notice: Security context
+
+The Security context protocol definitions and documentation excerpts are derived from
+[wayland-protocols security-context-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/staging/security-context/security-context-v1.xml).
+The original copyright notices and permission terms are preserved in
+[src/protocol/ext/security_context/LICENSE.md](src/protocol/ext/security_context/LICENSE.md).
+
+## Third-party notice: Single pixel buffer
+
+The Single pixel buffer protocol definitions and documentation excerpts are derived from
+[wayland-protocols single-pixel-buffer-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/staging/single-pixel-buffer/single-pixel-buffer-v1.xml).
+The original copyright notices and permission terms are preserved in
+[src/protocol/ext/single_pixel_buffer/LICENSE.md](src/protocol/ext/single_pixel_buffer/LICENSE.md).
+
+## Third-party notice: Tearing control
+
+The Tearing control protocol definitions and documentation excerpts are derived from
+[wayland-protocols tearing-control-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/staging/tearing-control/tearing-control-v1.xml).
+The original copyright notices and permission terms are preserved in
+[src/protocol/ext/tearing_control/LICENSE.md](src/protocol/ext/tearing_control/LICENSE.md).
+
+## Third-party notice: Xdg activation
+
+The Xdg activation protocol definitions and documentation excerpts are derived from
+[wayland-protocols xdg-activation-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/staging/xdg-activation/xdg-activation-v1.xml).
+The original copyright notices and permission terms are preserved in
+[src/protocol/ext/xdg_activation/LICENSE.md](src/protocol/ext/xdg_activation/LICENSE.md).
+
+## Third-party notice: Xdg dialog
+
+The Xdg dialog protocol definitions and documentation excerpts are derived from
+[wayland-protocols xdg-dialog-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/staging/xdg-dialog/xdg-dialog-v1.xml).
+The original copyright notices and permission terms are preserved in
+[src/protocol/ext/xdg_dialog/LICENSE.md](src/protocol/ext/xdg_dialog/LICENSE.md).
+
+## Third-party notice: Xdg session management
+
+The Xdg session management protocol definitions and documentation excerpts are derived from
+[wayland-protocols xdg-session-management-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/staging/xdg-session-management/xdg-session-management-v1.xml).
+The original copyright notices and permission terms are preserved in
+[src/protocol/ext/xdg_session_management/LICENSE.md](src/protocol/ext/xdg_session_management/LICENSE.md).
+
+## Third-party notice: Xdg system bell
+
+The Xdg system bell protocol definitions and documentation excerpts are derived from
+[wayland-protocols xdg-system-bell-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/staging/xdg-system-bell/xdg-system-bell-v1.xml).
+The original copyright notices and permission terms are preserved in
+[src/protocol/ext/xdg_system_bell/LICENSE.md](src/protocol/ext/xdg_system_bell/LICENSE.md).
+
+## Third-party notice: Xdg toplevel drag
+
+The Xdg toplevel drag protocol definitions and documentation excerpts are derived from
+[wayland-protocols xdg-toplevel-drag-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/staging/xdg-toplevel-drag/xdg-toplevel-drag-v1.xml).
+The original copyright notices and permission terms are preserved in
+[src/protocol/ext/xdg_toplevel_drag/LICENSE.md](src/protocol/ext/xdg_toplevel_drag/LICENSE.md).
+
+## Third-party notice: Xdg toplevel icon
+
+The Xdg toplevel icon protocol definitions and documentation excerpts are derived from
+[wayland-protocols xdg-toplevel-icon-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/staging/xdg-toplevel-icon/xdg-toplevel-icon-v1.xml).
+The original copyright notices and permission terms are preserved in
+[src/protocol/ext/xdg_toplevel_icon/LICENSE.md](src/protocol/ext/xdg_toplevel_icon/LICENSE.md).
+
+## Third-party notice: Xdg toplevel tag
+
+The Xdg toplevel tag protocol definitions and documentation excerpts are derived from
+[wayland-protocols xdg-toplevel-tag-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/staging/xdg-toplevel-tag/xdg-toplevel-tag-v1.xml).
+The original copyright notices and permission terms are preserved in
+[src/protocol/ext/xdg_toplevel_tag/LICENSE.md](src/protocol/ext/xdg_toplevel_tag/LICENSE.md).
+
+## Third-party notice: Xwayland shell
+
+The Xwayland shell protocol definitions and documentation excerpts are derived from
+[wayland-protocols xwayland-shell-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/staging/xwayland-shell/xwayland-shell-v1.xml).
+The original copyright notices and permission terms are preserved in
+[src/protocol/ext/xwayland_shell/LICENSE.md](src/protocol/ext/xwayland_shell/LICENSE.md).

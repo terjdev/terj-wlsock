@@ -1,0 +1,54 @@
+use crate::protocol::{ClientState, CommandReader, CommandWriter};
+use crate::utils::reader::{FdPayloadReader, FdReaderError};
+use crate::utils::writer::{FdPayloadWriter, FdWriterError};
+use std::sync::{Arc, Mutex};
+
+/// Wire value `ext_image_copy_capture_frame_v1.error`.
+///
+/// Unknown numeric values and flag bits are preserved.
+/// ```xml
+/// <enum name="error">
+///       <entry name="no_buffer" value="1" summary="capture sent without attach_buffer" />
+///       <entry name="invalid_buffer_damage" value="2" summary="invalid buffer damage" />
+///       <entry name="already_captured" value="3" summary="capture request has been sent" />
+///     </enum>
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+#[repr(transparent)]
+pub struct ExtImageCopyCaptureFrameV1Error(pub u32);
+impl ExtImageCopyCaptureFrameV1Error {
+    /// capture sent without attach_buffer; available since version 1.
+    pub const NO_BUFFER: Self = Self(1);
+    /// invalid buffer damage; available since version 1.
+    pub const INVALID_BUFFER_DAMAGE: Self = Self(2);
+    /// capture request has been sent; available since version 1.
+    pub const ALREADY_CAPTURED: Self = Self(3);
+}
+impl CommandReader<Self> for ExtImageCopyCaptureFrameV1Error {
+    async fn read(
+        _object_id: u32,
+        _opcode: u16,
+        reader: &mut FdPayloadReader<'_>,
+        _state: &Arc<Mutex<ClientState>>,
+    ) -> Result<Self, FdReaderError> {
+        Ok(Self(reader.next_u32().await?))
+    }
+}
+impl CommandWriter for ExtImageCopyCaptureFrameV1Error {
+    fn object_id(&self) -> u32 {
+        0
+    }
+    fn opcode(&self) -> u16 {
+        0
+    }
+    fn payload_size(&self) -> usize {
+        4
+    }
+    async fn write(
+        self,
+        writer: &mut FdPayloadWriter<'_>,
+        _state: &Arc<Mutex<ClientState>>,
+    ) -> Result<(), FdWriterError> {
+        writer.next_u32(self.0).await
+    }
+}
