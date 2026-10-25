@@ -54,6 +54,94 @@ pub enum FdWriterState {
     Failed,
 }
 
+/// Inline buffered bytes and progress through the current send.
+struct BytesStorage {
+    raw: [u8; BYTES_CAPACITY],
+    len: usize,
+    sent: usize,
+}
+
+impl BytesStorage {
+    fn new() -> Self {
+        Self {
+            raw: [0; BYTES_CAPACITY],
+            len: 0,
+            sent: 0,
+        }
+    }
+
+    /// Appends a complete frame without I/O when it fits in the remaining space.
+    /// The caller checked the writer state, wire length, padding and any byte quota.
+    /// `total` is four prefix bytes plus the body and initialized suffix bytes.
+    /// Publishing the frame is synchronous, so cancellation cannot split it.
+    fn try_buffer_frame(&mut self, value: &[u8], wire_len: u32, total: usize) -> bool {
+        if total > BYTES_CAPACITY - self.len {
+            return false;
+        }
+        let start = self.len;
+        self.raw[start..start + 4].copy_from_slice(&wire_len.to_ne_bytes());
+        self.raw[start + 4..start + 4 + value.len()].copy_from_slice(value);
+        self.raw[start + 4 + value.len()..start + total].fill(0);
+        self.len = start + total;
+        true
+    }
+}
+
+/// Inline control-message storage and descriptors owned until a successful send.
+struct AncillaryStorage {
+    raw: [MaybeUninit<u8>; ANCILLARY_CAPACITY],
+    buf: [Option<OwnedFd>; FDS_CAPACITY],
+    len: usize,
+}
+
+impl AncillaryStorage {
+    fn new() -> Self {
+        Self {
+            raw: [MaybeUninit::uninit(); ANCILLARY_CAPACITY],
+            buf: [const { None }; FDS_CAPACITY],
+            len: 0,
+        }
+    }
+
+    /// Sends bytes and queued descriptors without waiting for socket readiness.
+    /// The caller records a successful send before clearing descriptor ownership.
+    fn send(
+        &mut self,
+        socket: &UnixStream,
+        iov: &[IoSlice<'_>],
+    ) -> io::Result<Result<usize, FdWriterError>> {
+        // Avoid constructing the borrowed-FD array for ordinary writes.
+        if self.len != 0 {
+            let mut fds = [socket.as_fd(); FDS_CAPACITY];
+            for (borrowed, owned) in fds[..self.len].iter_mut().zip(&self.buf[..self.len]) {
+                let Some(owned) = owned.as_ref() else {
+                    return Ok(Err(FdWriterError::WriterFailed));
+                };
+                *borrowed = owned.as_fd();
+            }
+            let mut control = SendAncillaryBuffer::new(&mut self.raw);
+            if !control.push(SendAncillaryMessage::ScmRights(&fds[..self.len])) {
+                return Ok(Err(FdWriterError::AncillaryBufferTooSmall));
+            }
+            return sendmsg(socket, iov, &mut control, SendFlags::NOSIGNAL)
+                .map(Ok)
+                .map_err(io::Error::from);
+        }
+
+        let mut control = SendAncillaryBuffer::new(&mut self.raw);
+        sendmsg(socket, iov, &mut control, SendFlags::NOSIGNAL)
+            .map(Ok)
+            .map_err(io::Error::from)
+    }
+
+    fn clear(&mut self) {
+        for slot in &mut self.buf[..self.len] {
+            *slot = None;
+        }
+        self.len = 0;
+    }
+}
+
 /// Buffered native-endian writes to a nonblocking Unix stream.
 ///
 /// The socket must already be nonblocking and its Tokio runtime must remain
@@ -75,32 +163,12 @@ pub enum FdWriterState {
 /// rejects continuation and marks the writer as failed.
 pub struct FdWriter {
     fd: AsyncFd<UnixStream>,
-    bytes_raw: [u8; BYTES_CAPACITY],
-    bytes_len: usize,
-    bytes_sent: usize,
-    fds_raw: [MaybeUninit<u8>; ANCILLARY_CAPACITY],
-    fds_buf: [Option<OwnedFd>; FDS_CAPACITY],
-    fds_len: usize,
+    bytes: BytesStorage,
+    ancillary: AncillaryStorage,
     state: FdWriterState,
 }
 
 impl FdWriter {
-    /// Appends a complete frame without I/O when it fits in the remaining space.
-    /// The caller checked the Open state, wire length, padding and any byte quota.
-    /// `total` is four prefix bytes plus the body and initialized suffix bytes.
-    /// Publishing the frame is synchronous, so cancellation cannot split it.
-    fn try_buffer_frame(&mut self, value: &[u8], wire_len: u32, total: usize) -> bool {
-        if total > BYTES_CAPACITY - self.bytes_len {
-            return false;
-        }
-        let start = self.bytes_len;
-        self.bytes_raw[start..start + 4].copy_from_slice(&wire_len.to_ne_bytes());
-        self.bytes_raw[start + 4..start + 4 + value.len()].copy_from_slice(value);
-        self.bytes_raw[start + 4 + value.len()..start + total].fill(0);
-        self.bytes_len = start + total;
-        true
-    }
-
     /// Returns the encoded array size, including its length prefix and alignment.
     /// Returns None if the length cannot fit in u32 or size arithmetic overflows.
     /// This calculation does not require a socket or perform I/O.
@@ -178,7 +246,10 @@ impl FdWriter {
             if total > (usize::from(u16::MAX) & !3) - 8 {
                 return Err(FdWriterError::InvalidProtocol);
             }
-            if self.try_buffer_frame(value.as_bytes(), wire_len, total) {
+            if self
+                .bytes
+                .try_buffer_frame(value.as_bytes(), wire_len, total)
+            {
                 return Ok(());
             }
             self.next_u32(wire_len).await?;
@@ -211,7 +282,7 @@ impl FdWriter {
             if total > (usize::from(u16::MAX) & !3) - 8 {
                 return Err(FdWriterError::InvalidProtocol);
             }
-            if self.try_buffer_frame(value, len, total) {
+            if self.bytes.try_buffer_frame(value, len, total) {
                 return Ok(());
             }
             self.next_u32(len).await?;
@@ -229,12 +300,8 @@ impl FdWriter {
     pub fn new(fd: AsyncFd<UnixStream>) -> Self {
         Self {
             fd,
-            bytes_raw: [0; BYTES_CAPACITY],
-            bytes_len: 0,
-            bytes_sent: 0,
-            fds_raw: [MaybeUninit::uninit(); ANCILLARY_CAPACITY],
-            fds_buf: [const { None }; FDS_CAPACITY],
-            fds_len: 0,
+            bytes: BytesStorage::new(),
+            ancillary: AncillaryStorage::new(),
             state: FdWriterState::Open,
         }
     }
@@ -249,10 +316,10 @@ impl FdWriter {
     /// insufficient payload quota.
     pub async fn next_i32(&mut self, value: i32) -> Result<(), FdWriterError> {
         self.check_state()?;
-        if BYTES_CAPACITY - self.bytes_len >= 4 {
-            self.bytes_raw[self.bytes_len..self.bytes_len + 4]
+        if BYTES_CAPACITY - self.bytes.len >= 4 {
+            self.bytes.raw[self.bytes.len..self.bytes.len + 4]
                 .copy_from_slice(&value.to_ne_bytes());
-            self.bytes_len += 4;
+            self.bytes.len += 4;
             return Ok(());
         }
         self.next_bytes(&value.to_ne_bytes()).await
@@ -268,10 +335,10 @@ impl FdWriter {
     /// insufficient payload quota.
     pub async fn next_u32(&mut self, value: u32) -> Result<(), FdWriterError> {
         self.check_state()?;
-        if BYTES_CAPACITY - self.bytes_len >= 4 {
-            self.bytes_raw[self.bytes_len..self.bytes_len + 4]
+        if BYTES_CAPACITY - self.bytes.len >= 4 {
+            self.bytes.raw[self.bytes.len..self.bytes.len + 4]
                 .copy_from_slice(&value.to_ne_bytes());
-            self.bytes_len += 4;
+            self.bytes.len += 4;
             return Ok(());
         }
         self.next_bytes(&value.to_ne_bytes()).await
@@ -304,13 +371,13 @@ impl FdWriter {
 
         let mut consumed = 0;
         while consumed < bytes.len() {
-            if self.bytes_len == BYTES_CAPACITY {
+            if self.bytes.len == BYTES_CAPACITY {
                 self.send_buffered(1).await?;
             }
-            let count = (bytes.len() - consumed).min(BYTES_CAPACITY - self.bytes_len);
-            self.bytes_raw[self.bytes_len..self.bytes_len + count]
+            let count = (bytes.len() - consumed).min(BYTES_CAPACITY - self.bytes.len);
+            self.bytes.raw[self.bytes.len..self.bytes.len + count]
                 .copy_from_slice(&bytes[consumed..consumed + count]);
-            self.bytes_len += count;
+            self.bytes.len += count;
             consumed += count;
         }
 
@@ -348,16 +415,16 @@ impl FdWriter {
     /// automatically, as is the supplied descriptor on cancellation.
     pub async fn next_fd(&mut self, fd: OwnedFd) -> Result<(), FdWriterError> {
         self.check_state()?;
-        if self.fds_len == FDS_CAPACITY {
+        if self.ancillary.len == FDS_CAPACITY {
             // Keep the current message incomplete until its new descriptor can
             // accompany data. A sole byte must instead serve the queued FDs;
             // the caller then supplies more bytes before flushing the new FD.
-            let retain = usize::from(self.bytes_len > 1);
+            let retain = usize::from(self.bytes.len > 1);
             self.state = FdWriterState::Writing;
             self.send_buffered(retain).await?;
         }
-        self.fds_buf[self.fds_len] = Some(fd);
-        self.fds_len += 1;
+        self.ancillary.buf[self.ancillary.len] = Some(fd);
+        self.ancillary.len += 1;
         self.state = FdWriterState::Open;
         Ok(())
     }
@@ -397,17 +464,17 @@ impl FdWriter {
     /// Drains a prefix, optionally retaining one byte without shifting the buffer.
     /// Called only while the public operation owns the `Writing` state.
     async fn send_buffered(&mut self, retain: usize) -> Result<(), FdWriterError> {
-        if retain > 1 || retain > self.bytes_len {
+        if retain > 1 || retain > self.bytes.len {
             self.state = FdWriterState::Failed;
             return Err(FdWriterError::InvalidProtocol);
         }
-        let end = self.bytes_len - retain;
-        if end == 0 && self.fds_len != 0 {
+        let end = self.bytes.len - retain;
+        if end == 0 && self.ancillary.len != 0 {
             self.state = FdWriterState::Failed;
             return Err(FdWriterError::FdsWithoutBytes);
         }
 
-        while self.bytes_sent < end {
+        while self.bytes.sent < end {
             // Keep readiness guards and ancillary temporaries within one poll;
             // none are carried across a readiness wait in the outer future.
             let result = std::future::poll_fn(|cx| {
@@ -423,33 +490,8 @@ impl FdWriter {
                     };
                     match guard.try_io(|fd| {
                         let socket = fd.get_ref();
-                        let iov = [IoSlice::new(&self.bytes_raw[self.bytes_sent..end])];
-                        // Avoid constructing the borrowed-FD array for ordinary writes.
-                        if self.fds_len != 0 {
-                            let mut fds = [socket.as_fd(); FDS_CAPACITY];
-                            for (borrowed, owned) in fds[..self.fds_len]
-                                .iter_mut()
-                                .zip(&self.fds_buf[..self.fds_len])
-                            {
-                                let Some(owned) = owned.as_ref() else {
-                                    return Ok(Err(FdWriterError::WriterFailed));
-                                };
-                                *borrowed = owned.as_fd();
-                            }
-                            let mut control = SendAncillaryBuffer::new(&mut self.fds_raw);
-                            if !control.push(SendAncillaryMessage::ScmRights(&fds[..self.fds_len]))
-                            {
-                                return Ok(Err(FdWriterError::AncillaryBufferTooSmall));
-                            }
-                            return sendmsg(socket, &iov, &mut control, SendFlags::NOSIGNAL)
-                                .map(Ok)
-                                .map_err(io::Error::from);
-                        }
-
-                        let mut control = SendAncillaryBuffer::new(&mut self.fds_raw);
-                        sendmsg(socket, &iov, &mut control, SendFlags::NOSIGNAL)
-                            .map(Ok)
-                            .map_err(io::Error::from)
+                        let iov = [IoSlice::new(&self.bytes.raw[self.bytes.sent..end])];
+                        self.ancillary.send(socket, &iov)
                     }) {
                         // try_io clears writable readiness only for WouldBlock.
                         Err(_) => continue,
@@ -465,13 +507,10 @@ impl FdWriter {
                     return Err(FdWriterError::WriteZero);
                 }
                 Ok(Ok(size)) => {
-                    self.bytes_sent += size;
+                    self.bytes.sent += size;
                     // SCM_RIGHTS is sent once, even when sendmsg writes a prefix.
                     // No await occurs between the send and recording its effects.
-                    for slot in &mut self.fds_buf[..self.fds_len] {
-                        *slot = None;
-                    }
-                    self.fds_len = 0;
+                    self.ancillary.clear();
                 }
                 Err(error) if error.kind() == io::ErrorKind::Interrupted => continue,
                 Ok(Err(error)) => {
@@ -492,10 +531,10 @@ impl FdWriter {
         }
 
         if retain != 0 {
-            self.bytes_raw[0] = self.bytes_raw[end];
+            self.bytes.raw[0] = self.bytes.raw[end];
         }
-        self.bytes_len = retain;
-        self.bytes_sent = 0;
+        self.bytes.len = retain;
+        self.bytes.sent = 0;
 
         Ok(())
     }
@@ -556,6 +595,7 @@ impl<'a> FdPayloadWriter<'a> {
             self.writer.check_state()?;
             if self
                 .writer
+                .bytes
                 .try_buffer_frame(value.as_bytes(), wire_len, total)
             {
                 self.quota -= total;
@@ -589,7 +629,7 @@ impl<'a> FdPayloadWriter<'a> {
                 return Err(FdWriterError::InvalidProtocol);
             }
             self.writer.check_state()?;
-            if self.writer.try_buffer_frame(value, len, total) {
+            if self.writer.bytes.try_buffer_frame(value, len, total) {
                 self.quota -= total;
                 return Ok(());
             }
