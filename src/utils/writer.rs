@@ -75,6 +75,7 @@ pub enum FdWriterState {
 }
 
 /// Inline buffered bytes and progress through the current send.
+#[derive(Debug)]
 struct BytesStorage {
     raw: [u8; BYTES_CAPACITY],
     len: usize,
@@ -108,6 +109,7 @@ impl BytesStorage {
 }
 
 /// Inline control-message storage and descriptors owned until a successful send.
+#[derive(Debug)]
 struct AncillaryStorage {
     raw: [MaybeUninit<u8>; ANCILLARY_CAPACITY],
     buf: [Option<OwnedFd>; FDS_CAPACITY],
@@ -181,6 +183,7 @@ impl AncillaryStorage {
 /// Cancelling an asynchronous operation leaves the state as `Writing`:
 /// buffered or sent prefixes cannot safely be repeated. The next operation
 /// rejects continuation and marks the writer as failed.
+#[derive(Debug)]
 pub struct FdWriter {
     fd: AsyncFd<UnixStream>,
     bytes: BytesStorage,
@@ -571,6 +574,7 @@ impl FdWriter {
 /// the connection after a quota error instead of continuing its message stream.
 /// Cancelled operations are likewise unrecoverable. No payload copies or extra
 /// buffers are made by this wrapper.
+#[derive(Debug)]
 pub struct FdPayloadWriter<'a> {
     writer: &'a mut FdWriter,
     quota: usize,

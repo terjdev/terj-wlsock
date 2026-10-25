@@ -1,4 +1,5 @@
 /// Configures bounded command queues; both limits default to 128 messages.
+#[derive(Debug)]
 pub struct Options {
     /// Capacity of the server command queue and each client's outgoing event queue.
     ///

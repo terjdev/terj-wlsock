@@ -92,6 +92,7 @@ pub enum FdReaderState {
 const MAX_PENDING_FDS: usize = 256;
 
 /// Inline read-ahead bytes, consumption indices, and cooperative receive counter.
+#[derive(Debug)]
 struct BytesStorage {
     raw: [u8; BYTES_CAPACITY],
     read: usize,
@@ -113,6 +114,7 @@ impl BytesStorage {
 /// Aligned control-message storage and a bounded FIFO of owned descriptors.
 /// Rustix handles the raw cmsghdr layout and closes unclaimed received FDs.
 #[repr(C)]
+#[derive(Debug)]
 struct AncillaryStorage {
     alignment: [usize; 0],
     raw: [MaybeUninit<u8>; ANCILLARY_CAPACITY],
@@ -205,6 +207,7 @@ impl AncillaryStorage {
 ///
 /// Descriptors remain available after EOF or a read failure. Dropping the reader
 /// closes all queued descriptors.
+#[derive(Debug)]
 pub struct FdReader {
     fd: AsyncFd<UnixStream>,
     bytes: BytesStorage,
@@ -672,6 +675,7 @@ impl FdReader {
 /// File descriptors are not covered by the byte quota: [`Self::next_fd`] can
 /// take descriptors from the reader's shared FIFO even at zero remaining quota.
 /// This wrapper does not establish which Wayland message owns each descriptor.
+#[derive(Debug)]
 pub struct FdPayloadReader<'a> {
     reader: &'a mut FdReader,
     quota: usize,

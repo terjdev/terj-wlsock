@@ -18,6 +18,7 @@ use crate::{
 /// Dropping the handle requests abrupt cancellation without awaiting resource
 /// cleanup or guaranteeing a disconnect notification. Use [`Self::close`] to
 /// request cancellation and wait for the connection task to finish.
+#[derive(Debug)]
 pub struct Socket {
     worker: Option<tokio::task::JoinHandle<()>>,
     cancelation_token: CancellationToken,

@@ -22,6 +22,7 @@ use tokio_util::sync::CancellationToken;
 /// Dropping this handle requests abrupt cancellation without waiting for resource
 /// cleanup or guaranteeing disconnect notifications. Use [`Self::close`] for
 /// an orderly shutdown. Closing the listener does not remove its filesystem path.
+#[derive(Debug)]
 pub struct Socket {
     worker: Option<tokio::task::JoinHandle<()>>,
     cancelation_token: CancellationToken,
