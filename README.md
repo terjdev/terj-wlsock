@@ -20,6 +20,10 @@ The library does not implement compositor behavior, rendering or
 window management. It only transports typed protocol messages between clients
 and servers, including their encoding and decoding.
 
+> [!WARNING]
+> This project is under development and may contain bugs.
+> Its public API may change without backward compatibility.
+
 ## Get started
 
 ```sh
