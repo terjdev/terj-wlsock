@@ -19,7 +19,7 @@ bounded channels, with automatic message encoding and decoding over Unix sockets
 cargo add terj-wlsock
 ```
 
-`Socket::create` returns a socket handle and two thread-safe message queues based
+`terj_wlsock::client::Socket::create` and `terj_wlsock::server::Socket::create` returns a socket handle and two thread-safe message queues based
 on `tokio::sync::mpsc`: a command sender and a notification receiver. Socket I/O
 runs asynchronously in the background until `close()` completes or the
 handle is dropped.
@@ -58,8 +58,8 @@ while let Some(message) = requests.recv().await {
 
 ## How it works
 
-`Socket::create` takes an existing Tokio Unix stream or listener and returns
-`(handle, command_sender, notification_receiver)`.
+`Socket::create` takes an existing Tokio Unix stream or Unix listener and returns
+`(handle, command_sender, command_receiver)`.
 
 Keep the socket handle alive for as long as you need the client connection or server listener alive.
 The command sender can be cloned and used from multiple tasks; the receiver can

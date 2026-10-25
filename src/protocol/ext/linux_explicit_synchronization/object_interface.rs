@@ -1,0 +1,45 @@
+//! Defines interfaces and negotiated versions for this protocol.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum ObjectInteface {
+    ZwpLinuxExplicitSynchronizationV1 { version: u32 },
+    ZwpLinuxSurfaceSynchronizationV1 { version: u32 },
+    ZwpLinuxBufferReleaseV1 { version: u32 },
+}
+impl ObjectInteface {
+    pub(crate) fn name(self) -> &'static str {
+        match self {
+            Self::ZwpLinuxExplicitSynchronizationV1 { .. } => {
+                "zwp_linux_explicit_synchronization_v1"
+            }
+            Self::ZwpLinuxSurfaceSynchronizationV1 { .. } => "zwp_linux_surface_synchronization_v1",
+            Self::ZwpLinuxBufferReleaseV1 { .. } => "zwp_linux_buffer_release_v1",
+        }
+    }
+    pub(crate) fn version(self) -> u32 {
+        match self {
+            Self::ZwpLinuxExplicitSynchronizationV1 { version } => version,
+            Self::ZwpLinuxSurfaceSynchronizationV1 { version } => version,
+            Self::ZwpLinuxBufferReleaseV1 { version } => version,
+        }
+    }
+    pub(crate) fn max_version(self) -> u32 {
+        match self {
+            Self::ZwpLinuxExplicitSynchronizationV1 { .. } => 2,
+            Self::ZwpLinuxSurfaceSynchronizationV1 { .. } => 2,
+            Self::ZwpLinuxBufferReleaseV1 { .. } => 1,
+        }
+    }
+    pub(crate) fn from_name(name: &str, version: u32) -> Option<Self> {
+        let interface = match name {
+            "zwp_linux_explicit_synchronization_v1" => {
+                Self::ZwpLinuxExplicitSynchronizationV1 { version }
+            }
+            "zwp_linux_surface_synchronization_v1" => {
+                Self::ZwpLinuxSurfaceSynchronizationV1 { version }
+            }
+            "zwp_linux_buffer_release_v1" => Self::ZwpLinuxBufferReleaseV1 { version },
+            _ => return None,
+        };
+        (version > 0 && version <= interface.max_version()).then_some(interface)
+    }
+}

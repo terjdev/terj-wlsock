@@ -319,3 +319,99 @@ The Xwayland shell protocol definitions and documentation excerpts are derived f
 [wayland-protocols xwayland-shell-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/staging/xwayland-shell/xwayland-shell-v1.xml).
 The original copyright notices and permission terms are preserved in
 [src/protocol/ext/xwayland_shell/LICENSE.md](src/protocol/ext/xwayland_shell/LICENSE.md).
+
+## Third-party notice: fullscreen shell
+
+Protocol definitions and documentation excerpts are derived from [fullscreen-shell-unstable-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/unstable/fullscreen-shell/fullscreen-shell-unstable-v1.xml).
+Original copyright notices and permission terms are preserved in
+[src/protocol/ext/fullscreen_shell/LICENSE.md](src/protocol/ext/fullscreen_shell/LICENSE.md).
+
+## Third-party notice: idle inhibit
+
+Protocol definitions and documentation excerpts are derived from [idle-inhibit-unstable-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/unstable/idle-inhibit/idle-inhibit-unstable-v1.xml).
+Original copyright notices and permission terms are preserved in
+[src/protocol/ext/idle_inhibit/LICENSE.md](src/protocol/ext/idle_inhibit/LICENSE.md).
+
+## Third-party notice: input method
+
+Protocol definitions and documentation excerpts are derived from [input-method-unstable-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/unstable/input-method/input-method-unstable-v1.xml).
+Original copyright notices and permission terms are preserved in
+[src/protocol/ext/input_method/LICENSE.md](src/protocol/ext/input_method/LICENSE.md).
+
+## Third-party notice: input timestamps
+
+Protocol definitions and documentation excerpts are derived from [input-timestamps-unstable-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/unstable/input-timestamps/input-timestamps-unstable-v1.xml).
+Original copyright notices and permission terms are preserved in
+[src/protocol/ext/input_timestamps/LICENSE.md](src/protocol/ext/input_timestamps/LICENSE.md).
+
+## Third-party notice: keyboard shortcuts inhibit
+
+Protocol definitions and documentation excerpts are derived from [keyboard-shortcuts-inhibit-unstable-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/unstable/keyboard-shortcuts-inhibit/keyboard-shortcuts-inhibit-unstable-v1.xml).
+Original copyright notices and permission terms are preserved in
+[src/protocol/ext/keyboard_shortcuts_inhibit/LICENSE.md](src/protocol/ext/keyboard_shortcuts_inhibit/LICENSE.md).
+
+## Third-party notice: linux explicit synchronization
+
+Protocol definitions and documentation excerpts are derived from [linux-explicit-synchronization-unstable-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/unstable/linux-explicit-synchronization/linux-explicit-synchronization-unstable-v1.xml).
+Original copyright notices and permission terms are preserved in
+[src/protocol/ext/linux_explicit_synchronization/LICENSE.md](src/protocol/ext/linux_explicit_synchronization/LICENSE.md).
+
+## Third-party notice: pointer constraints
+
+Protocol definitions and documentation excerpts are derived from [pointer-constraints-unstable-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/unstable/pointer-constraints/pointer-constraints-unstable-v1.xml).
+Original copyright notices and permission terms are preserved in
+[src/protocol/ext/pointer_constraints/LICENSE.md](src/protocol/ext/pointer_constraints/LICENSE.md).
+
+## Third-party notice: pointer gestures
+
+Protocol definitions and documentation excerpts are derived from [pointer-gestures-unstable-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/unstable/pointer-gestures/pointer-gestures-unstable-v1.xml).
+Original copyright notices and permission terms are preserved in
+[src/protocol/ext/pointer_gestures/LICENSE.md](src/protocol/ext/pointer_gestures/LICENSE.md).
+
+## Third-party notice: primary selection
+
+Protocol definitions and documentation excerpts are derived from [primary-selection-unstable-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/unstable/primary-selection/primary-selection-unstable-v1.xml).
+Original copyright notices and permission terms are preserved in
+[src/protocol/ext/primary_selection/LICENSE.md](src/protocol/ext/primary_selection/LICENSE.md).
+
+## Third-party notice: relative pointer
+
+Protocol definitions and documentation excerpts are derived from [relative-pointer-unstable-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/unstable/relative-pointer/relative-pointer-unstable-v1.xml).
+Original copyright notices and permission terms are preserved in
+[src/protocol/ext/relative_pointer/LICENSE.md](src/protocol/ext/relative_pointer/LICENSE.md).
+
+## Third-party notice: tablet unstable
+
+Protocol definitions and documentation excerpts are derived from [tablet-unstable-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/unstable/tablet/tablet-unstable-v1.xml).
+Original copyright notices and permission terms are preserved in
+[src/protocol/ext/tablet_unstable/LICENSE.md](src/protocol/ext/tablet_unstable/LICENSE.md).
+
+## Third-party notice: text input
+
+Protocol definitions and documentation excerpts are derived from [text-input-unstable-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/unstable/text-input/text-input-unstable-v1.xml), [text-input-unstable-v3.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/unstable/text-input/text-input-unstable-v3.xml).
+Original copyright notices and permission terms are preserved in
+[src/protocol/ext/text_input/LICENSE.md](src/protocol/ext/text_input/LICENSE.md).
+
+## Third-party notice: xdg decoration
+
+Protocol definitions and documentation excerpts are derived from [xdg-decoration-unstable-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/unstable/xdg-decoration/xdg-decoration-unstable-v1.xml).
+Original copyright notices and permission terms are preserved in
+[src/protocol/ext/xdg_decoration/LICENSE.md](src/protocol/ext/xdg_decoration/LICENSE.md).
+
+## Third-party notice: xdg foreign
+
+Protocol definitions and documentation excerpts are derived from [xdg-foreign-unstable-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/unstable/xdg-foreign/xdg-foreign-unstable-v1.xml), [xdg-foreign-unstable-v2.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/unstable/xdg-foreign/xdg-foreign-unstable-v2.xml).
+Original copyright notices and permission terms are preserved in
+[src/protocol/ext/xdg_foreign/LICENSE.md](src/protocol/ext/xdg_foreign/LICENSE.md).
+
+## Third-party notice: xdg output
+
+Protocol definitions and documentation excerpts are derived from [xdg-output-unstable-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/unstable/xdg-output/xdg-output-unstable-v1.xml).
+Original copyright notices and permission terms are preserved in
+[src/protocol/ext/xdg_output/LICENSE.md](src/protocol/ext/xdg_output/LICENSE.md).
+
+## Third-party notice: xwayland keyboard grab
+
+Protocol definitions and documentation excerpts are derived from [xwayland-keyboard-grab-unstable-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/unstable/xwayland-keyboard-grab/xwayland-keyboard-grab-unstable-v1.xml).
+Original copyright notices and permission terms are preserved in
+[src/protocol/ext/xwayland_keyboard_grab/LICENSE.md](src/protocol/ext/xwayland_keyboard_grab/LICENSE.md).

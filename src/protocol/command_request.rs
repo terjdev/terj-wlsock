@@ -25,18 +25,38 @@ use crate::protocol::ext::fifo;
 use crate::protocol::ext::foreign_toplevel_list;
 #[cfg(feature = "ext-fractional-scale")]
 use crate::protocol::ext::fractional_scale;
+#[cfg(feature = "ext-fullscreen-shell")]
+use crate::protocol::ext::fullscreen_shell;
+#[cfg(feature = "ext-idle-inhibit")]
+use crate::protocol::ext::idle_inhibit;
 #[cfg(feature = "ext-idle-notify")]
 use crate::protocol::ext::idle_notify;
 #[cfg(feature = "ext-image-capture-source")]
 use crate::protocol::ext::image_capture_source;
 #[cfg(feature = "ext-image-copy-capture")]
 use crate::protocol::ext::image_copy_capture;
+#[cfg(feature = "ext-input-method")]
+use crate::protocol::ext::input_method;
+#[cfg(feature = "ext-input-timestamps")]
+use crate::protocol::ext::input_timestamps;
+#[cfg(feature = "ext-keyboard-shortcuts-inhibit")]
+use crate::protocol::ext::keyboard_shortcuts_inhibit;
 #[cfg(feature = "ext-linux-drm-syncobj")]
 use crate::protocol::ext::linux_drm_syncobj;
+#[cfg(feature = "ext-linux-explicit-synchronization")]
+use crate::protocol::ext::linux_explicit_synchronization;
+#[cfg(feature = "ext-pointer-constraints")]
+use crate::protocol::ext::pointer_constraints;
+#[cfg(feature = "ext-pointer-gestures")]
+use crate::protocol::ext::pointer_gestures;
 #[cfg(feature = "ext-pointer-warp")]
 use crate::protocol::ext::pointer_warp;
 #[cfg(feature = "ext-presentation-time")]
 use crate::protocol::ext::presentation_time;
+#[cfg(feature = "ext-primary-selection")]
+use crate::protocol::ext::primary_selection;
+#[cfg(feature = "ext-relative-pointer")]
+use crate::protocol::ext::relative_pointer;
 #[cfg(feature = "ext-security-context")]
 use crate::protocol::ext::security_context;
 #[cfg(feature = "ext-session-lock")]
@@ -45,8 +65,12 @@ use crate::protocol::ext::session_lock;
 use crate::protocol::ext::single_pixel_buffer;
 #[cfg(feature = "ext-tablet")]
 use crate::protocol::ext::tablet;
+#[cfg(feature = "ext-tablet-unstable")]
+use crate::protocol::ext::tablet_unstable;
 #[cfg(feature = "ext-tearing-control")]
 use crate::protocol::ext::tearing_control;
+#[cfg(feature = "ext-text-input")]
+use crate::protocol::ext::text_input;
 #[cfg(feature = "ext-transient-seat")]
 use crate::protocol::ext::transient_seat;
 #[cfg(feature = "ext-viewporter")]
@@ -55,8 +79,14 @@ use crate::protocol::ext::viewporter;
 use crate::protocol::ext::workspace;
 #[cfg(feature = "ext-xdg-activation")]
 use crate::protocol::ext::xdg_activation;
+#[cfg(feature = "ext-xdg-decoration")]
+use crate::protocol::ext::xdg_decoration;
 #[cfg(feature = "ext-xdg-dialog")]
 use crate::protocol::ext::xdg_dialog;
+#[cfg(feature = "ext-xdg-foreign")]
+use crate::protocol::ext::xdg_foreign;
+#[cfg(feature = "ext-xdg-output")]
+use crate::protocol::ext::xdg_output;
 #[cfg(feature = "ext-xdg-session-management")]
 use crate::protocol::ext::xdg_session_management;
 #[cfg(feature = "ext-xdg-shell")]
@@ -69,6 +99,8 @@ use crate::protocol::ext::xdg_toplevel_drag;
 use crate::protocol::ext::xdg_toplevel_icon;
 #[cfg(feature = "ext-xdg-toplevel-tag")]
 use crate::protocol::ext::xdg_toplevel_tag;
+#[cfg(feature = "ext-xwayland-keyboard-grab")]
+use crate::protocol::ext::xwayland_keyboard_grab;
 #[cfg(feature = "ext-xwayland-shell")]
 use crate::protocol::ext::xwayland_shell;
 #[cfg(feature = "wlr-data-control")]
@@ -91,6 +123,54 @@ use std::sync::{Arc, Mutex};
 pub enum CommandRequest {
     /// Core Wayland protocol commands.
     Core(core::CommandRequest),
+    /// xwayland keyboard grab messages.
+    #[cfg(feature = "ext-xwayland-keyboard-grab")]
+    XwaylandKeyboardGrab(xwayland_keyboard_grab::CommandRequest),
+    /// xdg output messages.
+    #[cfg(feature = "ext-xdg-output")]
+    XdgOutput(xdg_output::CommandRequest),
+    /// xdg foreign messages.
+    #[cfg(feature = "ext-xdg-foreign")]
+    XdgForeign(xdg_foreign::CommandRequest),
+    /// xdg decoration messages.
+    #[cfg(feature = "ext-xdg-decoration")]
+    XdgDecoration(xdg_decoration::CommandRequest),
+    /// text input messages.
+    #[cfg(feature = "ext-text-input")]
+    TextInput(text_input::CommandRequest),
+    /// tablet unstable messages.
+    #[cfg(feature = "ext-tablet-unstable")]
+    TabletUnstable(tablet_unstable::CommandRequest),
+    /// relative pointer messages.
+    #[cfg(feature = "ext-relative-pointer")]
+    RelativePointer(relative_pointer::CommandRequest),
+    /// primary selection messages.
+    #[cfg(feature = "ext-primary-selection")]
+    PrimarySelection(primary_selection::CommandRequest),
+    /// pointer gestures messages.
+    #[cfg(feature = "ext-pointer-gestures")]
+    PointerGestures(pointer_gestures::CommandRequest),
+    /// pointer constraints messages.
+    #[cfg(feature = "ext-pointer-constraints")]
+    PointerConstraints(pointer_constraints::CommandRequest),
+    /// linux explicit synchronization messages.
+    #[cfg(feature = "ext-linux-explicit-synchronization")]
+    LinuxExplicitSynchronization(linux_explicit_synchronization::CommandRequest),
+    /// keyboard shortcuts inhibit messages.
+    #[cfg(feature = "ext-keyboard-shortcuts-inhibit")]
+    KeyboardShortcutsInhibit(keyboard_shortcuts_inhibit::CommandRequest),
+    /// input timestamps messages.
+    #[cfg(feature = "ext-input-timestamps")]
+    InputTimestamps(input_timestamps::CommandRequest),
+    /// input method messages.
+    #[cfg(feature = "ext-input-method")]
+    InputMethod(input_method::CommandRequest),
+    /// idle inhibit messages.
+    #[cfg(feature = "ext-idle-inhibit")]
+    IdleInhibit(idle_inhibit::CommandRequest),
+    /// fullscreen shell messages.
+    #[cfg(feature = "ext-fullscreen-shell")]
+    FullscreenShell(fullscreen_shell::CommandRequest),
     /// Xwayland shell extension commands.
     #[cfg(feature = "ext-xwayland-shell")]
     XwaylandShell(xwayland_shell::CommandRequest),
@@ -502,6 +582,120 @@ impl InterfaceReader for CommandRequest {
                 )
                 .await?,
             )),
+            #[cfg(feature = "ext-fullscreen-shell")]
+            ObjectInteface::FullscreenShell(_) => Ok(Self::FullscreenShell(
+                fullscreen_shell::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "ext-idle-inhibit")]
+            ObjectInteface::IdleInhibit(_) => Ok(Self::IdleInhibit(
+                idle_inhibit::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "ext-input-method")]
+            ObjectInteface::InputMethod(_) => Ok(Self::InputMethod(
+                input_method::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "ext-input-timestamps")]
+            ObjectInteface::InputTimestamps(_) => Ok(Self::InputTimestamps(
+                input_timestamps::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "ext-keyboard-shortcuts-inhibit")]
+            ObjectInteface::KeyboardShortcutsInhibit(_) => Ok(Self::KeyboardShortcutsInhibit(
+                keyboard_shortcuts_inhibit::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "ext-linux-explicit-synchronization")]
+            ObjectInteface::LinuxExplicitSynchronization(_) => {
+                Ok(Self::LinuxExplicitSynchronization(
+                    linux_explicit_synchronization::CommandRequest::read_with_interface(
+                        object_id, opcode, interface, reader, state,
+                    )
+                    .await?,
+                ))
+            }
+            #[cfg(feature = "ext-pointer-constraints")]
+            ObjectInteface::PointerConstraints(_) => Ok(Self::PointerConstraints(
+                pointer_constraints::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "ext-pointer-gestures")]
+            ObjectInteface::PointerGestures(_) => Ok(Self::PointerGestures(
+                pointer_gestures::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "ext-primary-selection")]
+            ObjectInteface::PrimarySelection(_) => Ok(Self::PrimarySelection(
+                primary_selection::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "ext-relative-pointer")]
+            ObjectInteface::RelativePointer(_) => Ok(Self::RelativePointer(
+                relative_pointer::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "ext-tablet-unstable")]
+            ObjectInteface::TabletUnstable(_) => Ok(Self::TabletUnstable(
+                tablet_unstable::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "ext-text-input")]
+            ObjectInteface::TextInput(_) => Ok(Self::TextInput(
+                text_input::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "ext-xdg-decoration")]
+            ObjectInteface::XdgDecoration(_) => Ok(Self::XdgDecoration(
+                xdg_decoration::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "ext-xdg-foreign")]
+            ObjectInteface::XdgForeign(_) => Ok(Self::XdgForeign(
+                xdg_foreign::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "ext-xdg-output")]
+            ObjectInteface::XdgOutput(_) => Ok(Self::XdgOutput(
+                xdg_output::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
+            #[cfg(feature = "ext-xwayland-keyboard-grab")]
+            ObjectInteface::XwaylandKeyboardGrab(_) => Ok(Self::XwaylandKeyboardGrab(
+                xwayland_keyboard_grab::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
             ObjectInteface::Core(_) => Ok(Self::Core(
                 core::CommandRequest::read_with_interface(
                     object_id, opcode, interface, reader, state,
@@ -530,6 +724,38 @@ impl CommandWriter for CommandRequest {
     fn object_id(&self) -> u32 {
         match self {
             Self::Core(command) => command.object_id(),
+            #[cfg(feature = "ext-xwayland-keyboard-grab")]
+            Self::XwaylandKeyboardGrab(command) => command.object_id(),
+            #[cfg(feature = "ext-xdg-output")]
+            Self::XdgOutput(command) => command.object_id(),
+            #[cfg(feature = "ext-xdg-foreign")]
+            Self::XdgForeign(command) => command.object_id(),
+            #[cfg(feature = "ext-xdg-decoration")]
+            Self::XdgDecoration(command) => command.object_id(),
+            #[cfg(feature = "ext-text-input")]
+            Self::TextInput(command) => command.object_id(),
+            #[cfg(feature = "ext-tablet-unstable")]
+            Self::TabletUnstable(command) => command.object_id(),
+            #[cfg(feature = "ext-relative-pointer")]
+            Self::RelativePointer(command) => command.object_id(),
+            #[cfg(feature = "ext-primary-selection")]
+            Self::PrimarySelection(command) => command.object_id(),
+            #[cfg(feature = "ext-pointer-gestures")]
+            Self::PointerGestures(command) => command.object_id(),
+            #[cfg(feature = "ext-pointer-constraints")]
+            Self::PointerConstraints(command) => command.object_id(),
+            #[cfg(feature = "ext-linux-explicit-synchronization")]
+            Self::LinuxExplicitSynchronization(command) => command.object_id(),
+            #[cfg(feature = "ext-keyboard-shortcuts-inhibit")]
+            Self::KeyboardShortcutsInhibit(command) => command.object_id(),
+            #[cfg(feature = "ext-input-timestamps")]
+            Self::InputTimestamps(command) => command.object_id(),
+            #[cfg(feature = "ext-input-method")]
+            Self::InputMethod(command) => command.object_id(),
+            #[cfg(feature = "ext-idle-inhibit")]
+            Self::IdleInhibit(command) => command.object_id(),
+            #[cfg(feature = "ext-fullscreen-shell")]
+            Self::FullscreenShell(command) => command.object_id(),
             #[cfg(feature = "ext-xwayland-shell")]
             Self::XwaylandShell(command) => command.object_id(),
             #[cfg(feature = "ext-xdg-toplevel-tag")]
@@ -615,6 +841,38 @@ impl CommandWriter for CommandRequest {
     fn opcode(&self) -> u16 {
         match self {
             Self::Core(command) => command.opcode(),
+            #[cfg(feature = "ext-xwayland-keyboard-grab")]
+            Self::XwaylandKeyboardGrab(command) => command.opcode(),
+            #[cfg(feature = "ext-xdg-output")]
+            Self::XdgOutput(command) => command.opcode(),
+            #[cfg(feature = "ext-xdg-foreign")]
+            Self::XdgForeign(command) => command.opcode(),
+            #[cfg(feature = "ext-xdg-decoration")]
+            Self::XdgDecoration(command) => command.opcode(),
+            #[cfg(feature = "ext-text-input")]
+            Self::TextInput(command) => command.opcode(),
+            #[cfg(feature = "ext-tablet-unstable")]
+            Self::TabletUnstable(command) => command.opcode(),
+            #[cfg(feature = "ext-relative-pointer")]
+            Self::RelativePointer(command) => command.opcode(),
+            #[cfg(feature = "ext-primary-selection")]
+            Self::PrimarySelection(command) => command.opcode(),
+            #[cfg(feature = "ext-pointer-gestures")]
+            Self::PointerGestures(command) => command.opcode(),
+            #[cfg(feature = "ext-pointer-constraints")]
+            Self::PointerConstraints(command) => command.opcode(),
+            #[cfg(feature = "ext-linux-explicit-synchronization")]
+            Self::LinuxExplicitSynchronization(command) => command.opcode(),
+            #[cfg(feature = "ext-keyboard-shortcuts-inhibit")]
+            Self::KeyboardShortcutsInhibit(command) => command.opcode(),
+            #[cfg(feature = "ext-input-timestamps")]
+            Self::InputTimestamps(command) => command.opcode(),
+            #[cfg(feature = "ext-input-method")]
+            Self::InputMethod(command) => command.opcode(),
+            #[cfg(feature = "ext-idle-inhibit")]
+            Self::IdleInhibit(command) => command.opcode(),
+            #[cfg(feature = "ext-fullscreen-shell")]
+            Self::FullscreenShell(command) => command.opcode(),
             #[cfg(feature = "ext-xwayland-shell")]
             Self::XwaylandShell(command) => command.opcode(),
             #[cfg(feature = "ext-xdg-toplevel-tag")]
@@ -700,6 +958,38 @@ impl CommandWriter for CommandRequest {
     fn payload_size(&self) -> usize {
         match self {
             Self::Core(command) => command.payload_size(),
+            #[cfg(feature = "ext-xwayland-keyboard-grab")]
+            Self::XwaylandKeyboardGrab(command) => command.payload_size(),
+            #[cfg(feature = "ext-xdg-output")]
+            Self::XdgOutput(command) => command.payload_size(),
+            #[cfg(feature = "ext-xdg-foreign")]
+            Self::XdgForeign(command) => command.payload_size(),
+            #[cfg(feature = "ext-xdg-decoration")]
+            Self::XdgDecoration(command) => command.payload_size(),
+            #[cfg(feature = "ext-text-input")]
+            Self::TextInput(command) => command.payload_size(),
+            #[cfg(feature = "ext-tablet-unstable")]
+            Self::TabletUnstable(command) => command.payload_size(),
+            #[cfg(feature = "ext-relative-pointer")]
+            Self::RelativePointer(command) => command.payload_size(),
+            #[cfg(feature = "ext-primary-selection")]
+            Self::PrimarySelection(command) => command.payload_size(),
+            #[cfg(feature = "ext-pointer-gestures")]
+            Self::PointerGestures(command) => command.payload_size(),
+            #[cfg(feature = "ext-pointer-constraints")]
+            Self::PointerConstraints(command) => command.payload_size(),
+            #[cfg(feature = "ext-linux-explicit-synchronization")]
+            Self::LinuxExplicitSynchronization(command) => command.payload_size(),
+            #[cfg(feature = "ext-keyboard-shortcuts-inhibit")]
+            Self::KeyboardShortcutsInhibit(command) => command.payload_size(),
+            #[cfg(feature = "ext-input-timestamps")]
+            Self::InputTimestamps(command) => command.payload_size(),
+            #[cfg(feature = "ext-input-method")]
+            Self::InputMethod(command) => command.payload_size(),
+            #[cfg(feature = "ext-idle-inhibit")]
+            Self::IdleInhibit(command) => command.payload_size(),
+            #[cfg(feature = "ext-fullscreen-shell")]
+            Self::FullscreenShell(command) => command.payload_size(),
             #[cfg(feature = "ext-xwayland-shell")]
             Self::XwaylandShell(command) => command.payload_size(),
             #[cfg(feature = "ext-xdg-toplevel-tag")]
@@ -789,6 +1079,38 @@ impl CommandWriter for CommandRequest {
     ) -> Result<(), FdWriterError> {
         match self {
             Self::Core(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-xwayland-keyboard-grab")]
+            Self::XwaylandKeyboardGrab(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-xdg-output")]
+            Self::XdgOutput(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-xdg-foreign")]
+            Self::XdgForeign(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-xdg-decoration")]
+            Self::XdgDecoration(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-text-input")]
+            Self::TextInput(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-tablet-unstable")]
+            Self::TabletUnstable(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-relative-pointer")]
+            Self::RelativePointer(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-primary-selection")]
+            Self::PrimarySelection(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-pointer-gestures")]
+            Self::PointerGestures(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-pointer-constraints")]
+            Self::PointerConstraints(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-linux-explicit-synchronization")]
+            Self::LinuxExplicitSynchronization(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-keyboard-shortcuts-inhibit")]
+            Self::KeyboardShortcutsInhibit(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-input-timestamps")]
+            Self::InputTimestamps(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-input-method")]
+            Self::InputMethod(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-idle-inhibit")]
+            Self::IdleInhibit(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-fullscreen-shell")]
+            Self::FullscreenShell(command) => command.write(writer, state).await,
             #[cfg(feature = "ext-xwayland-shell")]
             Self::XwaylandShell(command) => command.write(writer, state).await,
             #[cfg(feature = "ext-xdg-toplevel-tag")]

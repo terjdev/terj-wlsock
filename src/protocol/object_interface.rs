@@ -27,18 +27,38 @@ use crate::protocol::ext::fifo;
 use crate::protocol::ext::foreign_toplevel_list;
 #[cfg(feature = "ext-fractional-scale")]
 use crate::protocol::ext::fractional_scale;
+#[cfg(feature = "ext-fullscreen-shell")]
+use crate::protocol::ext::fullscreen_shell;
+#[cfg(feature = "ext-idle-inhibit")]
+use crate::protocol::ext::idle_inhibit;
 #[cfg(feature = "ext-idle-notify")]
 use crate::protocol::ext::idle_notify;
 #[cfg(feature = "ext-image-capture-source")]
 use crate::protocol::ext::image_capture_source;
 #[cfg(feature = "ext-image-copy-capture")]
 use crate::protocol::ext::image_copy_capture;
+#[cfg(feature = "ext-input-method")]
+use crate::protocol::ext::input_method;
+#[cfg(feature = "ext-input-timestamps")]
+use crate::protocol::ext::input_timestamps;
+#[cfg(feature = "ext-keyboard-shortcuts-inhibit")]
+use crate::protocol::ext::keyboard_shortcuts_inhibit;
 #[cfg(feature = "ext-linux-drm-syncobj")]
 use crate::protocol::ext::linux_drm_syncobj;
+#[cfg(feature = "ext-linux-explicit-synchronization")]
+use crate::protocol::ext::linux_explicit_synchronization;
+#[cfg(feature = "ext-pointer-constraints")]
+use crate::protocol::ext::pointer_constraints;
+#[cfg(feature = "ext-pointer-gestures")]
+use crate::protocol::ext::pointer_gestures;
 #[cfg(feature = "ext-pointer-warp")]
 use crate::protocol::ext::pointer_warp;
 #[cfg(feature = "ext-presentation-time")]
 use crate::protocol::ext::presentation_time;
+#[cfg(feature = "ext-primary-selection")]
+use crate::protocol::ext::primary_selection;
+#[cfg(feature = "ext-relative-pointer")]
+use crate::protocol::ext::relative_pointer;
 #[cfg(feature = "ext-security-context")]
 use crate::protocol::ext::security_context;
 #[cfg(feature = "ext-session-lock")]
@@ -47,8 +67,12 @@ use crate::protocol::ext::session_lock;
 use crate::protocol::ext::single_pixel_buffer;
 #[cfg(feature = "ext-tablet")]
 use crate::protocol::ext::tablet;
+#[cfg(feature = "ext-tablet-unstable")]
+use crate::protocol::ext::tablet_unstable;
 #[cfg(feature = "ext-tearing-control")]
 use crate::protocol::ext::tearing_control;
+#[cfg(feature = "ext-text-input")]
+use crate::protocol::ext::text_input;
 #[cfg(feature = "ext-transient-seat")]
 use crate::protocol::ext::transient_seat;
 #[cfg(feature = "ext-viewporter")]
@@ -57,8 +81,14 @@ use crate::protocol::ext::viewporter;
 use crate::protocol::ext::workspace;
 #[cfg(feature = "ext-xdg-activation")]
 use crate::protocol::ext::xdg_activation;
+#[cfg(feature = "ext-xdg-decoration")]
+use crate::protocol::ext::xdg_decoration;
 #[cfg(feature = "ext-xdg-dialog")]
 use crate::protocol::ext::xdg_dialog;
+#[cfg(feature = "ext-xdg-foreign")]
+use crate::protocol::ext::xdg_foreign;
+#[cfg(feature = "ext-xdg-output")]
+use crate::protocol::ext::xdg_output;
 #[cfg(feature = "ext-xdg-session-management")]
 use crate::protocol::ext::xdg_session_management;
 #[cfg(feature = "ext-xdg-shell")]
@@ -71,6 +101,8 @@ use crate::protocol::ext::xdg_toplevel_drag;
 use crate::protocol::ext::xdg_toplevel_icon;
 #[cfg(feature = "ext-xdg-toplevel-tag")]
 use crate::protocol::ext::xdg_toplevel_tag;
+#[cfg(feature = "ext-xwayland-keyboard-grab")]
+use crate::protocol::ext::xwayland_keyboard_grab;
 #[cfg(feature = "ext-xwayland-shell")]
 use crate::protocol::ext::xwayland_shell;
 #[cfg(feature = "wlr-data-control")]
@@ -87,6 +119,54 @@ use crate::protocol::wlr::virtual_pointer;
 pub(crate) enum ObjectInteface {
     /// A core Wayland interface.
     Core(core::ObjectInteface),
+    /// A xwayland keyboard grab interface.
+    #[cfg(feature = "ext-xwayland-keyboard-grab")]
+    XwaylandKeyboardGrab(xwayland_keyboard_grab::ObjectInteface),
+    /// A xdg output interface.
+    #[cfg(feature = "ext-xdg-output")]
+    XdgOutput(xdg_output::ObjectInteface),
+    /// A xdg foreign interface.
+    #[cfg(feature = "ext-xdg-foreign")]
+    XdgForeign(xdg_foreign::ObjectInteface),
+    /// A xdg decoration interface.
+    #[cfg(feature = "ext-xdg-decoration")]
+    XdgDecoration(xdg_decoration::ObjectInteface),
+    /// A text input interface.
+    #[cfg(feature = "ext-text-input")]
+    TextInput(text_input::ObjectInteface),
+    /// A tablet unstable interface.
+    #[cfg(feature = "ext-tablet-unstable")]
+    TabletUnstable(tablet_unstable::ObjectInteface),
+    /// A relative pointer interface.
+    #[cfg(feature = "ext-relative-pointer")]
+    RelativePointer(relative_pointer::ObjectInteface),
+    /// A primary selection interface.
+    #[cfg(feature = "ext-primary-selection")]
+    PrimarySelection(primary_selection::ObjectInteface),
+    /// A pointer gestures interface.
+    #[cfg(feature = "ext-pointer-gestures")]
+    PointerGestures(pointer_gestures::ObjectInteface),
+    /// A pointer constraints interface.
+    #[cfg(feature = "ext-pointer-constraints")]
+    PointerConstraints(pointer_constraints::ObjectInteface),
+    /// A linux explicit synchronization interface.
+    #[cfg(feature = "ext-linux-explicit-synchronization")]
+    LinuxExplicitSynchronization(linux_explicit_synchronization::ObjectInteface),
+    /// A keyboard shortcuts inhibit interface.
+    #[cfg(feature = "ext-keyboard-shortcuts-inhibit")]
+    KeyboardShortcutsInhibit(keyboard_shortcuts_inhibit::ObjectInteface),
+    /// A input timestamps interface.
+    #[cfg(feature = "ext-input-timestamps")]
+    InputTimestamps(input_timestamps::ObjectInteface),
+    /// A input method interface.
+    #[cfg(feature = "ext-input-method")]
+    InputMethod(input_method::ObjectInteface),
+    /// A idle inhibit interface.
+    #[cfg(feature = "ext-idle-inhibit")]
+    IdleInhibit(idle_inhibit::ObjectInteface),
+    /// A fullscreen shell interface.
+    #[cfg(feature = "ext-fullscreen-shell")]
+    FullscreenShell(fullscreen_shell::ObjectInteface),
     /// A Xwayland shell interface.
     #[cfg(feature = "ext-xwayland-shell")]
     XwaylandShell(xwayland_shell::ObjectInteface),
@@ -214,6 +294,38 @@ impl ObjectInteface {
     pub(crate) fn name(self) -> &'static str {
         match self {
             Self::Core(interface) => interface.name(),
+            #[cfg(feature = "ext-xwayland-keyboard-grab")]
+            Self::XwaylandKeyboardGrab(interface) => interface.name(),
+            #[cfg(feature = "ext-xdg-output")]
+            Self::XdgOutput(interface) => interface.name(),
+            #[cfg(feature = "ext-xdg-foreign")]
+            Self::XdgForeign(interface) => interface.name(),
+            #[cfg(feature = "ext-xdg-decoration")]
+            Self::XdgDecoration(interface) => interface.name(),
+            #[cfg(feature = "ext-text-input")]
+            Self::TextInput(interface) => interface.name(),
+            #[cfg(feature = "ext-tablet-unstable")]
+            Self::TabletUnstable(interface) => interface.name(),
+            #[cfg(feature = "ext-relative-pointer")]
+            Self::RelativePointer(interface) => interface.name(),
+            #[cfg(feature = "ext-primary-selection")]
+            Self::PrimarySelection(interface) => interface.name(),
+            #[cfg(feature = "ext-pointer-gestures")]
+            Self::PointerGestures(interface) => interface.name(),
+            #[cfg(feature = "ext-pointer-constraints")]
+            Self::PointerConstraints(interface) => interface.name(),
+            #[cfg(feature = "ext-linux-explicit-synchronization")]
+            Self::LinuxExplicitSynchronization(interface) => interface.name(),
+            #[cfg(feature = "ext-keyboard-shortcuts-inhibit")]
+            Self::KeyboardShortcutsInhibit(interface) => interface.name(),
+            #[cfg(feature = "ext-input-timestamps")]
+            Self::InputTimestamps(interface) => interface.name(),
+            #[cfg(feature = "ext-input-method")]
+            Self::InputMethod(interface) => interface.name(),
+            #[cfg(feature = "ext-idle-inhibit")]
+            Self::IdleInhibit(interface) => interface.name(),
+            #[cfg(feature = "ext-fullscreen-shell")]
+            Self::FullscreenShell(interface) => interface.name(),
             #[cfg(feature = "ext-xwayland-shell")]
             Self::XwaylandShell(interface) => interface.name(),
             #[cfg(feature = "ext-xdg-toplevel-tag")]
@@ -300,6 +412,38 @@ impl ObjectInteface {
     pub(crate) fn version(self) -> u32 {
         match self {
             Self::Core(interface) => interface.version(),
+            #[cfg(feature = "ext-xwayland-keyboard-grab")]
+            Self::XwaylandKeyboardGrab(interface) => interface.version(),
+            #[cfg(feature = "ext-xdg-output")]
+            Self::XdgOutput(interface) => interface.version(),
+            #[cfg(feature = "ext-xdg-foreign")]
+            Self::XdgForeign(interface) => interface.version(),
+            #[cfg(feature = "ext-xdg-decoration")]
+            Self::XdgDecoration(interface) => interface.version(),
+            #[cfg(feature = "ext-text-input")]
+            Self::TextInput(interface) => interface.version(),
+            #[cfg(feature = "ext-tablet-unstable")]
+            Self::TabletUnstable(interface) => interface.version(),
+            #[cfg(feature = "ext-relative-pointer")]
+            Self::RelativePointer(interface) => interface.version(),
+            #[cfg(feature = "ext-primary-selection")]
+            Self::PrimarySelection(interface) => interface.version(),
+            #[cfg(feature = "ext-pointer-gestures")]
+            Self::PointerGestures(interface) => interface.version(),
+            #[cfg(feature = "ext-pointer-constraints")]
+            Self::PointerConstraints(interface) => interface.version(),
+            #[cfg(feature = "ext-linux-explicit-synchronization")]
+            Self::LinuxExplicitSynchronization(interface) => interface.version(),
+            #[cfg(feature = "ext-keyboard-shortcuts-inhibit")]
+            Self::KeyboardShortcutsInhibit(interface) => interface.version(),
+            #[cfg(feature = "ext-input-timestamps")]
+            Self::InputTimestamps(interface) => interface.version(),
+            #[cfg(feature = "ext-input-method")]
+            Self::InputMethod(interface) => interface.version(),
+            #[cfg(feature = "ext-idle-inhibit")]
+            Self::IdleInhibit(interface) => interface.version(),
+            #[cfg(feature = "ext-fullscreen-shell")]
+            Self::FullscreenShell(interface) => interface.version(),
             #[cfg(feature = "ext-xwayland-shell")]
             Self::XwaylandShell(interface) => interface.version(),
             #[cfg(feature = "ext-xdg-toplevel-tag")]
@@ -386,6 +530,38 @@ impl ObjectInteface {
     pub(crate) fn max_version(self) -> u32 {
         match self {
             Self::Core(interface) => interface.max_version(),
+            #[cfg(feature = "ext-xwayland-keyboard-grab")]
+            Self::XwaylandKeyboardGrab(interface) => interface.max_version(),
+            #[cfg(feature = "ext-xdg-output")]
+            Self::XdgOutput(interface) => interface.max_version(),
+            #[cfg(feature = "ext-xdg-foreign")]
+            Self::XdgForeign(interface) => interface.max_version(),
+            #[cfg(feature = "ext-xdg-decoration")]
+            Self::XdgDecoration(interface) => interface.max_version(),
+            #[cfg(feature = "ext-text-input")]
+            Self::TextInput(interface) => interface.max_version(),
+            #[cfg(feature = "ext-tablet-unstable")]
+            Self::TabletUnstable(interface) => interface.max_version(),
+            #[cfg(feature = "ext-relative-pointer")]
+            Self::RelativePointer(interface) => interface.max_version(),
+            #[cfg(feature = "ext-primary-selection")]
+            Self::PrimarySelection(interface) => interface.max_version(),
+            #[cfg(feature = "ext-pointer-gestures")]
+            Self::PointerGestures(interface) => interface.max_version(),
+            #[cfg(feature = "ext-pointer-constraints")]
+            Self::PointerConstraints(interface) => interface.max_version(),
+            #[cfg(feature = "ext-linux-explicit-synchronization")]
+            Self::LinuxExplicitSynchronization(interface) => interface.max_version(),
+            #[cfg(feature = "ext-keyboard-shortcuts-inhibit")]
+            Self::KeyboardShortcutsInhibit(interface) => interface.max_version(),
+            #[cfg(feature = "ext-input-timestamps")]
+            Self::InputTimestamps(interface) => interface.max_version(),
+            #[cfg(feature = "ext-input-method")]
+            Self::InputMethod(interface) => interface.max_version(),
+            #[cfg(feature = "ext-idle-inhibit")]
+            Self::IdleInhibit(interface) => interface.max_version(),
+            #[cfg(feature = "ext-fullscreen-shell")]
+            Self::FullscreenShell(interface) => interface.max_version(),
             #[cfg(feature = "ext-xwayland-shell")]
             Self::XwaylandShell(interface) => interface.max_version(),
             #[cfg(feature = "ext-xdg-toplevel-tag")]
@@ -632,6 +808,74 @@ impl ObjectInteface {
         #[cfg(feature = "ext-xwayland-shell")]
         if let Some(interface) = xwayland_shell::ObjectInteface::from_name(name, version) {
             return Some(Self::XwaylandShell(interface));
+        }
+        #[cfg(feature = "ext-fullscreen-shell")]
+        if let Some(interface) = fullscreen_shell::ObjectInteface::from_name(name, version) {
+            return Some(Self::FullscreenShell(interface));
+        }
+        #[cfg(feature = "ext-idle-inhibit")]
+        if let Some(interface) = idle_inhibit::ObjectInteface::from_name(name, version) {
+            return Some(Self::IdleInhibit(interface));
+        }
+        #[cfg(feature = "ext-input-method")]
+        if let Some(interface) = input_method::ObjectInteface::from_name(name, version) {
+            return Some(Self::InputMethod(interface));
+        }
+        #[cfg(feature = "ext-input-timestamps")]
+        if let Some(interface) = input_timestamps::ObjectInteface::from_name(name, version) {
+            return Some(Self::InputTimestamps(interface));
+        }
+        #[cfg(feature = "ext-keyboard-shortcuts-inhibit")]
+        if let Some(interface) =
+            keyboard_shortcuts_inhibit::ObjectInteface::from_name(name, version)
+        {
+            return Some(Self::KeyboardShortcutsInhibit(interface));
+        }
+        #[cfg(feature = "ext-linux-explicit-synchronization")]
+        if let Some(interface) =
+            linux_explicit_synchronization::ObjectInteface::from_name(name, version)
+        {
+            return Some(Self::LinuxExplicitSynchronization(interface));
+        }
+        #[cfg(feature = "ext-pointer-constraints")]
+        if let Some(interface) = pointer_constraints::ObjectInteface::from_name(name, version) {
+            return Some(Self::PointerConstraints(interface));
+        }
+        #[cfg(feature = "ext-pointer-gestures")]
+        if let Some(interface) = pointer_gestures::ObjectInteface::from_name(name, version) {
+            return Some(Self::PointerGestures(interface));
+        }
+        #[cfg(feature = "ext-primary-selection")]
+        if let Some(interface) = primary_selection::ObjectInteface::from_name(name, version) {
+            return Some(Self::PrimarySelection(interface));
+        }
+        #[cfg(feature = "ext-relative-pointer")]
+        if let Some(interface) = relative_pointer::ObjectInteface::from_name(name, version) {
+            return Some(Self::RelativePointer(interface));
+        }
+        #[cfg(feature = "ext-tablet-unstable")]
+        if let Some(interface) = tablet_unstable::ObjectInteface::from_name(name, version) {
+            return Some(Self::TabletUnstable(interface));
+        }
+        #[cfg(feature = "ext-text-input")]
+        if let Some(interface) = text_input::ObjectInteface::from_name(name, version) {
+            return Some(Self::TextInput(interface));
+        }
+        #[cfg(feature = "ext-xdg-decoration")]
+        if let Some(interface) = xdg_decoration::ObjectInteface::from_name(name, version) {
+            return Some(Self::XdgDecoration(interface));
+        }
+        #[cfg(feature = "ext-xdg-foreign")]
+        if let Some(interface) = xdg_foreign::ObjectInteface::from_name(name, version) {
+            return Some(Self::XdgForeign(interface));
+        }
+        #[cfg(feature = "ext-xdg-output")]
+        if let Some(interface) = xdg_output::ObjectInteface::from_name(name, version) {
+            return Some(Self::XdgOutput(interface));
+        }
+        #[cfg(feature = "ext-xwayland-keyboard-grab")]
+        if let Some(interface) = xwayland_keyboard_grab::ObjectInteface::from_name(name, version) {
+            return Some(Self::XwaylandKeyboardGrab(interface));
         }
         None
     }

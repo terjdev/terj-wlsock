@@ -107,3 +107,51 @@ pub mod xdg_toplevel_tag;
 
 #[cfg(feature = "ext-xwayland-shell")]
 pub mod xwayland_shell;
+
+#[cfg(feature = "ext-fullscreen-shell")]
+pub mod fullscreen_shell;
+
+#[cfg(feature = "ext-idle-inhibit")]
+pub mod idle_inhibit;
+
+#[cfg(feature = "ext-input-method")]
+pub mod input_method;
+
+#[cfg(feature = "ext-input-timestamps")]
+pub mod input_timestamps;
+
+#[cfg(feature = "ext-keyboard-shortcuts-inhibit")]
+pub mod keyboard_shortcuts_inhibit;
+
+#[cfg(feature = "ext-linux-explicit-synchronization")]
+pub mod linux_explicit_synchronization;
+
+#[cfg(feature = "ext-pointer-constraints")]
+pub mod pointer_constraints;
+
+#[cfg(feature = "ext-pointer-gestures")]
+pub mod pointer_gestures;
+
+#[cfg(feature = "ext-primary-selection")]
+pub mod primary_selection;
+
+#[cfg(feature = "ext-relative-pointer")]
+pub mod relative_pointer;
+
+#[cfg(feature = "ext-tablet-unstable")]
+pub mod tablet_unstable;
+
+#[cfg(feature = "ext-text-input")]
+pub mod text_input;
+
+#[cfg(feature = "ext-xdg-decoration")]
+pub mod xdg_decoration;
+
+#[cfg(feature = "ext-xdg-foreign")]
+pub mod xdg_foreign;
+
+#[cfg(feature = "ext-xdg-output")]
+pub mod xdg_output;
+
+#[cfg(feature = "ext-xwayland-keyboard-grab")]
+pub mod xwayland_keyboard_grab;

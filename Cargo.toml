@@ -7,6 +7,22 @@ license = "MIT"
 [features]
 default = ["ext", "wlr"]
 ext = [
+    "ext-fullscreen-shell",
+    "ext-idle-inhibit",
+    "ext-input-method",
+    "ext-input-timestamps",
+    "ext-keyboard-shortcuts-inhibit",
+    "ext-linux-explicit-synchronization",
+    "ext-pointer-constraints",
+    "ext-pointer-gestures",
+    "ext-primary-selection",
+    "ext-relative-pointer",
+    "ext-tablet-unstable",
+    "ext-text-input",
+    "ext-xdg-decoration",
+    "ext-xdg-foreign",
+    "ext-xdg-output",
+    "ext-xwayland-keyboard-grab",
     "ext-xwayland-shell",
     "ext-xdg-toplevel-tag",
     "ext-xdg-toplevel-icon",
@@ -85,6 +101,23 @@ wlr-virtual-pointer = []
 ext-tablet = []
 ext-xdg-shell = []
 ext-dmabuf = []
+
+ext-fullscreen-shell = []
+ext-idle-inhibit = []
+ext-input-method = []
+ext-input-timestamps = []
+ext-keyboard-shortcuts-inhibit = []
+ext-linux-explicit-synchronization = []
+ext-pointer-constraints = []
+ext-pointer-gestures = []
+ext-primary-selection = []
+ext-relative-pointer = []
+ext-tablet-unstable = []
+ext-text-input = []
+ext-xdg-decoration = []
+ext-xdg-foreign = []
+ext-xdg-output = []
+ext-xwayland-keyboard-grab = []
 
 [dependencies]
 tokio = { version = "1", features = ["rt", "net", "sync", "macros", "io-util"] }
