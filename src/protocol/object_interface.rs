@@ -67,8 +67,6 @@ use crate::protocol::ext::session_lock;
 use crate::protocol::ext::single_pixel_buffer;
 #[cfg(feature = "ext-tablet")]
 use crate::protocol::ext::tablet;
-#[cfg(feature = "ext-tablet-unstable")]
-use crate::protocol::ext::tablet_unstable;
 #[cfg(feature = "ext-tearing-control")]
 use crate::protocol::ext::tearing_control;
 #[cfg(feature = "ext-text-input")]
@@ -164,9 +162,6 @@ pub(crate) enum ObjectInteface {
     /// A text input interface.
     #[cfg(feature = "ext-text-input")]
     TextInput(text_input::ObjectInteface),
-    /// A tablet unstable interface.
-    #[cfg(feature = "ext-tablet-unstable")]
-    TabletUnstable(tablet_unstable::ObjectInteface),
     /// A relative pointer interface.
     #[cfg(feature = "ext-relative-pointer")]
     RelativePointer(relative_pointer::ObjectInteface),
@@ -346,8 +341,6 @@ impl ObjectInteface {
             Self::XdgDecoration(interface) => interface.name(),
             #[cfg(feature = "ext-text-input")]
             Self::TextInput(interface) => interface.name(),
-            #[cfg(feature = "ext-tablet-unstable")]
-            Self::TabletUnstable(interface) => interface.name(),
             #[cfg(feature = "ext-relative-pointer")]
             Self::RelativePointer(interface) => interface.name(),
             #[cfg(feature = "ext-primary-selection")]
@@ -476,8 +469,6 @@ impl ObjectInteface {
             Self::XdgDecoration(interface) => interface.version(),
             #[cfg(feature = "ext-text-input")]
             Self::TextInput(interface) => interface.version(),
-            #[cfg(feature = "ext-tablet-unstable")]
-            Self::TabletUnstable(interface) => interface.version(),
             #[cfg(feature = "ext-relative-pointer")]
             Self::RelativePointer(interface) => interface.version(),
             #[cfg(feature = "ext-primary-selection")]
@@ -606,8 +597,6 @@ impl ObjectInteface {
             Self::XdgDecoration(interface) => interface.max_version(),
             #[cfg(feature = "ext-text-input")]
             Self::TextInput(interface) => interface.max_version(),
-            #[cfg(feature = "ext-tablet-unstable")]
-            Self::TabletUnstable(interface) => interface.max_version(),
             #[cfg(feature = "ext-relative-pointer")]
             Self::RelativePointer(interface) => interface.max_version(),
             #[cfg(feature = "ext-primary-selection")]
@@ -918,10 +907,6 @@ impl ObjectInteface {
         #[cfg(feature = "ext-relative-pointer")]
         if let Some(interface) = relative_pointer::ObjectInteface::from_name(name, version) {
             return Some(Self::RelativePointer(interface));
-        }
-        #[cfg(feature = "ext-tablet-unstable")]
-        if let Some(interface) = tablet_unstable::ObjectInteface::from_name(name, version) {
-            return Some(Self::TabletUnstable(interface));
         }
         #[cfg(feature = "ext-text-input")]
         if let Some(interface) = text_input::ObjectInteface::from_name(name, version) {

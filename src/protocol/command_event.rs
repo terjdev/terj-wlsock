@@ -43,8 +43,6 @@ use crate::protocol::ext::relative_pointer;
 use crate::protocol::ext::session_lock;
 #[cfg(feature = "ext-tablet")]
 use crate::protocol::ext::tablet;
-#[cfg(feature = "ext-tablet-unstable")]
-use crate::protocol::ext::tablet_unstable;
 #[cfg(feature = "ext-text-input")]
 use crate::protocol::ext::text_input;
 #[cfg(feature = "ext-transient-seat")]
@@ -120,9 +118,6 @@ pub enum CommandEvent {
     /// text input messages.
     #[cfg(feature = "ext-text-input")]
     TextInput(text_input::CommandEvent),
-    /// tablet unstable messages.
-    #[cfg(feature = "ext-tablet-unstable")]
-    TabletUnstable(tablet_unstable::CommandEvent),
     /// relative pointer messages.
     #[cfg(feature = "ext-relative-pointer")]
     RelativePointer(relative_pointer::CommandEvent),
@@ -493,13 +488,6 @@ impl InterfaceReader for CommandEvent {
                 )
                 .await?,
             )),
-            #[cfg(feature = "ext-tablet-unstable")]
-            ObjectInteface::TabletUnstable(_) => Ok(Self::TabletUnstable(
-                tablet_unstable::CommandEvent::read_with_interface(
-                    object_id, opcode, interface, reader, state,
-                )
-                .await?,
-            )),
             #[cfg(feature = "ext-text-input")]
             ObjectInteface::TextInput(_) => Ok(Self::TextInput(
                 text_input::CommandEvent::read_with_interface(
@@ -606,8 +594,6 @@ impl CommandWriter for CommandEvent {
             Self::XdgDecoration(command) => command.object_id(),
             #[cfg(feature = "ext-text-input")]
             Self::TextInput(command) => command.object_id(),
-            #[cfg(feature = "ext-tablet-unstable")]
-            Self::TabletUnstable(command) => command.object_id(),
             #[cfg(feature = "ext-relative-pointer")]
             Self::RelativePointer(command) => command.object_id(),
             #[cfg(feature = "ext-primary-selection")]
@@ -693,8 +679,6 @@ impl CommandWriter for CommandEvent {
             Self::XdgDecoration(command) => command.opcode(),
             #[cfg(feature = "ext-text-input")]
             Self::TextInput(command) => command.opcode(),
-            #[cfg(feature = "ext-tablet-unstable")]
-            Self::TabletUnstable(command) => command.opcode(),
             #[cfg(feature = "ext-relative-pointer")]
             Self::RelativePointer(command) => command.opcode(),
             #[cfg(feature = "ext-primary-selection")]
@@ -780,8 +764,6 @@ impl CommandWriter for CommandEvent {
             Self::XdgDecoration(command) => command.payload_size(),
             #[cfg(feature = "ext-text-input")]
             Self::TextInput(command) => command.payload_size(),
-            #[cfg(feature = "ext-tablet-unstable")]
-            Self::TabletUnstable(command) => command.payload_size(),
             #[cfg(feature = "ext-relative-pointer")]
             Self::RelativePointer(command) => command.payload_size(),
             #[cfg(feature = "ext-primary-selection")]
@@ -871,8 +853,6 @@ impl CommandWriter for CommandEvent {
             Self::XdgDecoration(command) => command.write(writer, state).await,
             #[cfg(feature = "ext-text-input")]
             Self::TextInput(command) => command.write(writer, state).await,
-            #[cfg(feature = "ext-tablet-unstable")]
-            Self::TabletUnstable(command) => command.write(writer, state).await,
             #[cfg(feature = "ext-relative-pointer")]
             Self::RelativePointer(command) => command.write(writer, state).await,
             #[cfg(feature = "ext-primary-selection")]

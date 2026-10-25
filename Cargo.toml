@@ -5,7 +5,8 @@ edition = "2024"
 license = "MIT"
 
 [features]
-default = ["ext", "wlr"]
+default = []
+all = ["ext", "wlr"]
 ext = [
     "ext-fullscreen-shell",
     "ext-idle-inhibit",
@@ -17,7 +18,6 @@ ext = [
     "ext-pointer-gestures",
     "ext-primary-selection",
     "ext-relative-pointer",
-    "ext-tablet-unstable",
     "ext-text-input",
     "ext-xdg-decoration",
     "ext-xdg-foreign",
@@ -112,7 +112,6 @@ wlr-virtual-pointer = []
 ext-tablet = []
 ext-xdg-shell = []
 ext-dmabuf = []
-
 ext-fullscreen-shell = []
 ext-idle-inhibit = []
 ext-input-method = []
@@ -123,13 +122,11 @@ ext-pointer-constraints = []
 ext-pointer-gestures = []
 ext-primary-selection = []
 ext-relative-pointer = []
-ext-tablet-unstable = []
 ext-text-input = []
 ext-xdg-decoration = []
 ext-xdg-foreign = []
 ext-xdg-output = []
 ext-xwayland-keyboard-grab = []
-
 wlr-export-dmabuf = []
 wlr-foreign-toplevel-management = []
 wlr-gamma-control = []

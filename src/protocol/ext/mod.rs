@@ -138,9 +138,6 @@ pub mod primary_selection;
 #[cfg(feature = "ext-relative-pointer")]
 pub mod relative_pointer;
 
-#[cfg(feature = "ext-tablet-unstable")]
-pub mod tablet_unstable;
-
 #[cfg(feature = "ext-text-input")]
 pub mod text_input;
 

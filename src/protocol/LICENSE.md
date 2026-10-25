@@ -388,12 +388,6 @@ Protocol definitions and documentation excerpts are derived from [relative-point
 Original copyright notices and permission terms are preserved in
 [ext/relative_pointer/LICENSE.md](ext/relative_pointer/LICENSE.md).
 
-## Third-party notice: tablet unstable
-
-Protocol definitions and documentation excerpts are derived from [tablet-unstable-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/unstable/tablet/tablet-unstable-v1.xml).
-Original copyright notices and permission terms are preserved in
-[ext/tablet_unstable/LICENSE.md](ext/tablet_unstable/LICENSE.md).
-
 ## Third-party notice: text input
 
 Protocol definitions and documentation excerpts are derived from [text-input-unstable-v1.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/unstable/text-input/text-input-unstable-v1.xml), [text-input-unstable-v3.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/unstable/text-input/text-input-unstable-v3.xml).

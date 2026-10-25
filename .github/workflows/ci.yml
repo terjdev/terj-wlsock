@@ -20,6 +20,6 @@ jobs:
         with:
           persist-credentials: false
       - name: Build
-        run: cargo build --locked
+        run: cargo build --locked --features all
       - name: Test
-        run: cargo test --locked
+        run: cargo test --locked --features all
