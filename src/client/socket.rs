@@ -194,7 +194,7 @@ async fn read_event(
     let size = (word >> 16) as usize;
     let opcode = (word & 0xffff) as u16;
 
-    if size < 8 || size % 4 != 0 {
+    if size < 8 || !size.is_multiple_of(4) {
         return Err(FdReaderError::InvalidProtocol);
     }
 
@@ -215,10 +215,10 @@ async fn write_requests(
             return DisconnectReason::Error(ClientError::Write(error));
         }
 
-        if send_rx.is_empty() {
-            if let Err(error) = writer.flush().await {
-                return DisconnectReason::Error(ClientError::Write(error));
-            }
+        if send_rx.is_empty()
+            && let Err(error) = writer.flush().await
+        {
+            return DisconnectReason::Error(ClientError::Write(error));
         }
     }
 

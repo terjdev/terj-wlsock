@@ -183,10 +183,10 @@ async fn handle_server(
                 match completed {
                     None => continue,
                     Some(completed) => {
-                        if let Some(cmd) = handle_client_disconnect(&mut clients_registry, completed).await {
-                            if recv_tx.send(cmd).await.is_err() {
-                                break;
-                            }
+                        if let Some(cmd) = handle_client_disconnect(&mut clients_registry, completed).await
+                            && recv_tx.send(cmd).await.is_err()
+                        {
+                            break;
                         }
                     },
                 }
@@ -198,12 +198,12 @@ async fn handle_server(
     drop(send_rx);
     clients_registry.join_set.abort_all();
     while let Some(completed) = clients_registry.join_set.join_next_with_id().await {
-        if let Some(cmd) = handle_client_disconnect(&mut clients_registry, completed).await {
-            if recv_tx.send(cmd).await.is_err() {
-                // recv_tx already closed, wait for shutdown without explicit cleanup
-                clients_registry.join_set.shutdown().await;
-                break;
-            }
+        if let Some(cmd) = handle_client_disconnect(&mut clients_registry, completed).await
+            && recv_tx.send(cmd).await.is_err()
+        {
+            // recv_tx already closed, wait for shutdown without explicit cleanup
+            clients_registry.join_set.shutdown().await;
+            break;
         }
     }
 }
@@ -247,7 +247,7 @@ async fn handle_client(
     tokio::select! {
         biased;
         result = disconnect_rx => {
-            return match result {
+            match result {
                 Ok(reason) => reason,
                 Err(_) => protocol::DisconnectReason::Server,
             }
@@ -322,10 +322,10 @@ async fn write_events(
             return protocol::DisconnectReason::Error(protocol::ClientError::Write(error));
         }
 
-        if send_rx.is_empty() {
-            if let Err(error) = writer.flush().await {
-                return protocol::DisconnectReason::Error(protocol::ClientError::Write(error));
-            }
+        if send_rx.is_empty()
+            && let Err(error) = writer.flush().await
+        {
+            return protocol::DisconnectReason::Error(protocol::ClientError::Write(error));
         }
     }
 
@@ -381,7 +381,7 @@ async fn read_requests(
         };
 
         let cmd = CommandRecv::Request {
-            client_id: id.clone(),
+            client_id: id,
             command: read_result,
         };
 
@@ -390,10 +390,10 @@ async fn read_requests(
         }
     }
 
-    return match reader.state() {
+    match reader.state() {
         FdReaderState::EndOfStream => protocol::DisconnectReason::Client,
         _ => protocol::DisconnectReason::Error(protocol::ClientError::ConnectionFailed),
-    };
+    }
 }
 
 async fn read_request(
@@ -405,7 +405,7 @@ async fn read_request(
     let word = reader.next_u32().await?;
     let size = (word >> 16) as usize;
     let opcode = (word & 0xffff) as u16;
-    if size < 8 || size % 4 != 0 {
+    if size < 8 || !size.is_multiple_of(4) {
         return Err(FdReaderError::InvalidProtocol);
     }
 
@@ -486,5 +486,5 @@ async fn accept_client(
         runtime,
     );
     clients_registry.tasks_to_ids.insert(task.id(), client_id);
-    return Ok(());
+    Ok(())
 }
