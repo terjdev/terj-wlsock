@@ -1,8 +1,16 @@
 [package]
 name = "terj-wlsock"
+description = "Asynchronous Wayland transport library for clients and servers with typed protocol messages, powered by Tokio"
 version = "1.0.0"
 edition = "2024"
 license = "MIT"
+repository = "https://github.com/terjdev/terj-wlsock"
+keywords = ["wayland", "protocol", "async", "tokio", "unix"]
+categories = ["asynchronous", "network-programming"]
+include = ["src/**", "Cargo.toml", "README.md", "LICENSE.md"]
+
+[package.metadata.docs.rs]
+all-features = true
 
 [features]
 default = []

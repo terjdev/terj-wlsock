@@ -226,6 +226,11 @@ with their stable or unstable counterparts as distinct wire interfaces.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-36BC9B?style=for-the-badge)](LICENSE.md)
 
+Wayland protocol definitions and documentation excerpts, including their
+extensions and wlr-protocols, retain their original copyright notices and
+permission terms. See [protocol third-party licenses](src/protocol/LICENSE.md)
+for the core MIT license and individual protocol notices.
+
 ## Support Me
 
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy_Me_a_Coffee-FFDD00?style=for-the-badge&logo=buymeacoffee&logoColor=000000)](https://buymeacoffee.com/terjdev)

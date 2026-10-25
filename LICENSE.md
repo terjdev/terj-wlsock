@@ -1,8 +1,4 @@
-# License
-
-The terj-wlsock package is licensed under the MIT License.
-
-## MIT License
+MIT License
 
 Copyright (c) 2026 terj-wlsock contributors
 
@@ -23,10 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-
-## Third-party licenses
-
-Wayland protocol definitions and documentation excerpts, including their
-extensions and wlr-protocols, retain their original copyright notices and
-permission terms. See [protocol third-party licenses](src/protocol/LICENSE.md)
-for the core MIT license and individual protocol notices.
