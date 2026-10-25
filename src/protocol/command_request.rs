@@ -5,6 +5,8 @@ use crate::protocol::ext::dmabuf;
 use crate::protocol::ext::presentation_time;
 #[cfg(feature = "ext-viewporter")]
 use crate::protocol::ext::viewporter;
+#[cfg(feature = "ext-xdg-shell")]
+use crate::protocol::ext::xdg_shell;
 use crate::protocol::{
     ClientState, CommandReader, CommandReaderExt, CommandWriter, InterfaceReader, ObjectInteface,
 };
@@ -17,6 +19,9 @@ use std::sync::{Arc, Mutex};
 pub enum CommandRequest {
     /// Core Wayland protocol commands.
     Core(core::CommandRequest),
+    /// XDG shell extension commands.
+    #[cfg(feature = "ext-xdg-shell")]
+    XdgShell(xdg_shell::CommandRequest),
     /// Linux DMA-BUF extension commands.
     #[cfg(feature = "ext-dmabuf")]
     Dmabuf(dmabuf::CommandRequest),
@@ -58,6 +63,13 @@ impl InterfaceReader for CommandRequest {
                 )
                 .await?,
             )),
+            #[cfg(feature = "ext-xdg-shell")]
+            ObjectInteface::XdgShell(_) => Ok(Self::XdgShell(
+                xdg_shell::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
             ObjectInteface::Core(_) => Ok(Self::Core(
                 core::CommandRequest::read_with_interface(
                     object_id, opcode, interface, reader, state,
@@ -86,6 +98,8 @@ impl CommandWriter for CommandRequest {
     fn object_id(&self) -> u32 {
         match self {
             Self::Core(command) => command.object_id(),
+            #[cfg(feature = "ext-xdg-shell")]
+            Self::XdgShell(command) => command.object_id(),
             #[cfg(feature = "ext-dmabuf")]
             Self::Dmabuf(command) => command.object_id(),
             #[cfg(feature = "ext-presentation-time")]
@@ -97,6 +111,8 @@ impl CommandWriter for CommandRequest {
     fn opcode(&self) -> u16 {
         match self {
             Self::Core(command) => command.opcode(),
+            #[cfg(feature = "ext-xdg-shell")]
+            Self::XdgShell(command) => command.opcode(),
             #[cfg(feature = "ext-dmabuf")]
             Self::Dmabuf(command) => command.opcode(),
             #[cfg(feature = "ext-presentation-time")]
@@ -108,6 +124,8 @@ impl CommandWriter for CommandRequest {
     fn payload_size(&self) -> usize {
         match self {
             Self::Core(command) => command.payload_size(),
+            #[cfg(feature = "ext-xdg-shell")]
+            Self::XdgShell(command) => command.payload_size(),
             #[cfg(feature = "ext-dmabuf")]
             Self::Dmabuf(command) => command.payload_size(),
             #[cfg(feature = "ext-presentation-time")]
@@ -123,6 +141,8 @@ impl CommandWriter for CommandRequest {
     ) -> Result<(), FdWriterError> {
         match self {
             Self::Core(command) => command.write(writer, state).await,
+            #[cfg(feature = "ext-xdg-shell")]
+            Self::XdgShell(command) => command.write(writer, state).await,
             #[cfg(feature = "ext-dmabuf")]
             Self::Dmabuf(command) => command.write(writer, state).await,
             #[cfg(feature = "ext-presentation-time")]

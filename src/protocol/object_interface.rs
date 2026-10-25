@@ -7,12 +7,17 @@ use crate::protocol::ext::dmabuf;
 use crate::protocol::ext::presentation_time;
 #[cfg(feature = "ext-viewporter")]
 use crate::protocol::ext::viewporter;
+#[cfg(feature = "ext-xdg-shell")]
+use crate::protocol::ext::xdg_shell;
 
 /// Identifies an object's protocol group, interface, and negotiated version.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum ObjectInteface {
     /// A core Wayland interface.
     Core(core::ObjectInteface),
+    /// A XDG shell interface.
+    #[cfg(feature = "ext-xdg-shell")]
+    XdgShell(xdg_shell::ObjectInteface),
     /// A Linux DMA-BUF interface.
     #[cfg(feature = "ext-dmabuf")]
     Dmabuf(dmabuf::ObjectInteface),
@@ -29,6 +34,8 @@ impl ObjectInteface {
     pub(crate) fn name(self) -> &'static str {
         match self {
             Self::Core(interface) => interface.name(),
+            #[cfg(feature = "ext-xdg-shell")]
+            Self::XdgShell(interface) => interface.name(),
             #[cfg(feature = "ext-dmabuf")]
             Self::Dmabuf(interface) => interface.name(),
             #[cfg(feature = "ext-presentation-time")]
@@ -41,6 +48,8 @@ impl ObjectInteface {
     pub(crate) fn version(self) -> u32 {
         match self {
             Self::Core(interface) => interface.version(),
+            #[cfg(feature = "ext-xdg-shell")]
+            Self::XdgShell(interface) => interface.version(),
             #[cfg(feature = "ext-dmabuf")]
             Self::Dmabuf(interface) => interface.version(),
             #[cfg(feature = "ext-presentation-time")]
@@ -53,6 +62,8 @@ impl ObjectInteface {
     pub(crate) fn max_version(self) -> u32 {
         match self {
             Self::Core(interface) => interface.max_version(),
+            #[cfg(feature = "ext-xdg-shell")]
+            Self::XdgShell(interface) => interface.max_version(),
             #[cfg(feature = "ext-dmabuf")]
             Self::Dmabuf(interface) => interface.max_version(),
             #[cfg(feature = "ext-presentation-time")]
@@ -77,6 +88,10 @@ impl ObjectInteface {
         #[cfg(feature = "ext-dmabuf")]
         if let Some(interface) = dmabuf::ObjectInteface::from_name(name, version) {
             return Some(Self::Dmabuf(interface));
+        }
+        #[cfg(feature = "ext-xdg-shell")]
+        if let Some(interface) = xdg_shell::ObjectInteface::from_name(name, version) {
+            return Some(Self::XdgShell(interface));
         }
         None
     }

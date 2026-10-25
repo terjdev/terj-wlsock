@@ -8,3 +8,6 @@ pub mod viewporter;
 
 #[cfg(feature = "ext-dmabuf")]
 pub mod dmabuf;
+
+#[cfg(feature = "ext-xdg-shell")]
+pub mod xdg_shell;

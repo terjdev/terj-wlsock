@@ -55,3 +55,10 @@ The Linux DMA-BUF protocol definitions and documentation excerpts are derived fr
 Copyright © 2014, 2015 Collabora, Ltd. The original MIT license and copyright
 notice are preserved in
 [src/protocol/ext/dmabuf/LICENSE.md](src/protocol/ext/dmabuf/LICENSE.md).
+
+## Third-party notice: XDG shell
+
+The XDG shell protocol definitions and documentation excerpts are derived from
+[wayland-protocols xdg-shell.xml](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/main/stable/xdg-shell/xdg-shell.xml).
+The original MIT license and copyright notices are preserved in
+[src/protocol/ext/xdg_shell/LICENSE.md](src/protocol/ext/xdg_shell/LICENSE.md).
