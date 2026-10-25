@@ -86,3 +86,11 @@ The WLR data control protocol definitions and documentation excerpts are derived
 Copyright © 2018 Simon Ser; Copyright © 2019 Ivan Molodetskikh. These materials retain their original permissive
 license, including its attribution and non-endorsement terms, preserved in
 [src/protocol/wlr/data_control/LICENSE.md](src/protocol/wlr/data_control/LICENSE.md).
+
+## Third-party notice: WLR virtual pointer
+
+The WLR virtual pointer protocol definitions and documentation excerpts are derived from
+[wlr-protocols wlr-virtual-pointer-unstable-v1.xml](https://gitlab.freedesktop.org/wlroots/wlr-protocols/-/blob/master/unstable/wlr-virtual-pointer-unstable-v1.xml).
+Copyright © 2019 Josef Gajdusek. The original MIT license and copyright notice
+are preserved in
+[src/protocol/wlr/virtual_pointer/LICENSE.md](src/protocol/wlr/virtual_pointer/LICENSE.md).

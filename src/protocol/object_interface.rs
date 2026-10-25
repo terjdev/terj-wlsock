@@ -15,12 +15,17 @@ use crate::protocol::ext::xdg_shell;
 use crate::protocol::wlr::data_control;
 #[cfg(feature = "wlr-layer-shell")]
 use crate::protocol::wlr::layer_shell;
+#[cfg(feature = "wlr-virtual-pointer")]
+use crate::protocol::wlr::virtual_pointer;
 
 /// Identifies an object's protocol group, interface, and negotiated version.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum ObjectInteface {
     /// A core Wayland interface.
     Core(core::ObjectInteface),
+    /// A WLR virtual pointer interface.
+    #[cfg(feature = "wlr-virtual-pointer")]
+    WlrVirtualPointer(virtual_pointer::ObjectInteface),
     /// A WLR data control interface.
     #[cfg(feature = "wlr-data-control")]
     WlrDataControl(data_control::ObjectInteface),
@@ -49,6 +54,8 @@ impl ObjectInteface {
     pub(crate) fn name(self) -> &'static str {
         match self {
             Self::Core(interface) => interface.name(),
+            #[cfg(feature = "wlr-virtual-pointer")]
+            Self::WlrVirtualPointer(interface) => interface.name(),
             #[cfg(feature = "wlr-data-control")]
             Self::WlrDataControl(interface) => interface.name(),
             #[cfg(feature = "wlr-layer-shell")]
@@ -69,6 +76,8 @@ impl ObjectInteface {
     pub(crate) fn version(self) -> u32 {
         match self {
             Self::Core(interface) => interface.version(),
+            #[cfg(feature = "wlr-virtual-pointer")]
+            Self::WlrVirtualPointer(interface) => interface.version(),
             #[cfg(feature = "wlr-data-control")]
             Self::WlrDataControl(interface) => interface.version(),
             #[cfg(feature = "wlr-layer-shell")]
@@ -89,6 +98,8 @@ impl ObjectInteface {
     pub(crate) fn max_version(self) -> u32 {
         match self {
             Self::Core(interface) => interface.max_version(),
+            #[cfg(feature = "wlr-virtual-pointer")]
+            Self::WlrVirtualPointer(interface) => interface.max_version(),
             #[cfg(feature = "wlr-data-control")]
             Self::WlrDataControl(interface) => interface.max_version(),
             #[cfg(feature = "wlr-layer-shell")]
@@ -137,6 +148,10 @@ impl ObjectInteface {
         #[cfg(feature = "wlr-data-control")]
         if let Some(interface) = data_control::ObjectInteface::from_name(name, version) {
             return Some(Self::WlrDataControl(interface));
+        }
+        #[cfg(feature = "wlr-virtual-pointer")]
+        if let Some(interface) = virtual_pointer::ObjectInteface::from_name(name, version) {
+            return Some(Self::WlrVirtualPointer(interface));
         }
         None
     }

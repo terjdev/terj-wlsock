@@ -5,3 +5,6 @@ pub mod layer_shell;
 
 #[cfg(feature = "wlr-data-control")]
 pub mod data_control;
+
+#[cfg(feature = "wlr-virtual-pointer")]
+pub mod virtual_pointer;

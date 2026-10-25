@@ -66,6 +66,8 @@ impl InterfaceReader for CommandEvent {
         state: &Arc<Mutex<ClientState>>,
     ) -> Result<Self, FdReaderError> {
         match interface {
+            #[cfg(feature = "wlr-virtual-pointer")]
+            ObjectInteface::WlrVirtualPointer(_) => Err(FdReaderError::InvalidProtocol),
             #[cfg(feature = "ext-dmabuf")]
             ObjectInteface::Dmabuf(_) => Ok(Self::Dmabuf(
                 dmabuf::CommandEvent::read_with_interface(

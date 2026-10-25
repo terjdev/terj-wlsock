@@ -13,6 +13,8 @@ use crate::protocol::ext::xdg_shell;
 use crate::protocol::wlr::data_control;
 #[cfg(feature = "wlr-layer-shell")]
 use crate::protocol::wlr::layer_shell;
+#[cfg(feature = "wlr-virtual-pointer")]
+use crate::protocol::wlr::virtual_pointer;
 use crate::protocol::{
     ClientState, CommandReader, CommandReaderExt, CommandWriter, InterfaceReader, ObjectInteface,
 };
@@ -25,6 +27,9 @@ use std::sync::{Arc, Mutex};
 pub enum CommandRequest {
     /// Core Wayland protocol commands.
     Core(core::CommandRequest),
+    /// WLR virtual pointer extension commands.
+    #[cfg(feature = "wlr-virtual-pointer")]
+    WlrVirtualPointer(virtual_pointer::CommandRequest),
     /// WLR data control extension commands.
     #[cfg(feature = "wlr-data-control")]
     WlrDataControl(data_control::CommandRequest),
@@ -106,6 +111,13 @@ impl InterfaceReader for CommandRequest {
                 )
                 .await?,
             )),
+            #[cfg(feature = "wlr-virtual-pointer")]
+            ObjectInteface::WlrVirtualPointer(_) => Ok(Self::WlrVirtualPointer(
+                virtual_pointer::CommandRequest::read_with_interface(
+                    object_id, opcode, interface, reader, state,
+                )
+                .await?,
+            )),
             ObjectInteface::Core(_) => Ok(Self::Core(
                 core::CommandRequest::read_with_interface(
                     object_id, opcode, interface, reader, state,
@@ -134,6 +146,8 @@ impl CommandWriter for CommandRequest {
     fn object_id(&self) -> u32 {
         match self {
             Self::Core(command) => command.object_id(),
+            #[cfg(feature = "wlr-virtual-pointer")]
+            Self::WlrVirtualPointer(command) => command.object_id(),
             #[cfg(feature = "wlr-data-control")]
             Self::WlrDataControl(command) => command.object_id(),
             #[cfg(feature = "wlr-layer-shell")]
@@ -153,6 +167,8 @@ impl CommandWriter for CommandRequest {
     fn opcode(&self) -> u16 {
         match self {
             Self::Core(command) => command.opcode(),
+            #[cfg(feature = "wlr-virtual-pointer")]
+            Self::WlrVirtualPointer(command) => command.opcode(),
             #[cfg(feature = "wlr-data-control")]
             Self::WlrDataControl(command) => command.opcode(),
             #[cfg(feature = "wlr-layer-shell")]
@@ -172,6 +188,8 @@ impl CommandWriter for CommandRequest {
     fn payload_size(&self) -> usize {
         match self {
             Self::Core(command) => command.payload_size(),
+            #[cfg(feature = "wlr-virtual-pointer")]
+            Self::WlrVirtualPointer(command) => command.payload_size(),
             #[cfg(feature = "wlr-data-control")]
             Self::WlrDataControl(command) => command.payload_size(),
             #[cfg(feature = "wlr-layer-shell")]
@@ -195,6 +213,8 @@ impl CommandWriter for CommandRequest {
     ) -> Result<(), FdWriterError> {
         match self {
             Self::Core(command) => command.write(writer, state).await,
+            #[cfg(feature = "wlr-virtual-pointer")]
+            Self::WlrVirtualPointer(command) => command.write(writer, state).await,
             #[cfg(feature = "wlr-data-control")]
             Self::WlrDataControl(command) => command.write(writer, state).await,
             #[cfg(feature = "wlr-layer-shell")]
