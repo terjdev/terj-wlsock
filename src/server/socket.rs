@@ -217,12 +217,12 @@ async fn handle_client_disconnect(
         Ok((task_id, result)) => (task_id, result),
         Err(error) => {
             let task_id = error.id();
-            let protocol_error = if error.is_cancelled() {
+            let reason = if error.is_cancelled() {
                 protocol::DisconnectReason::Server
             } else {
                 protocol::DisconnectReason::Error(protocol::ClientError::UnhandledTaskError(error))
             };
-            (task_id, protocol_error)
+            (task_id, reason)
         }
     };
 
@@ -304,7 +304,7 @@ async fn send_command(
         }
     } else {
         let cmd = CommandRecv::Error {
-            protocol_error: protocol::ServerError::ClientNotFound(client_id),
+            error: protocol::ServerError::ClientNotFound(client_id),
         };
         recv_tx.send(cmd).await?;
     }
@@ -428,7 +428,7 @@ async fn accept_client(
         Ok(value) => value,
         Err(error) => {
             let cmd = CommandRecv::Error {
-                protocol_error: protocol::ServerError::ClientAccept(error),
+                error: protocol::ServerError::ClientAccept(error),
             };
             recv_tx.send(cmd).await?;
             return Ok(());
@@ -439,7 +439,7 @@ async fn accept_client(
         Some(id) => protocol::ClientId(id),
         None => {
             let cmd = CommandRecv::Error {
-                protocol_error: protocol::ServerError::ClientIndexOverflow,
+                error: protocol::ServerError::ClientIndexOverflow,
             };
             recv_tx.send(cmd).await?;
             return Err(AcceptError::IndexOverflow);
@@ -454,7 +454,7 @@ async fn accept_client(
         }
         Err(error) => {
             let cmd = CommandRecv::Error {
-                protocol_error: protocol::ServerError::ClientAccept(error),
+                error: protocol::ServerError::ClientAccept(error),
             };
             recv_tx.send(cmd).await?;
             return Ok(());

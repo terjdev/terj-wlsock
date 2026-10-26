@@ -18,7 +18,7 @@ pub enum CommandRecv {
     /// The transport encountered a protocol or socket error.
     Error {
         /// Failure reported by the transport.
-        protocol_error: ServerError,
+        error: ServerError,
     },
     /// A client connection was closed.
     Disconnect {
